@@ -66,7 +66,7 @@ export default function HomePage() {
           style={{ animationDelay: "80ms" }}
         >
           Drag and drop Markdown, DOCX, HTML, Mermaid diagrams, JSON, CSV, images, or SQL files.
-          Choose a format, hit Convert, download the result — no sign-up, no uploads.
+          Choose a format, hit Convert, download the result - no sign-up, no uploads.
         </p>
 
         {/* Stats row */}

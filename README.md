@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ FileFlow
+# ⚡ FileFlowOne
 
 ### Universal File Converter — Drag, Drop, Convert
 
@@ -93,7 +93,7 @@ npm install
 ```
 
 > **Note:** `puppeteer` attempts to download a bundled Chromium (~170 MB) on first install.  
-> If the download fails, FileFlow automatically falls back to your system Chrome or Edge installation.
+> If the download fails, FileFlowOne automatically falls back to your system Chrome or Edge installation.
 
 ### 2. Start the development server
 
@@ -198,7 +198,7 @@ No environment variables are required. All conversions run entirely on the local
 
 ### Puppeteer / Chrome
 
-FileFlow finds a browser in this order:
+FileFlowOne finds a browser in this order:
 
 1. Puppeteer's bundled Chromium (downloaded on `npm install`)
 2. System Google Chrome — `C:\Program Files\Google\Chrome\Application\chrome.exe` (Windows)

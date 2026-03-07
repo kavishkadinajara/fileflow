@@ -31,7 +31,7 @@ export function Header() {
           {/* Brand name */}
           <div className="flex flex-col leading-none gap-0.5">
             <span className="font-display font-bold text-xl tracking-tight text-gradient">
-              FileFlow
+              FileFlowOne
             </span>
             <span className="text-[10px] text-muted-foreground hidden sm:block tracking-wide leading-none">
               Universal File Converter

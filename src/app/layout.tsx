@@ -12,7 +12,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "FileFlow — Universal File Converter",
+  title: "FileFlowOne — Universal File Converter",
   description:
     "Convert Markdown, Mermaid diagrams, HTML, DOCX, PDF, JSON, YAML, CSV, SQL, and images — all locally. No uploads, no API keys.",
   keywords: ["file converter", "mermaid to pdf", "markdown to docx", "html to pdf", "json to csv", "sql dialect converter"],
@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <footer className="border-t border-border/50 py-6 mt-8">
               <div className="container max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-foreground/70">FileFlow</span>
+                  <span className="font-semibold text-foreground/70">FileFlowOne</span>
                   <span>·</span>
                   <span>Open-source universal file converter</span>
                 </div>

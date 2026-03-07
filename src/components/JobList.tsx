@@ -3,8 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
 import { FORMAT_META } from "@/lib/formats";
+import { cn } from "@/lib/utils";
 import { useConversionStore } from "@/store/conversionStore";
 import type { ConversionJob } from "@/types";
 import { AlertCircle, CheckCircle2, Download, Loader2, X } from "lucide-react";

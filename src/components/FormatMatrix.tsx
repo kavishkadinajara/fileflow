@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { FORMAT_META, SUPPORTED_CONVERSIONS } from "@/lib/formats";
+import { cn } from "@/lib/utils";
 
 type CategoryKey = "document" | "diagram" | "data" | "sql" | "image";
 

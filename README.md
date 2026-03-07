@@ -87,7 +87,7 @@ Conversions cover: data type mapping, identity/serial/auto-increment, quoting st
 ### 1. Clone & install
 
 ```bash
-git clone https://github.com/your-username/fileflow.git
+git clone https://github.com/kavishkadinajara/fileflow.git
 cd fileflow
 npm install
 ```

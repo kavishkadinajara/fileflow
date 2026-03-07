@@ -49,7 +49,7 @@ export function Header() {
         <div className="flex items-center gap-1.5">
           {/* GitHub link */}
           <a
-            href="https://github.com"
+            href="https://github.com/kavishkadinajara/fileflow"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"

@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <div className="flex items-center gap-4">
                   <span>MIT License · 2026</span>
                   <a
-                    href="https://github.com"
+                    href="https://github.com/kavishkadinajara/fileflow"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-foreground transition-colors"

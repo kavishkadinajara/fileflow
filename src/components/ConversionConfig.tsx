@@ -13,7 +13,7 @@ import { FORMAT_META, formatBytes, getSupportedOutputs } from "@/lib/formats";
 import { useConversionStore } from "@/store/conversionStore";
 import type { ConvertOptions, DropzoneFile, FileFormat } from "@/types";
 import { ArrowRight, Settings2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   document: "Documents",
@@ -36,7 +36,28 @@ export function ConversionConfig({ droppedFile, onRemove }: ConversionConfigProp
   const [showOptions, setShowOptions] = useState(false);
 
   const addJob = useConversionStore((s) => s.addJob);
+  const setActiveFile = useConversionStore((s) => s.setActiveFile);
   const supportedOutputs = getSupportedOutputs(fromFormat);
+
+  // Read text content and set as active file context for AI chat
+  useEffect(() => {
+    const textFormats = ["md", "html", "txt", "json", "yaml", "csv", "mermaid", "mssql", "mysql", "pgsql", "svg"];
+    if (textFormats.includes(fromFormat)) {
+      file.text().then((content) => {
+        setActiveFile({
+          fileName: file.name,
+          fileFormat: fromFormat,
+          content,
+          file,
+          toFormat: (toFormat || undefined) as FileFormat | undefined,
+        });
+      }).catch(() => { /* binary file – skip */ });
+    }
+    return () => {
+      // Clear active file when this config is removed
+      setActiveFile(null);
+    };
+  }, [file, fromFormat, toFormat, setActiveFile]);
 
   const handleConvert = () => {
     if (!toFormat) return;

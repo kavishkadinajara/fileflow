@@ -1,3 +1,4 @@
+import { AiChat } from "@/components/AiChat";
 import { Header } from "@/components/Header";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="relative flex min-h-screen flex-col">
             <Header />
             <main className="flex-1 animate-fade-in">{children}</main>
+            <AiChat />
             <footer className="border-t border-border/50 py-6 mt-8">
               <div className="container max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">

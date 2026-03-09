@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "src/app/api/convert/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/ai-modify/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}

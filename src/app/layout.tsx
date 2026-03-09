@@ -1,5 +1,6 @@
 import { AiChat } from "@/components/AiChat";
 import { Header } from "@/components/Header";
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </footer>
           </div>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );

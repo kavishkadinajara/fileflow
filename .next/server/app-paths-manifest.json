@@ -1,6 +1,12 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/convert/route": "app/api/convert/route.js",
   "/page": "app/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/api/ai-modify/route": "app/api/ai-modify/route.js",
   "/api/chat/route": "app/api/chat/route.js",
-  "/api/convert/route": "app/api/convert/route.js"
+  "/api/ai-tools/route": "app/api/ai-tools/route.js",
+  "/terms/page": "app/terms/page.js",
+  "/privacy/page": "app/privacy/page.js",
+  "/guide/page": "app/guide/page.js"
 }

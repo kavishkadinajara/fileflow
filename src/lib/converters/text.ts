@@ -2,36 +2,38 @@
  * Markdown ↔ HTML / PDF / DOCX / TXT converters (server-side)
  * Supports embedded Mermaid diagram blocks (```mermaid ... ```)
  */
+import { configureMarked } from "@/lib/marked-config";
 import {
-  AlignmentType,
-  BorderStyle,
-  Document,
-  Footer,
-  Header,
-  HeadingLevel,
-  ImageRun,
-  NumberFormat,
-  Packer,
-  PageBreak,
-  PageNumber,
-  Paragraph,
-  ShadingType,
-  StyleLevel,
-  Table,
-  TableCell,
-  TableOfContents,
-  TableRow,
-  TextRun,
-  WidthType,
-  type ISectionOptions,
-  type IStylesOptions
+    AlignmentType,
+    BorderStyle,
+    Document,
+    Footer,
+    Header,
+    HeadingLevel,
+    ImageRun,
+    NumberFormat,
+    Packer,
+    PageBreak,
+    PageNumber,
+    Paragraph,
+    ShadingType,
+    StyleLevel,
+    Table,
+    TableCell,
+    TableOfContents,
+    TableRow,
+    TextRun,
+    WidthType,
+    type ISectionOptions,
+    type IStylesOptions
 } from "docx";
-import hljs from "highlight.js";
 import { marked } from "marked";
-import { markedHighlight } from "marked-highlight";
 import { mermaidToPng } from "./mermaid";
 
 const MERMAID_CDN = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
+
+// Configure marked with syntax highlighting + emoji support
+configureMarked();
 
 // ─── Helpers: Extract mermaid blocks from markdown ───────────────────────────
 
@@ -64,17 +66,6 @@ function splitMermaidBlocks(markdown: string): MdSegment[] {
 
   return segments;
 }
-
-// Configure marked with syntax highlighting
-marked.use(
-  markedHighlight({
-    langPrefix: "hljs language-",
-    highlight(code, lang) {
-      const language = hljs.getLanguage(lang) ? lang : "plaintext";
-      return hljs.highlight(code, { language }).value;
-    },
-  })
-);
 
 // ─── MD → HTML (with Mermaid.js rendering) ──────────────────────────────────
 

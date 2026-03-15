@@ -15,7 +15,21 @@ export type FileFormat =
   | "svg"
   | "mssql"
   | "mysql"
-  | "pgsql";
+  | "pgsql"
+  // Audio
+  | "mp3"
+  | "wav"
+  | "ogg"
+  | "flac"
+  | "aac"
+  | "m4a"
+  // Video
+  | "mp4"
+  | "webm"
+  | "avi"
+  | "mov"
+  | "mkv"
+  | "gif";
 
 export interface FormatMeta {
   label: string;
@@ -23,7 +37,7 @@ export interface FormatMeta {
   extension: string;
   description: string;
   icon: string;
-  category: "document" | "data" | "image" | "diagram" | "sql";
+  category: "document" | "data" | "image" | "diagram" | "sql" | "audio" | "video";
 }
 
 export interface ConversionPair {
@@ -42,6 +56,8 @@ export interface ConversionJob {
   resultBlob?: Blob;
   error?: string;
   createdAt: Date;
+  sourceContent?: string;
+  options?: ConvertOptions;
 }
 
 export interface ConvertRequest {
@@ -71,6 +87,10 @@ export interface ConvertOptions {
   mermaidTheme?: "default" | "dark" | "forest" | "neutral";
   /** Markdown options */
   mdHighlightCode?: boolean;
+  /** Video compression options */
+  videoCrf?: number;                  // 18–51: lower = better quality, larger file
+  videoResolution?: "original" | "1080p" | "720p" | "480p" | "360p";
+  videoAudioBitrate?: "64k" | "128k" | "192k" | "256k";
 }
 
 export interface DropzoneFile {

@@ -2,8 +2,9 @@
 
 import { FORMAT_META, SUPPORTED_CONVERSIONS } from "@/lib/formats";
 import { cn } from "@/lib/utils";
+import type { FileFormat } from "@/types";
 
-type CategoryKey = "document" | "diagram" | "data" | "sql" | "image";
+type CategoryKey = "document" | "diagram" | "data" | "sql" | "image" | "audio" | "video";
 
 const CATEGORY_META: Record<CategoryKey, { icon: string; label: string; accent: string; badgeColor: string }> = {
   document: {
@@ -36,9 +37,33 @@ const CATEGORY_META: Record<CategoryKey, { icon: string; label: string; accent: 
     accent: "hover:border-pink-500/40",
     badgeColor: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
   },
+  audio: {
+    icon: "🎵",
+    label: "Audio",
+    accent: "hover:border-orange-500/40",
+    badgeColor: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
+  },
+  video: {
+    icon: "🎬",
+    label: "Video",
+    accent: "hover:border-purple-500/40",
+    badgeColor: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+  },
 };
 
-const CATEGORY_ORDER: CategoryKey[] = ["document", "diagram", "data", "sql", "image"];
+const CATEGORY_ORDER: CategoryKey[] = ["document", "diagram", "data", "sql", "image", "audio", "video"];
+
+const TEXT_FORMATS: FileFormat[] = [
+  "md", "html", "txt", "json", "yaml", "csv",
+  "mermaid", "mssql", "mysql", "pgsql", "svg",
+];
+
+function handleFormatClick(format: FileFormat) {
+  const tab: "text" | "upload" = TEXT_FORMATS.includes(format) ? "text" : "upload";
+  window.dispatchEvent(
+    new CustomEvent("fileflow:selectformat", { detail: { format, tab } })
+  );
+}
 
 export function FormatMatrix() {
   const formats = Object.entries(FORMAT_META);
@@ -49,7 +74,7 @@ export function FormatMatrix() {
   }, {});
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
       {CATEGORY_ORDER.map((cat, ci) => {
         const entries  = grouped[cat] ?? [];
         const meta     = CATEGORY_META[cat];
@@ -73,12 +98,13 @@ export function FormatMatrix() {
                 return (
                   <div
                     key={key}
-                    title={`${fmeta.label}: converts to ${outputCount} format${outputCount !== 1 ? "s" : ""}`}
+                    title={`${fmeta.label}: ${outputCount} output${outputCount !== 1 ? "s" : ""} · Click to use`}
                     className="inline-block"
                   >
                     <span
+                      onClick={() => handleFormatClick(key as FileFormat)}
                       className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border cursor-default transition-transform duration-150 hover:scale-105",
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border cursor-pointer transition-all duration-150 hover:scale-105 hover:shadow-sm active:scale-95",
                         meta.badgeColor
                       )}
                     >

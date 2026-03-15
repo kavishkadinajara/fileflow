@@ -2,8 +2,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { TEMPLATE_CATEGORIES, TEMPLATES, type Template } from "@/lib/templates";
+import { cn } from "@/lib/utils";
 import { BookOpen, X } from "lucide-react";
 import { useState } from "react";
 

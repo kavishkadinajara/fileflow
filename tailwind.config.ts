@@ -93,6 +93,10 @@ const config: Config = {
           from: { opacity: "0", transform: "translateX(-12px)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
+        "slide-left": {
+          from: { opacity: "0", transform: "translateX(12px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -103,6 +107,7 @@ const config: Config = {
         float: "float 3s ease-in-out infinite",
         shimmer: "shimmer 1.5s linear infinite",
         "slide-right": "slide-right 0.4s ease both",
+        "slide-left": "slide-left 0.4s ease both",
       },
     },
   },

@@ -1,52 +1,81 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
+import { BookOpen, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const NAV_LINKS = [
+  { href: "/guide", label: "Guide", icon: BookOpen },
+];
 
 export function Header() {
   const { setTheme, theme } = useTheme();
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="container flex h-16 max-w-screen-xl items-center justify-between">
         {/* ── Logo + Brand ── */}
         <div className="flex items-center gap-3">
-          {/* Animated logo mark */}
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center">
-            <div className="absolute inset-0 rounded-xl bg-gradient-brand animate-glow-pulse" />
-            <svg
-              className="relative z-10 h-5 w-5 text-white drop-shadow"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
-          </div>
-
-          {/* Brand name */}
-          <div className="flex flex-col leading-none gap-0.5">
-            <span className="font-display font-bold text-xl tracking-tight text-gradient">
-              FileFlowOne
-            </span>
-            <span className="text-[10px] text-muted-foreground hidden sm:block tracking-wide leading-none">
-              Universal File Converter
-            </span>
-          </div>
+          <Link href="/" className="flex items-center gap-3 group">
+            {/* Animated logo mark */}
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center">
+              <div className="absolute inset-0 rounded-xl bg-gradient-brand animate-glow-pulse" />
+              <svg
+                className="relative z-10 h-5 w-5 text-white drop-shadow"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+            </div>
+            <div className="flex flex-col leading-none gap-0.5">
+              <span className="font-display font-bold text-xl tracking-tight text-gradient">
+                FileFlowOne
+              </span>
+              <span className="text-[10px] text-muted-foreground hidden sm:block tracking-wide leading-none">
+                Universal File Converter
+              </span>
+            </div>
+          </Link>
 
           {/* Live badge */}
           <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-medium ml-1">
             <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-            30+ conversions
+            50+ conversions
           </div>
         </div>
 
+        {/* ── Centre nav ── */}
+        <nav className="hidden md:flex items-center gap-1">
+          {NAV_LINKS.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
+                ${pathname === href
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </Link>
+          ))}
+        </nav>
+
         {/* ── Right side ── */}
         <div className="flex items-center gap-1.5">
+          {/* Mobile guide link */}
+          <Link
+            href="/guide"
+            className="md:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+          </Link>
+
           {/* GitHub link */}
           <a
             href="https://github.com/kavishkadinajara/fileflow"
@@ -62,8 +91,7 @@ export function Header() {
 
           {/* Theme toggle */}
           <Button
-            variant="ghost"
-            size="icon"
+            variant="ghost" size="icon"
             className="h-9 w-9 rounded-lg"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             aria-label="Toggle theme"

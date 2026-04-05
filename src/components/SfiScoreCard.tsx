@@ -297,7 +297,6 @@ export function SfiScoreCard({ job, sourceFile }: SfiScoreCardProps) {
         const res = await fetch("/api/slm-score", { method: "POST", body: form });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          // Surface the full backend detail so it's visible in the UI
           throw new Error(body.detail ?? body.error ?? `Server error ${res.status}`);
         }
         setResult(await res.json());

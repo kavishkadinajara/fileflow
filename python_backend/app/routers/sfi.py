@@ -54,7 +54,7 @@ def _extract_docx(data: bytes) -> tuple[str, dict[str, int]]:
     headings = tables = lists = links = 0
 
     for para in doc.paragraphs:
-        style_name = (para.style.name or "").lower()
+        style_name = (para.style.name if para.style and para.style.name else "").lower()
         text = para.text.strip()
         if text:
             text_parts.append(text)

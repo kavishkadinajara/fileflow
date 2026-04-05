@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Q1 2026 Product &amp; Engineering Report</title>
+</head>
+<body>
+
+<h1>Q1 2026 Product &amp; Engineering Report</h1>
+<p><strong>Prepared by:</strong> Product &amp; Engineering Leadership<br>
+<strong>Period:</strong> January 1 – March 31, 2026<br>
+<strong>Distribution:</strong> Executive Team, Board of Directors</p>
+
+<hr>
+
+<h2>Executive Summary</h2>
+<p>The first quarter of 2026 delivered strong execution across all three product pillars. FileFlowOne reached 42,000 monthly active users, a 34% increase quarter-over-quarter. The launch of the Semantic Fidelity Index (SFI) feature in March generated significant media coverage and drove a 22% uptick in Pro tier subscriptions. Engineering velocity improved by 18% following the adoption of the new CI/CD pipeline.</p>
+
+<p>Key highlights:</p>
+<ul>
+  <li>Achieved 99.97% API uptime, exceeding the 99.9% SLA commitment</li>
+  <li>Reduced median conversion latency from 1,840 ms to 920 ms (50% improvement)</li>
+  <li>Onboarded 3 enterprise customers representing $480K ARR</li>
+  <li>Shipped 6 major features and resolved 47 user-reported bugs</li>
+</ul>
+
+<hr>
+
+<h2>Product Metrics</h2>
+
+<h3>User Growth</h3>
+<table>
+  <thead>
+    <tr><th>Metric</th><th>Q4 2025</th><th>Q1 2026</th><th>Change</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Monthly Active Users</td><td>31,300</td><td>42,000</td><td>+34.2%</td></tr>
+    <tr><td>Weekly Active Users</td><td>18,700</td><td>26,100</td><td>+39.6%</td></tr>
+    <tr><td>Daily Active Users</td><td>6,400</td><td>9,200</td><td>+43.8%</td></tr>
+    <tr><td>New Registrations</td><td>8,900</td><td>13,400</td><td>+50.6%</td></tr>
+    <tr><td>Churn Rate (monthly)</td><td>4.1%</td><td>3.2%</td><td>−0.9 pp</td></tr>
+  </tbody>
+</table>
+
+<h3>Conversion Volume</h3>
+<table>
+  <thead>
+    <tr><th>Format Pair</th><th>Q4 2025</th><th>Q1 2026</th><th>Change</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>MD → HTML</td><td>1,240,000</td><td>1,780,000</td><td>+43.5%</td></tr>
+    <tr><td>MD → DOCX</td><td>890,000</td><td>1,340,000</td><td>+50.6%</td></tr>
+    <tr><td>MD → PDF</td><td>1,120,000</td><td>1,690,000</td><td>+50.9%</td></tr>
+    <tr><td>DOCX → PDF</td><td>670,000</td><td>1,020,000</td><td>+52.2%</td></tr>
+    <tr><td>PDF → MD</td><td>340,000</td><td>580,000</td><td>+70.6%</td></tr>
+    <tr><td>Other pairs</td><td>410,000</td><td>720,000</td><td>+75.6%</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>4,670,000</strong></td><td><strong>7,130,000</strong></td><td><strong>+52.7%</strong></td></tr>
+  </tbody>
+</table>
+
+<h3>Revenue</h3>
+<table>
+  <thead>
+    <tr><th>Tier</th><th>Q4 2025 MRR</th><th>Q1 2026 MRR</th><th>Change</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Free</td><td>$0</td><td>$0</td><td>—</td></tr>
+    <tr><td>Pro</td><td>$68,400</td><td>$83,500</td><td>+22.1%</td></tr>
+    <tr><td>Enterprise</td><td>$28,000</td><td>$68,000</td><td>+142.9%</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>$96,400</strong></td><td><strong>$151,500</strong></td><td><strong>+57.2%</strong></td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>Feature Launches</h2>
+
+<h3>January 2026</h3>
+<p><strong>SQL Dialect Conversion Improvements</strong><br>
+Enhanced the MSSQL ↔ MySQL ↔ PostgreSQL conversion engine with support for 34 additional function mappings and improved handling of window functions. Customer-reported accuracy improved from 78% to 94%.</p>
+
+<p><strong>Batch Processing Parallelization</strong><br>
+Rewrote the batch conversion pipeline to process files concurrently rather than sequentially. Throughput for 10-file batches improved by 6.2×.</p>
+
+<h3>February 2026</h3>
+<p><strong>AI Modification Panel</strong><br>
+Launched the AI Modify feature allowing users to apply natural language instructions to converted documents (e.g., "Translate to Spanish", "Summarize to 3 bullet points"). Powered by Groq LLaMA 3.3 70B. Achieved 91% user satisfaction in post-launch survey.</p>
+
+<p><strong>Dark Mode Polish Pass</strong><br>
+Addressed 23 contrast and readability issues in dark mode across the conversion config, job list, and output preview panels.</p>
+
+<h3>March 2026</h3>
+<p><strong>Semantic Fidelity Index (SFI)</strong><br>
+Launched the flagship quality metric for converted documents. SFI combines structural, semantic, and functional dimensions into a single A–F grade displayed on every completed conversion job. The feature was covered by The Practical Dev, Hacker News (342 points), and three developer newsletters. Drove the single largest weekly new-user spike in company history (+2,100 registrations in 7 days).</p>
+
+<p><strong>Round-Trip Scoring</strong><br>
+Extended SFI with round-trip chain scoring, allowing users to measure cumulative fidelity loss across A→B→A conversion chains. Used internally for benchmark regression testing.</p>
+
+<hr>
+
+<h2>Engineering Metrics</h2>
+
+<h3>Reliability</h3>
+<table>
+  <thead>
+    <tr><th>Metric</th><th>Q4 2025</th><th>Q1 2026</th><th>Target</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>API Uptime</td><td>99.91%</td><td>99.97%</td><td>99.90%</td></tr>
+    <tr><td>P50 Conversion Latency</td><td>1,840ms</td><td>920ms</td><td>&lt; 1,500ms</td></tr>
+    <tr><td>P95 Conversion Latency</td><td>8,200ms</td><td>3,100ms</td><td>&lt; 5,000ms</td></tr>
+    <tr><td>Error Rate</td><td>0.42%</td><td>0.19%</td><td>&lt; 0.50%</td></tr>
+    <tr><td>Mean Time to Recovery</td><td>18 min</td><td>6 min</td><td>&lt; 30 min</td></tr>
+  </tbody>
+</table>
+
+<h3>Delivery</h3>
+<table>
+  <thead>
+    <tr><th>Metric</th><th>Q4 2025</th><th>Q1 2026</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Story Points Delivered</td><td>234</td><td>276</td></tr>
+    <tr><td>Sprint Velocity</td><td>39 pts</td><td>46 pts</td></tr>
+    <tr><td>Bugs Opened</td><td>74</td><td>52</td></tr>
+    <tr><td>Bugs Resolved</td><td>61</td><td>47 (+ 26 backlog)</td></tr>
+    <tr><td>PRs Merged</td><td>87</td><td>104</td></tr>
+    <tr><td>Code Review Turnaround</td><td>2.1 days</td><td>1.3 days</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>Incidents</h2>
+
+<h3>INC-2026-001 — Puppeteer Memory Leak (Jan 14)</h3>
+<p><strong>Severity:</strong> P2 | <strong>Duration:</strong> 47 minutes | <strong>Users Affected:</strong> ~1,200</p>
+<p>A memory leak in the Puppeteer browser pool caused OOM crashes on the conversion server, degrading PDF and PNG output availability. Root cause was missing browser process cleanup on conversion timeout. Fix: added explicit <code>browser.close()</code> call in the finally block of the converter. Post-incident review completed; added memory headroom alerting at 75% threshold.</p>
+
+<h3>INC-2026-002 — SFI Backend Cold Start (Mar 8)</h3>
+<p><strong>Severity:</strong> P3 | <strong>Duration:</strong> 12 minutes | <strong>Users Affected:</strong> ~300</p>
+<p>Python backend restarted after deployment and the sentence-transformer model (all-MiniLM-L6-v2, 80 MB) required a warm-up period before the first scoring request could be served. Subsequent requests to /api/slm-score timed out during warm-up. Fix: added a startup probe that pre-loads the model on server init, eliminating cold-start latency.</p>
+
+<hr>
+
+<h2>Q2 2026 Priorities</h2>
+<ol>
+  <li><strong>ConvertBench public dataset</strong> — Release the 500-document benchmark corpus as open data to establish FileFlowOne SFI as an industry standard</li>
+  <li><strong>PPTX support</strong> — PowerPoint input/output, highest-voted feature request (834 votes)</li>
+  <li><strong>Self-hosted tier</strong> — Docker image for on-premises deployment targeting enterprise security requirements</li>
+  <li><strong>Mobile PWA</strong> — Responsive redesign for mobile conversion workflows</li>
+  <li><strong>Webhook callbacks</strong> — Async conversion with callback URL for large-file workflows</li>
+</ol>
+
+</body>
+</html>

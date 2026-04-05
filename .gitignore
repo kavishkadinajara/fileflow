@@ -13,6 +13,14 @@ python_backend/app/routers/__pycache__
 **/__pycache__
 *.pyc
 
+# Generated binary fixtures (regenerate with scripts/generate_fixtures.py)
+fixtures/*.docx
+fixtures/*.pdf
+
+# Benchmark output
+benchmark_results.csv
+results/
+
 # Docs that shouldn't be in the repo
 IMPLEMENTATION_SUMMARY.md
 PR_DESCRIPTION_v0.2.0.md

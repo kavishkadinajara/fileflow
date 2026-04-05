@@ -3,3 +3,17 @@ node_modules
 .env
 .env.local
 .env*.local
+tsconfig.tsbuildinfo
+
+# Python backend
+python_backend/.venv
+python_backend/__pycache__
+python_backend/app/__pycache__
+python_backend/app/routers/__pycache__
+**/__pycache__
+*.pyc
+
+# Docs that shouldn't be in the repo
+IMPLEMENTATION_SUMMARY.md
+PR_DESCRIPTION_v0.2.0.md
+RELEASE_NOTES_v0.2.0.md

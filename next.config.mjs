@@ -19,6 +19,7 @@ const nextConfig = {
       'sharp',
       'docx',
       'mammoth',
+      'pdf-parse',
     ],
   },
 };

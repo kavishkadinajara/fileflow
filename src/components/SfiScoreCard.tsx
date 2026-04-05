@@ -9,6 +9,7 @@
  *  - Expandable raw-details table kept below the radar.
  */
 
+import { RoundTripScore, supportsRoundTrip } from "@/components/RoundTripScore";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { ConversionJob } from "@/types";
@@ -336,6 +337,12 @@ export function SfiScoreCard({ job, sourceFile }: SfiScoreCardProps) {
   // ── Result card ───────────────────────────────────────────────────────────
   const { sfi_score, grade, breakdown, processing_time_ms } = result;
 
+  const WARNING_MSGS: Record<string, string> = {
+    C: "Fair fidelity — some semantic content may have been lost in conversion.",
+    D: "Poor fidelity — significant semantic content was lost. Consider reviewing the output.",
+    F: "Very poor fidelity — the converted file may be missing critical content from the original.",
+  };
+
   const radarPoints = [
     { label: "Structural", value: breakdown.structural.score, color: "rgb(59,130,246)"  },
     { label: "Semantic",   value: breakdown.semantic.score,   color: "rgb(139,92,246)"  },
@@ -361,6 +368,19 @@ export function SfiScoreCard({ job, sourceFile }: SfiScoreCardProps) {
             : <ChevronDown className="h-3 w-3" />}
         </button>
       </div>
+
+      {/* Grade C/D/F warning banner */}
+      {WARNING_MSGS[grade] && (
+        <div className={cn(
+          "flex items-start gap-1.5 rounded-md px-2.5 py-1.5 text-[10px]",
+          grade === "C" && "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border border-yellow-500/20",
+          grade === "D" && "bg-orange-500/10 text-orange-700 dark:text-orange-400 border border-orange-500/20",
+          grade === "F" && "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20",
+        )}>
+          <span className="shrink-0 mt-0.5">⚠</span>
+          <span>{WARNING_MSGS[grade]}</span>
+        </div>
+      )}
 
       {/* Radar + grade (always visible) */}
       <div className="flex items-center gap-3">
@@ -418,6 +438,16 @@ export function SfiScoreCard({ job, sourceFile }: SfiScoreCardProps) {
           <DimensionDetails label="Structural" dim={breakdown.structural} dotColor="rgb(59,130,246)"  />
           <DimensionDetails label="Semantic"   dim={breakdown.semantic}   dotColor="rgb(139,92,246)"  />
           <DimensionDetails label="Functional" dim={breakdown.functional} dotColor="rgb(16,185,129)"  />
+
+          {/* Round-trip chain scoring */}
+          {sourceFile && supportsRoundTrip(job.fromFormat, job.toFormat) && (
+            <RoundTripScore
+              sourceBlob={sourceFile}
+              sourceName={sourceFile.name}
+              fromFormat={job.fromFormat}
+              toFormat={job.toFormat}
+            />
+          )}
         </div>
       )}
     </div>

@@ -263,20 +263,31 @@ export function SfiScoreCard({ job, sourceFile }: SfiScoreCardProps) {
         const EXT: Record<string, string> = {
           md: "md", html: "html", docx: "docx", pdf: "pdf", txt: "txt",
         };
-        const srcExt      = EXT[job.fromFormat] ?? "txt";
-        const convertedExt = EXT[job.toFormat]  ?? "txt";
+        const MIME: Record<string, string> = {
+          md:   "text/plain",
+          html: "text/html",
+          docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          pdf:  "application/pdf",
+          txt:  "text/plain",
+        };
+
+        const srcExt       = EXT[job.fromFormat]  ?? "txt";
+        const convertedExt = EXT[job.toFormat]    ?? "txt";
+        const srcMime      = MIME[job.fromFormat]  ?? "text/plain";
+        const convertedMime = MIME[job.toFormat]   ?? "text/plain";
 
         // Ensure the original file has the right extension (text-editor jobs
         // may have been created with a generic fileName like "file.txt").
         const srcName = sourceFile!.name.includes(".")
           ? sourceFile!.name.replace(/\.[^.]+$/, `.${srcExt}`)
           : `source.${srcExt}`;
-        const srcFile = new File([sourceFile!], srcName, { type: sourceFile!.type });
+        // Always set explicit MIME — browsers may report "" for .docx uploads
+        const srcFile = new File([sourceFile!], srcName, { type: srcMime });
 
         const convertedFile = new File(
           [job.resultBlob!],
           `converted.${convertedExt}`,
-          { type: job.resultBlob!.type },
+          { type: convertedMime },
         );
 
         const form = new FormData();
@@ -286,7 +297,8 @@ export function SfiScoreCard({ job, sourceFile }: SfiScoreCardProps) {
         const res = await fetch("/api/slm-score", { method: "POST", body: form });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          throw new Error(body.error ?? `Server error ${res.status}`);
+          // Surface the full backend detail so it's visible in the UI
+          throw new Error(body.detail ?? body.error ?? `Server error ${res.status}`);
         }
         setResult(await res.json());
       } catch (err) {

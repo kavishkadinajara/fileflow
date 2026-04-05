@@ -366,7 +366,12 @@ async def slm_score(
         src_text, src_elements = extract(src_data, src_fmt)
         tgt_text, tgt_elements = extract(tgt_data, tgt_fmt)
     except Exception as exc:
-        raise HTTPException(status_code=422, detail=f"Extraction failed ({src_fmt}→{tgt_fmt}): {exc}") from exc
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=422,
+            detail=f"Extraction failed ({src_fmt}→{tgt_fmt}): {type(exc).__name__}: {exc}",
+        ) from exc
 
     if not src_text.strip():
         raise HTTPException(status_code=422, detail=f"Could not extract text from source file ({src_fmt}).")

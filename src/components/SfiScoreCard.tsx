@@ -259,11 +259,19 @@ export function SfiScoreCard({ job, sourceFile }: SfiScoreCardProps) {
     async function run() {
       setLoading(true);
       try {
-        const convertedExt =
-          job.toFormat === "md"   ? "md"   :
-          job.toFormat === "html" ? "html" :
-          job.toFormat === "docx" ? "docx" :
-          job.toFormat === "pdf"  ? "pdf"  : "txt";
+        // Always use explicit extensions so the Python backend detects formats correctly.
+        const EXT: Record<string, string> = {
+          md: "md", html: "html", docx: "docx", pdf: "pdf", txt: "txt",
+        };
+        const srcExt      = EXT[job.fromFormat] ?? "txt";
+        const convertedExt = EXT[job.toFormat]  ?? "txt";
+
+        // Ensure the original file has the right extension (text-editor jobs
+        // may have been created with a generic fileName like "file.txt").
+        const srcName = sourceFile!.name.includes(".")
+          ? sourceFile!.name.replace(/\.[^.]+$/, `.${srcExt}`)
+          : `source.${srcExt}`;
+        const srcFile = new File([sourceFile!], srcName, { type: sourceFile!.type });
 
         const convertedFile = new File(
           [job.resultBlob!],
@@ -272,7 +280,7 @@ export function SfiScoreCard({ job, sourceFile }: SfiScoreCardProps) {
         );
 
         const form = new FormData();
-        form.append("original_file",  sourceFile!,   sourceFile!.name);
+        form.append("original_file",  srcFile,       srcFile.name);
         form.append("converted_file", convertedFile, convertedFile.name);
 
         const res = await fetch("/api/slm-score", { method: "POST", body: form });

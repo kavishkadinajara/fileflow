@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Building a Type-Safe File Converter in TypeScript</title>
+  <style>
+    @page { size: A4; margin: 25mm 20mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Calibri, 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 100%; margin: 0 auto; padding: 0 20px; line-height: 1.7; color: #1F2937; font-size: 11pt; }
+    /* Cover page */
+    .cover-page { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; text-align: center; }
+    .cover-title { font-size: 28pt; font-weight: bold; color: #1F2937; margin-bottom: 16px; }
+    .cover-line { color: #9CA3AF; font-size: 10pt; margin-bottom: 12px; }
+    .cover-date { font-size: 11pt; color: #6B7280; }
+    /* TOC */
+    .toc { page-break-after: always; }
+    .toc-title { font-size: 18pt; color: #1F2937; border-bottom: 2px solid #3B82F6; padding-bottom: 8px; margin-bottom: 16px; }
+    .toc ul { list-style: none; padding: 0; }
+    .toc li { padding: 4px 0; font-size: 10.5pt; }
+    .toc a { color: #3B82F6; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    /* Headings */
+    h1 { font-size: 22pt; color: #111827; page-break-before: always; border-bottom: 3px solid #3B82F6; padding-bottom: 8px; margin-top: 0; }
+    h1:first-of-type { page-break-before: avoid; }
+    h2 { font-size: 17pt; color: #1F2937; page-break-before: always; border-bottom: 2px solid #D1D5DB; padding-bottom: 6px; }
+    h3 { font-size: 14pt; color: #374151; margin-top: 24px; }
+    h4 { font-size: 12pt; color: #4B5563; }
+    h5, h6 { font-size: 11pt; color: #6B7280; }
+    /* Code */
+    pre { background: #F3F4F6; border-radius: 6px; padding: 16px; overflow-x: auto; border-left: 4px solid #3B82F6; font-size: 9.5pt; page-break-inside: avoid; }
+    code { background: #F3F4F6; padding: 2px 5px; border-radius: 3px; font-size: 0.9em; font-family: Consolas, 'Courier New', monospace; }
+    pre code { background: none; padding: 0; }
+    /* Blockquote */
+    blockquote { border-left: 4px solid #3B82F6; margin: 16px 0; padding: 12px 16px; color: #6B7280; background: #EFF6FF; border-radius: 0 6px 6px 0; font-style: italic; }
+    /* Table */
+    table { border-collapse: collapse; width: 100%; page-break-inside: avoid; margin: 16px 0; }
+    th { background: #374151; color: #FFFFFF; padding: 10px 12px; text-align: left; font-size: 10pt; }
+    td { border: 1px solid #D1D5DB; padding: 8px 12px; font-size: 10pt; }
+    tr:nth-child(even) { background: #F9FAFB; }
+    img { max-width: 100%; }
+    a { color: #3B82F6; }
+    .mermaid { display: flex; justify-content: center; margin: 24px 0; page-break-inside: avoid; }
+    .mermaid svg { max-width: 100%; height: auto; }
+    /* Prevent orphans/widows */
+    p, li { orphans: 3; widows: 3; }
+    h1, h2, h3, h4, h5, h6 { page-break-after: avoid; }
+  </style>
+  
+</head>
+<body>
+<div class="cover-page">
+    <div class="cover-title">Building a Type-Safe File Converter in TypeScript</div>
+    <div class="cover-line">─────────────────────────────────────────</div>
+    <div class="cover-date">April 5, 2026</div>
+  </div>
+  <div style="page-break-after:always;"></div>
+<div class="toc"><h2 class="toc-title">Table of Contents</h2><ul><li style="margin-left:0px;"><a href="#building-a-type-safe-file-converter-in-typescript">Building a Type-Safe File Converter in TypeScript</a></li>
+<li style="margin-left:20px;"><a href="#prerequisites">Prerequisites</a></li>
+<li style="margin-left:20px;"><a href="#project-structure">Project Structure</a></li>
+<li style="margin-left:20px;"><a href="#step-1-define-the-type-system">Step 1: Define the Type System</a></li>
+<li style="margin-left:20px;"><a href="#step-2-build-the-format-registry">Step 2: Build the Format Registry</a></li>
+<li style="margin-left:20px;"><a href="#step-3-implement-the-markdown-converter">Step 3: Implement the Markdown Converter</a></li>
+<li style="margin-left:20px;"><a href="#step-4-add-zod-validation-to-the-api-route">Step 4: Add Zod Validation to the API Route</a></li>
+<li style="margin-left:20px;"><a href="#step-5-write-tests">Step 5: Write Tests</a></li>
+<li style="margin-left:20px;"><a href="#common-pitfalls">Common Pitfalls</a></li></ul></div><div style="page-break-after:always;"></div>
+<h1>Building a Type-Safe File Converter in TypeScript</h1>
+<p>This tutorial walks through building a robust file conversion module in TypeScript, covering input validation, format detection, stream processing, and error handling.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li>Node.js 20+</li>
+<li>TypeScript 5.3+</li>
+<li><code>npm install zod sharp mammoth</code></li>
+</ul>
+<h2>Project Structure</h2>
+<pre><code>src/
+  converters/
+    text.ts        ← Markdown ↔ HTML, DOCX, TXT
+    image.ts       ← PNG ↔ JPEG, SVG
+    docx.ts        ← DOCX extraction
+  lib/
+    formats.ts     ← Format registry
+    utils.ts       ← Shared helpers
+  types/
+    index.ts       ← Shared type definitions
+</code></pre><h2>Step 1: Define the Type System</h2>
+<p>Start with a discriminated union for all supported formats:</p>
+<pre><code class="hljs language-typescript"><span class="hljs-comment">// src/types/index.ts</span>
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">type</span> <span class="hljs-title class_">FileFormat</span> =
+  | <span class="hljs-string">&quot;md&quot;</span> | <span class="hljs-string">&quot;html&quot;</span> | <span class="hljs-string">&quot;docx&quot;</span> | <span class="hljs-string">&quot;pdf&quot;</span> | <span class="hljs-string">&quot;txt&quot;</span>
+  | <span class="hljs-string">&quot;png&quot;</span> | <span class="hljs-string">&quot;jpeg&quot;</span> | <span class="hljs-string">&quot;svg&quot;</span>
+  | <span class="hljs-string">&quot;json&quot;</span> | <span class="hljs-string">&quot;yaml&quot;</span> | <span class="hljs-string">&quot;csv&quot;</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">ConversionJob</span> {
+  <span class="hljs-attr">id</span>:         <span class="hljs-built_in">string</span>;
+  <span class="hljs-attr">fileName</span>:   <span class="hljs-built_in">string</span>;
+  <span class="hljs-attr">fromFormat</span>: <span class="hljs-title class_">FileFormat</span>;
+  <span class="hljs-attr">toFormat</span>:   <span class="hljs-title class_">FileFormat</span>;
+  <span class="hljs-attr">status</span>:     <span class="hljs-string">&quot;idle&quot;</span> | <span class="hljs-string">&quot;processing&quot;</span> | <span class="hljs-string">&quot;done&quot;</span> | <span class="hljs-string">&quot;error&quot;</span>;
+  <span class="hljs-attr">progress</span>:   <span class="hljs-built_in">number</span>;
+  <span class="hljs-attr">resultBlob</span>?: <span class="hljs-title class_">Blob</span>;
+  <span class="hljs-attr">error</span>?:     <span class="hljs-built_in">string</span>;
+  <span class="hljs-attr">createdAt</span>:  <span class="hljs-title class_">Date</span>;
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">ConvertRequest</span> {
+  <span class="hljs-attr">fileBase64</span>: <span class="hljs-built_in">string</span>;
+  <span class="hljs-attr">fileName</span>:   <span class="hljs-built_in">string</span>;
+  <span class="hljs-attr">fromFormat</span>: <span class="hljs-title class_">FileFormat</span>;
+  <span class="hljs-attr">toFormat</span>:   <span class="hljs-title class_">FileFormat</span>;
+  <span class="hljs-attr">options</span>?:   <span class="hljs-title class_">ConvertOptions</span>;
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">ConvertOptions</span> {
+  <span class="hljs-attr">pdfPageSize</span>?:    <span class="hljs-string">&quot;A4&quot;</span> | <span class="hljs-string">&quot;A3&quot;</span> | <span class="hljs-string">&quot;Letter&quot;</span> | <span class="hljs-string">&quot;Legal&quot;</span>;
+  <span class="hljs-attr">pdfOrientation</span>?: <span class="hljs-string">&quot;portrait&quot;</span> | <span class="hljs-string">&quot;landscape&quot;</span>;
+  <span class="hljs-attr">imageQuality</span>?:   <span class="hljs-built_in">number</span>;
+}
+</code></pre><h2>Step 2: Build the Format Registry</h2>
+<pre><code class="hljs language-typescript"><span class="hljs-comment">// src/lib/formats.ts</span>
+
+<span class="hljs-keyword">import</span> <span class="hljs-keyword">type</span> { <span class="hljs-title class_">FileFormat</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@/types&quot;</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-attr">SUPPORTED_CONVERSIONS</span>: { <span class="hljs-attr">from</span>: <span class="hljs-title class_">FileFormat</span>; <span class="hljs-attr">to</span>: <span class="hljs-title class_">FileFormat</span> }[] = [
+  { <span class="hljs-attr">from</span>: <span class="hljs-string">&quot;md&quot;</span>,   <span class="hljs-attr">to</span>: <span class="hljs-string">&quot;html&quot;</span>  },
+  { <span class="hljs-attr">from</span>: <span class="hljs-string">&quot;md&quot;</span>,   <span class="hljs-attr">to</span>: <span class="hljs-string">&quot;docx&quot;</span>  },
+  { <span class="hljs-attr">from</span>: <span class="hljs-string">&quot;md&quot;</span>,   <span class="hljs-attr">to</span>: <span class="hljs-string">&quot;pdf&quot;</span>   },
+  { <span class="hljs-attr">from</span>: <span class="hljs-string">&quot;md&quot;</span>,   <span class="hljs-attr">to</span>: <span class="hljs-string">&quot;txt&quot;</span>   },
+  { <span class="hljs-attr">from</span>: <span class="hljs-string">&quot;html&quot;</span>, <span class="hljs-attr">to</span>: <span class="hljs-string">&quot;md&quot;</span>    },
+  { <span class="hljs-attr">from</span>: <span class="hljs-string">&quot;html&quot;</span>, <span class="hljs-attr">to</span>: <span class="hljs-string">&quot;docx&quot;</span>  },
+  { <span class="hljs-attr">from</span>: <span class="hljs-string">&quot;html&quot;</span>, <span class="hljs-attr">to</span>: <span class="hljs-string">&quot;pdf&quot;</span>   },
+  { <span class="hljs-attr">from</span>: <span class="hljs-string">&quot;docx&quot;</span>, <span class="hljs-attr">to</span>: <span class="hljs-string">&quot;md&quot;</span>    },
+  { <span class="hljs-attr">from</span>: <span class="hljs-string">&quot;docx&quot;</span>, <span class="hljs-attr">to</span>: <span class="hljs-string">&quot;html&quot;</span>  },
+  { <span class="hljs-attr">from</span>: <span class="hljs-string">&quot;docx&quot;</span>, <span class="hljs-attr">to</span>: <span class="hljs-string">&quot;pdf&quot;</span>   },
+];
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">isConversionSupported</span>(<span class="hljs-params"><span class="hljs-attr">from</span>: <span class="hljs-title class_">FileFormat</span>, <span class="hljs-attr">to</span>: <span class="hljs-title class_">FileFormat</span></span>): <span class="hljs-built_in">boolean</span> {
+  <span class="hljs-keyword">return</span> <span class="hljs-variable constant_">SUPPORTED_CONVERSIONS</span>.<span class="hljs-title function_">some</span>(<span class="hljs-function">(<span class="hljs-params">p</span>) =&gt;</span> p.<span class="hljs-property">from</span> === <span class="hljs-keyword">from</span> &amp;&amp; p.<span class="hljs-property">to</span> === to);
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">getSupportedOutputs</span>(<span class="hljs-params"><span class="hljs-attr">from</span>: <span class="hljs-title class_">FileFormat</span></span>): <span class="hljs-title class_">FileFormat</span>[] {
+  <span class="hljs-keyword">return</span> <span class="hljs-variable constant_">SUPPORTED_CONVERSIONS</span>
+    .<span class="hljs-title function_">filter</span>(<span class="hljs-function">(<span class="hljs-params">p</span>) =&gt;</span> p.<span class="hljs-property">from</span> === <span class="hljs-keyword">from</span>)
+    .<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">p</span>) =&gt;</span> p.<span class="hljs-property">to</span>);
+}
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">detectTextFormat</span>(<span class="hljs-params"><span class="hljs-attr">text</span>: <span class="hljs-built_in">string</span></span>): <span class="hljs-title class_">FileFormat</span> {
+  <span class="hljs-keyword">const</span> trimmed = text.<span class="hljs-title function_">trim</span>();
+  <span class="hljs-keyword">if</span> (trimmed.<span class="hljs-title function_">startsWith</span>(<span class="hljs-string">&quot;&lt;!DOCTYPE&quot;</span>) || trimmed.<span class="hljs-title function_">startsWith</span>(<span class="hljs-string">&quot;&lt;html&quot;</span>)) <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;html&quot;</span>;
+  <span class="hljs-keyword">if</span> (<span class="hljs-regexp">/^#+\s/m</span>.<span class="hljs-title function_">test</span>(trimmed) || <span class="hljs-regexp">/^[-*]\s/m</span>.<span class="hljs-title function_">test</span>(trimmed)) <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;md&quot;</span>;
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;txt&quot;</span>;
+}
+</code></pre><h2>Step 3: Implement the Markdown Converter</h2>
+<pre><code class="hljs language-typescript"><span class="hljs-comment">// src/lib/converters/text.ts</span>
+
+<span class="hljs-keyword">import</span> { marked } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;marked&quot;</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">Document</span>, <span class="hljs-title class_">Packer</span>, <span class="hljs-title class_">Paragraph</span>, <span class="hljs-title class_">HeadingLevel</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;docx&quot;</span>;
+<span class="hljs-keyword">import</span> <span class="hljs-keyword">type</span> { <span class="hljs-title class_">FileFormat</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@/types&quot;</span>;
+
+<span class="hljs-comment">/** Markdown → HTML */</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">mdToHtml</span>(<span class="hljs-params"><span class="hljs-attr">md</span>: <span class="hljs-built_in">string</span></span>): <span class="hljs-title class_">Promise</span>&lt;<span class="hljs-built_in">string</span>&gt; {
+  <span class="hljs-keyword">const</span> html = <span class="hljs-keyword">await</span> marked.<span class="hljs-title function_">parse</span>(md);
+  <span class="hljs-keyword">return</span> <span class="hljs-string">`&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;&lt;meta charset=&quot;UTF-8&quot;&gt;&lt;title&gt;Converted&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;<span class="hljs-subst">${html}</span>&lt;/body&gt;
+&lt;/html&gt;`</span>;
+}
+
+<span class="hljs-comment">/** Markdown → plain text (strips all markdown syntax) */</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">mdToTxt</span>(<span class="hljs-params"><span class="hljs-attr">md</span>: <span class="hljs-built_in">string</span></span>): <span class="hljs-built_in">string</span> {
+  <span class="hljs-keyword">return</span> md
+    .<span class="hljs-title function_">replace</span>(<span class="hljs-regexp">/```[\s\S]*?```/g</span>, <span class="hljs-string">&quot;&quot;</span>)           <span class="hljs-comment">// code blocks</span>
+    .<span class="hljs-title function_">replace</span>(<span class="hljs-regexp">/`[^`]+`/g</span>, <span class="hljs-string">&quot;&quot;</span>)                  <span class="hljs-comment">// inline code</span>
+    .<span class="hljs-title function_">replace</span>(<span class="hljs-regexp">/^#{1,6}\s+/gm</span>, <span class="hljs-string">&quot;&quot;</span>)              <span class="hljs-comment">// headings</span>
+    .<span class="hljs-title function_">replace</span>(<span class="hljs-regexp">/[*_~&gt;|]/g</span>, <span class="hljs-string">&quot;&quot;</span>)                   <span class="hljs-comment">// formatting</span>
+    .<span class="hljs-title function_">replace</span>(<span class="hljs-regexp">/\[([^\]]+)\]\([^)]+\)/g</span>, <span class="hljs-string">&quot;$1&quot;</span>)  <span class="hljs-comment">// links → text</span>
+    .<span class="hljs-title function_">replace</span>(<span class="hljs-regexp">/\s+/g</span>, <span class="hljs-string">&quot; &quot;</span>)
+    .<span class="hljs-title function_">trim</span>();
+}
+
+<span class="hljs-comment">/** Markdown → DOCX buffer */</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">mdToDocx</span>(<span class="hljs-params"><span class="hljs-attr">md</span>: <span class="hljs-built_in">string</span></span>): <span class="hljs-title class_">Promise</span>&lt;<span class="hljs-title class_">Buffer</span>&gt; {
+  <span class="hljs-keyword">const</span> lines = md.<span class="hljs-title function_">split</span>(<span class="hljs-string">&quot;\n&quot;</span>);
+  <span class="hljs-keyword">const</span> <span class="hljs-attr">children</span>: <span class="hljs-title class_">Paragraph</span>[] = [];
+
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> line <span class="hljs-keyword">of</span> lines) {
+    <span class="hljs-keyword">const</span> h1 = line.<span class="hljs-title function_">match</span>(<span class="hljs-regexp">/^#\s+(.+)/</span>);
+    <span class="hljs-keyword">const</span> h2 = line.<span class="hljs-title function_">match</span>(<span class="hljs-regexp">/^##\s+(.+)/</span>);
+    <span class="hljs-keyword">const</span> h3 = line.<span class="hljs-title function_">match</span>(<span class="hljs-regexp">/^###\s+(.+)/</span>);
+    <span class="hljs-keyword">const</span> li = line.<span class="hljs-title function_">match</span>(<span class="hljs-regexp">/^[-*]\s+(.+)/</span>);
+
+    <span class="hljs-keyword">if</span> (h1) {
+      children.<span class="hljs-title function_">push</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Paragraph</span>({ <span class="hljs-attr">text</span>: h1[<span class="hljs-number">1</span>], <span class="hljs-attr">heading</span>: <span class="hljs-title class_">HeadingLevel</span>.<span class="hljs-property">HEADING_1</span> }));
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (h2) {
+      children.<span class="hljs-title function_">push</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Paragraph</span>({ <span class="hljs-attr">text</span>: h2[<span class="hljs-number">1</span>], <span class="hljs-attr">heading</span>: <span class="hljs-title class_">HeadingLevel</span>.<span class="hljs-property">HEADING_2</span> }));
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (h3) {
+      children.<span class="hljs-title function_">push</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Paragraph</span>({ <span class="hljs-attr">text</span>: h3[<span class="hljs-number">1</span>], <span class="hljs-attr">heading</span>: <span class="hljs-title class_">HeadingLevel</span>.<span class="hljs-property">HEADING_3</span> }));
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (li) {
+      children.<span class="hljs-title function_">push</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Paragraph</span>({ <span class="hljs-attr">text</span>: <span class="hljs-string">`• <span class="hljs-subst">${li[<span class="hljs-number">1</span>]}</span>`</span> }));
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (line.<span class="hljs-title function_">trim</span>()) {
+      children.<span class="hljs-title function_">push</span>(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Paragraph</span>({ <span class="hljs-attr">text</span>: line }));
+    }
+  }
+
+  <span class="hljs-keyword">const</span> doc = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Document</span>({ <span class="hljs-attr">sections</span>: [{ children }] });
+  <span class="hljs-keyword">return</span> <span class="hljs-title class_">Packer</span>.<span class="hljs-title function_">toBuffer</span>(doc);
+}
+</code></pre><h2>Step 4: Add Zod Validation to the API Route</h2>
+<pre><code class="hljs language-typescript"><span class="hljs-comment">// src/app/api/convert/route.ts</span>
+
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">NextRequest</span>, <span class="hljs-title class_">NextResponse</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;next/server&quot;</span>;
+<span class="hljs-keyword">import</span> { z } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;zod&quot;</span>;
+
+<span class="hljs-keyword">const</span> <span class="hljs-title class_">RequestSchema</span> = z.<span class="hljs-title function_">object</span>({
+  <span class="hljs-attr">fileBase64</span>: z.<span class="hljs-title function_">string</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>),
+  <span class="hljs-attr">fileName</span>:   z.<span class="hljs-title function_">string</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>).<span class="hljs-title function_">max</span>(<span class="hljs-number">255</span>),
+  <span class="hljs-attr">fromFormat</span>: z.<span class="hljs-title function_">enum</span>([<span class="hljs-string">&quot;md&quot;</span>, <span class="hljs-string">&quot;html&quot;</span>, <span class="hljs-string">&quot;docx&quot;</span>, <span class="hljs-string">&quot;pdf&quot;</span>, <span class="hljs-string">&quot;txt&quot;</span>, <span class="hljs-string">&quot;png&quot;</span>, <span class="hljs-string">&quot;jpeg&quot;</span>]),
+  <span class="hljs-attr">toFormat</span>:   z.<span class="hljs-title function_">enum</span>([<span class="hljs-string">&quot;md&quot;</span>, <span class="hljs-string">&quot;html&quot;</span>, <span class="hljs-string">&quot;docx&quot;</span>, <span class="hljs-string">&quot;pdf&quot;</span>, <span class="hljs-string">&quot;txt&quot;</span>, <span class="hljs-string">&quot;png&quot;</span>, <span class="hljs-string">&quot;jpeg&quot;</span>]),
+  <span class="hljs-attr">options</span>:    z.<span class="hljs-title function_">object</span>({
+    <span class="hljs-attr">pdfPageSize</span>:    z.<span class="hljs-title function_">enum</span>([<span class="hljs-string">&quot;A4&quot;</span>, <span class="hljs-string">&quot;A3&quot;</span>, <span class="hljs-string">&quot;Letter&quot;</span>, <span class="hljs-string">&quot;Legal&quot;</span>]).<span class="hljs-title function_">optional</span>(),
+    <span class="hljs-attr">pdfOrientation</span>: z.<span class="hljs-title function_">enum</span>([<span class="hljs-string">&quot;portrait&quot;</span>, <span class="hljs-string">&quot;landscape&quot;</span>]).<span class="hljs-title function_">optional</span>(),
+    <span class="hljs-attr">imageQuality</span>:   z.<span class="hljs-title function_">number</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>).<span class="hljs-title function_">max</span>(<span class="hljs-number">100</span>).<span class="hljs-title function_">optional</span>(),
+  }).<span class="hljs-title function_">optional</span>(),
+});
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">POST</span>(<span class="hljs-params"><span class="hljs-attr">req</span>: <span class="hljs-title class_">NextRequest</span></span>) {
+  <span class="hljs-keyword">const</span> body   = <span class="hljs-keyword">await</span> req.<span class="hljs-title function_">json</span>().<span class="hljs-title function_">catch</span>(<span class="hljs-function">() =&gt;</span> <span class="hljs-literal">null</span>);
+  <span class="hljs-keyword">const</span> parsed = <span class="hljs-title class_">RequestSchema</span>.<span class="hljs-title function_">safeParse</span>(body);
+
+  <span class="hljs-keyword">if</span> (!parsed.<span class="hljs-property">success</span>) {
+    <span class="hljs-keyword">return</span> <span class="hljs-title class_">NextResponse</span>.<span class="hljs-title function_">json</span>(
+      { <span class="hljs-attr">success</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">error</span>: parsed.<span class="hljs-property">error</span>.<span class="hljs-property">message</span> },
+      { <span class="hljs-attr">status</span>: <span class="hljs-number">400</span> },
+    );
+  }
+
+  <span class="hljs-keyword">const</span> { fileBase64, fileName, fromFormat, toFormat, options = {} } = parsed.<span class="hljs-property">data</span>;
+  <span class="hljs-keyword">const</span> fileBuffer = <span class="hljs-title class_">Buffer</span>.<span class="hljs-title function_">from</span>(fileBase64, <span class="hljs-string">&quot;base64&quot;</span>);
+
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">const</span> result = <span class="hljs-keyword">await</span> <span class="hljs-title function_">runConversion</span>(fileBuffer, fileName, fromFormat, toFormat, options);
+    <span class="hljs-keyword">return</span> <span class="hljs-title class_">NextResponse</span>.<span class="hljs-title function_">json</span>({ <span class="hljs-attr">success</span>: <span class="hljs-literal">true</span>, ...result });
+  } <span class="hljs-keyword">catch</span> (err) {
+    <span class="hljs-keyword">const</span> message = err <span class="hljs-keyword">instanceof</span> <span class="hljs-title class_">Error</span> ? err.<span class="hljs-property">message</span> : <span class="hljs-string">&quot;Conversion failed&quot;</span>;
+    <span class="hljs-keyword">return</span> <span class="hljs-title class_">NextResponse</span>.<span class="hljs-title function_">json</span>({ <span class="hljs-attr">success</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">error</span>: message }, { <span class="hljs-attr">status</span>: <span class="hljs-number">500</span> });
+  }
+}
+</code></pre><h2>Step 5: Write Tests</h2>
+<pre><code class="hljs language-typescript"><span class="hljs-comment">// src/lib/converters/__tests__/text.test.ts</span>
+
+<span class="hljs-keyword">import</span> { describe, it, expect } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;vitest&quot;</span>;
+<span class="hljs-keyword">import</span> { mdToTxt, detectTextFormat } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@/lib/formats&quot;</span>;
+<span class="hljs-keyword">import</span> { mdToHtml } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@/lib/converters/text&quot;</span>;
+
+<span class="hljs-title function_">describe</span>(<span class="hljs-string">&quot;mdToTxt&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&quot;strips headings&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-title function_">expect</span>(<span class="hljs-title function_">mdToTxt</span>(<span class="hljs-string">&quot;# Hello\nWorld&quot;</span>)).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&quot;Hello World&quot;</span>);
+  });
+
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&quot;strips links, keeps text&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-title function_">expect</span>(<span class="hljs-title function_">mdToTxt</span>(<span class="hljs-string">&quot;[click here](https://example.com)&quot;</span>)).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&quot;click here&quot;</span>);
+  });
+
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&quot;strips code blocks&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-title function_">expect</span>(<span class="hljs-title function_">mdToTxt</span>(<span class="hljs-string">&quot;```js\nconsole.log(&#x27;hi&#x27;)\n```&quot;</span>)).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&quot;&quot;</span>);
+  });
+});
+
+<span class="hljs-title function_">describe</span>(<span class="hljs-string">&quot;detectTextFormat&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&quot;detects HTML&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-title function_">expect</span>(<span class="hljs-title function_">detectTextFormat</span>(<span class="hljs-string">&quot;&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;/html&gt;&quot;</span>)).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&quot;html&quot;</span>);
+  });
+
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&quot;detects Markdown by heading&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-title function_">expect</span>(<span class="hljs-title function_">detectTextFormat</span>(<span class="hljs-string">&quot;# Title\nSome text&quot;</span>)).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&quot;md&quot;</span>);
+  });
+
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&quot;falls back to txt&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-title function_">expect</span>(<span class="hljs-title function_">detectTextFormat</span>(<span class="hljs-string">&quot;Just plain text&quot;</span>)).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&quot;txt&quot;</span>);
+  });
+});
+
+<span class="hljs-title function_">describe</span>(<span class="hljs-string">&quot;mdToHtml&quot;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&quot;wraps in html document&quot;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-keyword">const</span> html = <span class="hljs-keyword">await</span> <span class="hljs-title function_">mdToHtml</span>(<span class="hljs-string">&quot;# Hello&quot;</span>);
+    <span class="hljs-title function_">expect</span>(html).<span class="hljs-title function_">toContain</span>(<span class="hljs-string">&quot;&lt;!DOCTYPE html&gt;&quot;</span>);
+    <span class="hljs-title function_">expect</span>(html).<span class="hljs-title function_">toContain</span>(<span class="hljs-string">&quot;&lt;h1&gt;&quot;</span>);
+  });
+});
+</code></pre><h2>Common Pitfalls</h2>
+<ul>
+<li><strong>Buffer vs Uint8Array</strong>: When passing file data to <code>new Blob()</code>, always use <code>new Blob([new Uint8Array(buffer)])</code> rather than <code>new Blob([buffer])</code> to avoid TypeScript type errors.</li>
+<li><strong>MIME types</strong>: Always set explicit MIME types when creating <code>File</code> objects for multipart uploads — browsers may report <code>&quot;&quot;</code> for <code>.docx</code> files.</li>
+<li><strong>Puppeteer memory</strong>: Always call <code>browser.close()</code> in a <code>finally</code> block. Browser processes do not self-terminate on route handler exit.</li>
+<li><strong>React Strict Mode double-fire</strong>: Guard <code>useEffect</code> with a <code>useRef</code> flag when the effect must run exactly once (e.g., auto-triggering a network request on mount).</li>
+</ul>
+
+</body>
+</html>

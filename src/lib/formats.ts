@@ -123,6 +123,104 @@ export const FORMAT_META: Record<FileFormat, FormatMeta> = {
     icon: "Database",
     category: "sql",
   },
+  // ── Audio ───────────────────────────────────────────────────────────────────
+  mp3: {
+    label: "MP3",
+    mime: "audio/mpeg",
+    extension: ".mp3",
+    description: "MPEG Audio Layer III",
+    icon: "Music",
+    category: "audio",
+  },
+  wav: {
+    label: "WAV",
+    mime: "audio/wav",
+    extension: ".wav",
+    description: "Waveform Audio File",
+    icon: "Music2",
+    category: "audio",
+  },
+  ogg: {
+    label: "OGG",
+    mime: "audio/ogg",
+    extension: ".ogg",
+    description: "Ogg Vorbis Audio",
+    icon: "Volume2",
+    category: "audio",
+  },
+  flac: {
+    label: "FLAC",
+    mime: "audio/flac",
+    extension: ".flac",
+    description: "Free Lossless Audio",
+    icon: "AudioLines",
+    category: "audio",
+  },
+  aac: {
+    label: "AAC",
+    mime: "audio/aac",
+    extension: ".aac",
+    description: "Advanced Audio Coding",
+    icon: "Music",
+    category: "audio",
+  },
+  m4a: {
+    label: "M4A",
+    mime: "audio/mp4",
+    extension: ".m4a",
+    description: "MPEG-4 Audio",
+    icon: "Music",
+    category: "audio",
+  },
+  // ── Video ───────────────────────────────────────────────────────────────────
+  mp4: {
+    label: "MP4",
+    mime: "video/mp4",
+    extension: ".mp4",
+    description: "MPEG-4 Video",
+    icon: "Film",
+    category: "video",
+  },
+  webm: {
+    label: "WebM",
+    mime: "video/webm",
+    extension: ".webm",
+    description: "WebM Video",
+    icon: "Film",
+    category: "video",
+  },
+  avi: {
+    label: "AVI",
+    mime: "video/x-msvideo",
+    extension: ".avi",
+    description: "Audio Video Interleave",
+    icon: "Film",
+    category: "video",
+  },
+  mov: {
+    label: "MOV",
+    mime: "video/quicktime",
+    extension: ".mov",
+    description: "QuickTime Movie",
+    icon: "Film",
+    category: "video",
+  },
+  mkv: {
+    label: "MKV",
+    mime: "video/x-matroska",
+    extension: ".mkv",
+    description: "Matroska Video",
+    icon: "Film",
+    category: "video",
+  },
+  gif: {
+    label: "GIF",
+    mime: "image/gif",
+    extension: ".gif",
+    description: "Animated GIF",
+    icon: "Image",
+    category: "video",
+  },
 };
 
 // ─── Supported Conversion Matrix ────────────────────────────────────────────
@@ -145,6 +243,11 @@ export const SUPPORTED_CONVERSIONS: ConversionPair[] = [
   { from: "html", to: "docx" },
   { from: "html", to: "txt" },
   { from: "html", to: "png" },
+  // PDF →
+  { from: "pdf", to: "md"   },
+  { from: "pdf", to: "html" },
+  { from: "pdf", to: "txt"  },
+  { from: "pdf", to: "docx" },
   // DOCX →
   { from: "docx", to: "html" },
   { from: "docx", to: "md" },
@@ -178,6 +281,43 @@ export const SUPPORTED_CONVERSIONS: ConversionPair[] = [
   { from: "mysql", to: "pgsql" },
   { from: "pgsql", to: "mssql" },
   { from: "pgsql", to: "mysql" },
+  // ── Audio ↔ Audio ──────────────────────────────────────────────────────────
+  { from: "mp3",  to: "wav"  }, { from: "wav",  to: "mp3"  },
+  { from: "mp3",  to: "ogg"  }, { from: "ogg",  to: "mp3"  },
+  { from: "mp3",  to: "flac" }, { from: "flac", to: "mp3"  },
+  { from: "mp3",  to: "aac"  }, { from: "aac",  to: "mp3"  },
+  { from: "mp3",  to: "m4a"  }, { from: "m4a",  to: "mp3"  },
+  { from: "wav",  to: "ogg"  }, { from: "ogg",  to: "wav"  },
+  { from: "wav",  to: "flac" }, { from: "flac", to: "wav"  },
+  { from: "wav",  to: "aac"  }, { from: "aac",  to: "wav"  },
+  { from: "ogg",  to: "flac" }, { from: "flac", to: "ogg"  },
+  { from: "flac", to: "aac"  }, { from: "aac",  to: "flac" },
+  // ── Video ↔ Video ──────────────────────────────────────────────────────────
+  { from: "mp4",  to: "webm" }, { from: "webm", to: "mp4"  },
+  { from: "mp4",  to: "avi"  }, { from: "avi",  to: "mp4"  },
+  { from: "mp4",  to: "mov"  }, { from: "mov",  to: "mp4"  },
+  { from: "webm", to: "avi"  }, { from: "avi",  to: "webm" },
+  { from: "webm", to: "mov"  }, { from: "mov",  to: "webm" },
+  { from: "avi",  to: "mov"  }, { from: "mov",  to: "avi"  },
+  { from: "mkv",  to: "mp4"  },
+  { from: "mkv",  to: "webm" },
+  { from: "mkv",  to: "avi"  },
+  { from: "mkv",  to: "mov"  }, { from: "mov",  to: "mkv"  },
+  // ── Same-format compression (re-encode with quality/resolution options) ──────
+  { from: "mp4",  to: "mp4"  },
+  { from: "webm", to: "webm" },
+  { from: "mkv",  to: "mkv"  },
+  { from: "mov",  to: "mov"  },
+  { from: "avi",  to: "avi"  },
+  // ── Video → Audio ──────────────────────────────────────────────────────────
+  { from: "mp4",  to: "mp3"  }, { from: "mp4",  to: "wav"  },
+  { from: "webm", to: "mp3"  }, { from: "webm", to: "wav"  },
+  { from: "avi",  to: "mp3"  }, { from: "avi",  to: "wav"  },
+  { from: "mov",  to: "mp3"  }, { from: "mov",  to: "wav"  },
+  { from: "mkv",  to: "mp3"  }, { from: "mkv",  to: "wav"  },
+  // ── Video → GIF ────────────────────────────────────────────────────────────
+  { from: "mp4",  to: "gif"  },
+  { from: "webm", to: "gif"  },
 ];
 
 export function getSupportedOutputs(from: FileFormat): FileFormat[] {
@@ -205,6 +345,28 @@ const MIME_TO_FORMAT: Record<string, FileFormat> = {
   "image/jpeg": "jpeg",
   "image/jpg": "jpeg",
   "image/svg+xml": "svg",
+  // Audio
+  "audio/mpeg":   "mp3",
+  "audio/mp3":    "mp3",
+  "audio/wav":    "wav",
+  "audio/x-wav":  "wav",
+  "audio/wave":   "wav",
+  "audio/ogg":    "ogg",
+  "audio/vorbis": "ogg",
+  "audio/flac":   "flac",
+  "audio/x-flac": "flac",
+  "audio/aac":    "aac",
+  "audio/x-aac":  "aac",
+  "audio/mp4":    "m4a",
+  "audio/m4a":    "m4a",
+  // Video
+  "video/mp4":        "mp4",
+  "video/webm":       "webm",
+  "video/x-msvideo":  "avi",
+  "video/avi":        "avi",
+  "video/quicktime":  "mov",
+  "video/x-matroska": "mkv",
+  "image/gif":        "gif",
 };
 
 const EXT_TO_FORMAT: Record<string, FileFormat> = {
@@ -226,6 +388,20 @@ const EXT_TO_FORMAT: Record<string, FileFormat> = {
   ".jpeg": "jpeg",
   ".svg": "svg",
   ".sql": "mssql",
+  // Audio
+  ".mp3":  "mp3",
+  ".wav":  "wav",
+  ".ogg":  "ogg",
+  ".flac": "flac",
+  ".aac":  "aac",
+  ".m4a":  "m4a",
+  // Video
+  ".mp4":  "mp4",
+  ".webm": "webm",
+  ".avi":  "avi",
+  ".mov":  "mov",
+  ".mkv":  "mkv",
+  ".gif":  "gif",
 };
 
 export function detectFormat(file: File): FileFormat | undefined {
@@ -244,6 +420,9 @@ export function formatBytes(bytes: number): string {
 }
 
 // ─── Auto-detect format from text content ───────────────────────────────────
+
+// Markdown structural indicators (shared between early + late checks)
+const MD_INDICATORS = [/^#{1,6}\s/m, /\*\*.+?\*\*/, /\[.+?\]\(.+?\)/, /^[-*+]\s+/m, /^```/m, /^\|.*\|/m];
 
 export function detectTextFormat(content: string): FileFormat {
   const trimmed = content.trim();
@@ -276,11 +455,18 @@ export function detectTextFormat(content: string): FileFormat {
     return "mermaid";
   }
 
-  // SQL detection with dialect analysis
-  if (
-    /\b(SELECT|INSERT|UPDATE|DELETE|CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE)\b/i.test(trimmed)
-  ) {
-    // Check for dialect-specific markers
+  // ── Early high-confidence Markdown check (BEFORE SQL) ──────────────────────
+  // Protects Markdown documents from false SQL detection:
+  // ordinary English words ("update", "delete") and inline code (`word`) are
+  // common in docs but must not be treated as SQL.
+  const mdScore = MD_INDICATORS.filter((p) => p.test(trimmed)).length;
+  if (mdScore >= 3) return "md";
+
+  // ── SQL detection ───────────────────────────────────────────────────────────
+  // Requires SQL-statement-level context: keyword must appear at a statement
+  // boundary with SQL-specific syntax (not just the word "update" mid-sentence).
+  const sqlStatement = /^\s*(SELECT\s+[\w*"'\[]|INSERT\s+INTO\s+\w|UPDATE\s+\w+\s+SET\b|DELETE\s+FROM\s+\w|CREATE\s+TABLE\s+[\w\[\("]|ALTER\s+TABLE\s+\w|DROP\s+TABLE\s+\w)/im;
+  if (sqlStatement.test(trimmed)) {
     const mssqlMarkers = [/\bGO\b/m, /\bTOP\s*\(/i, /\bNVARCHAR\b/i, /\bIDENTITY\s*\(/i, /\bISNULL\s*\(/i, /\bGETDATE\s*\(\)/i, /\[\w+\]/];
     const mysqlMarkers = [/\bAUTO_INCREMENT\b/i, /\bENGINE\s*=/i, /`\w+`/, /\bIFNULL\s*\(/i, /\bSHOW\s+TABLES/i, /\bLIMIT\s+\d+/i];
     const pgsqlMarkers = [/\bSERIAL\b/i, /\bRETURNING\b/i, /\bBOOLEAN\b/i, /\bTIMESTAMPTZ\b/i, /\bJSONB\b/i, /\b::\w+/, /\bCREATE\s+EXTENSION/i];
@@ -297,7 +483,6 @@ export function detectTextFormat(content: string): FileFormat {
 
   // YAML detection (key: value patterns, starts with ---)
   if (/^---\s*$/m.test(trimmed) || /^\w[\w\s]*:\s+\S/m.test(trimmed)) {
-    // Make sure it's not markdown with front matter
     const yamlishLines = trimmed.split("\n").filter((l) => /^\w[\w\s]*:\s+/.test(l)).length;
     const totalLines = trimmed.split("\n").length;
     if (yamlishLines / totalLines > 0.3) return "yaml";
@@ -311,9 +496,7 @@ export function detectTextFormat(content: string): FileFormat {
     if (consistent) return "csv";
   }
 
-  // Markdown detection (headings, lists, emphasis, links)
-  const mdIndicators = [/^#{1,6}\s/m, /\*\*.+?\*\*/, /\[.+?\]\(.+?\)/, /^[-*+]\s+/m, /^```/m, /^\|.*\|/m];
-  const mdScore = mdIndicators.filter((p) => p.test(trimmed)).length;
+  // Markdown detection (2+ indicators — less rich markdown)
   if (mdScore >= 2) return "md";
 
   // Default to plain text

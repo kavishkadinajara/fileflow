@@ -22,6 +22,8 @@ const FORMAT_CHIPS: { label: string; color: string }[] = [
   { label: "SQL",      color: "bg-cyan-500/12 text-cyan-600 dark:text-cyan-400" },
   { label: "Mermaid",  color: "bg-indigo-500/12 text-indigo-600 dark:text-indigo-400" },
   { label: "PNG/JPEG", color: "bg-pink-500/12 text-pink-600 dark:text-pink-400" },
+  { label: "MP3/WAV",  color: "bg-orange-500/12 text-orange-600 dark:text-orange-400" },
+  { label: "MP4/WebM", color: "bg-purple-500/12 text-purple-600 dark:text-purple-400" },
 ];
 
 export function FileUploader({ onFilesAccepted }: FileUploaderProps) {
@@ -54,7 +56,7 @@ export function FileUploader({ onFilesAccepted }: FileUploaderProps) {
     onDropAccepted: () => setIsDragActive(false),
     onDropRejected: () => setIsDragActive(false),
     multiple: true,
-    maxSize: 50 * 1024 * 1024,
+    maxSize: 500 * 1024 * 1024, // 500 MB — video files can be large
   });
 
   return (

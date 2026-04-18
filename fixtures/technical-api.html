@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FileFlowOne API Reference</title>
+</head>
+<body>
+
+<h1>FileFlowOne API Reference</h1>
+<p>A comprehensive reference for the FileFlowOne REST conversion API. All endpoints accept JSON and return JSON unless otherwise noted.</p>
+
+<h2>Authentication</h2>
+<p>All API requests must include a valid bearer token in the <code>Authorization</code> header.</p>
+<pre><code>Authorization: Bearer &lt;your_token&gt;</code></pre>
+<p>Tokens are issued via the <code>/auth/token</code> endpoint and expire after 24 hours. Rotate tokens regularly to maintain security.</p>
+
+<h2>Base URL</h2>
+<pre><code>https://api.fileflowone.com/v1</code></pre>
+<p>All paths in this document are relative to this base URL.</p>
+
+<hr>
+
+<h2>Endpoints</h2>
+
+<h3>POST /convert</h3>
+<p>Convert a file from one format to another.</p>
+
+<h4>Request Body</h4>
+<table>
+  <thead>
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>fileBase64</td><td>string</td><td>Yes</td><td>Base64-encoded source file content</td></tr>
+    <tr><td>fileName</td><td>string</td><td>Yes</td><td>Original filename including extension</td></tr>
+    <tr><td>fromFormat</td><td>string</td><td>Yes</td><td>Source format code (e.g. md, docx)</td></tr>
+    <tr><td>toFormat</td><td>string</td><td>Yes</td><td>Target format code (e.g. html, pdf)</td></tr>
+    <tr><td>options</td><td>object</td><td>No</td><td>Format-specific conversion options</td></tr>
+  </tbody>
+</table>
+
+<h4>Supported Format Pairs</h4>
+<ul>
+  <li><code>md</code> → html, docx, pdf, txt</li>
+  <li><code>html</code> → md, docx, pdf, txt</li>
+  <li><code>docx</code> → md, html, pdf, txt</li>
+  <li><code>pdf</code> → md, html, txt, docx</li>
+</ul>
+
+<h4>Example Request</h4>
+<pre><code>{
+  "fileBase64": "IyBIZWxsbyBXb3JsZA==",
+  "fileName": "document.md",
+  "fromFormat": "md",
+  "toFormat": "html",
+  "options": {
+    "mdHighlightCode": true
+  }
+}</code></pre>
+
+<h4>Success Response <code>200 OK</code></h4>
+<pre><code>{
+  "success": true,
+  "fileBase64": "PCFET0NUWVBFIGh0bWw+...",
+  "fileName": "document.html",
+  "mimeType": "text/html"
+}</code></pre>
+
+<h4>Error Response <code>400 Bad Request</code></h4>
+<pre><code>{
+  "success": false,
+  "error": "Conversion from 'png' to 'docx' is not supported."
+}</code></pre>
+
+<hr>
+
+<h3>POST /slm-score</h3>
+<p>Score semantic fidelity between two documents using the SFI algorithm.</p>
+
+<h4>Request — multipart/form-data</h4>
+<table>
+  <thead>
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>original_file</td><td>file</td><td>Yes</td><td>Source document</td></tr>
+    <tr><td>converted_file</td><td>file</td><td>Yes</td><td>Converted document</td></tr>
+  </tbody>
+</table>
+
+<h4>Response</h4>
+<pre><code>{
+  "sfi_score": 0.847,
+  "grade": "A",
+  "breakdown": {
+    "structural": { "score": 0.92, "weight": 0.35, "weighted": 0.322 },
+    "semantic":   { "score": 0.81, "weight": 0.45, "weighted": 0.365 },
+    "functional": { "score": 0.80, "weight": 0.20, "weighted": 0.160 }
+  },
+  "conversion_pair": { "source_format": "md", "target_format": "html" },
+  "processing_time_ms": 412
+}</code></pre>
+
+<h4>Grade Scale</h4>
+<table>
+  <thead>
+    <tr><th>Grade</th><th>SFI Range</th><th>Meaning</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>A</td><td>≥ 0.85</td><td>Excellent</td></tr>
+    <tr><td>B</td><td>0.70 – 0.84</td><td>Good</td></tr>
+    <tr><td>C</td><td>0.55 – 0.69</td><td>Fair</td></tr>
+    <tr><td>D</td><td>0.40 – 0.54</td><td>Poor</td></tr>
+    <tr><td>F</td><td>&lt; 0.40</td><td>Very Poor</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h3>GET /health</h3>
+<pre><code>{ "status": "ok" }</code></pre>
+
+<hr>
+
+<h2>Error Codes</h2>
+<table>
+  <thead>
+    <tr><th>HTTP Status</th><th>Code</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>400</td><td>INVALID_FORMAT_PAIR</td><td>Conversion pair not supported</td></tr>
+    <tr><td>400</td><td>INVALID_REQUEST</td><td>Malformed request body</td></tr>
+    <tr><td>413</td><td>FILE_TOO_LARGE</td><td>Input file exceeds 50 MB limit</td></tr>
+    <tr><td>422</td><td>EXTRACTION_FAILED</td><td>Could not extract text from source file</td></tr>
+    <tr><td>503</td><td>BACKEND_UNAVAILABLE</td><td>Python scoring backend is not reachable</td></tr>
+  </tbody>
+</table>
+
+<h2>Rate Limits</h2>
+<ul>
+  <li>Free tier: 100 conversions / hour</li>
+  <li>Pro tier: 5,000 conversions / hour</li>
+  <li>Enterprise: unlimited</li>
+</ul>
+<p>Rate limit headers are included in every response:</p>
+<pre><code>X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 87
+X-RateLimit-Reset: 1712000000</code></pre>
+
+<h2>SDKs and Client Libraries</h2>
+<ul>
+  <li><a href="https://github.com/fileflowone/sdk-js">JavaScript/TypeScript SDK</a> — <code>npm install @fileflowone/sdk</code></li>
+  <li><a href="https://github.com/fileflowone/sdk-python">Python SDK</a> — <code>pip install fileflowone</code></li>
+  <li><a href="https://github.com/fileflowone/sdk-go">Go SDK</a> — <code>go get github.com/fileflowone/sdk-go</code></li>
+</ul>
+
+<h2>Changelog</h2>
+<h3>v1.2.0 — 2026-03-01</h3>
+<ul>
+  <li>Added PDF extraction via pdfminer.six for better text quality</li>
+  <li>Improved DOCX heading detection for auto-generated documents</li>
+  <li>SFI scoring now gives full structural score for lossy targets (PDF, TXT)</li>
+</ul>
+<h3>v1.1.0 — 2026-01-15</h3>
+<ul>
+  <li>Round-trip chain scoring endpoint</li>
+  <li>Batch conversion support (up to 20 files per request)</li>
+</ul>
+<h3>v1.0.0 — 2025-12-01</h3>
+<ul>
+  <li>Initial public release</li>
+</ul>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 "use client";
 
 import { OutputPreview } from "@/components/OutputPreview";
+import { SfiScoreCard } from "@/components/SfiScoreCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +37,9 @@ const TEXT_OUTPUTS: FileFormat[] = [
   "md", "html", "txt", "json", "yaml", "csv", "svg",
   "mssql", "mysql", "pgsql", "mermaid",
 ];
+
+// Formats supported by the SFI Python backend extractor
+const SFI_FORMATS: FileFormat[] = ["md", "html", "docx", "pdf", "txt"];
 
 function JobCard({ job }: { job: ConversionJob }) {
   const downloadJob = useConversionStore((s) => s.downloadJob);
@@ -260,6 +264,13 @@ function JobCard({ job }: { job: ConversionJob }) {
             </div>
           </div>
         )}
+
+        {/* SFI quality score (done + supported formats) */}
+        {job.status === "done" &&
+          SFI_FORMATS.includes(job.fromFormat) &&
+          SFI_FORMATS.includes(job.toFormat) && (
+            <SfiScoreCard job={job} sourceFile={job.sourceFile ?? null} />
+          )}
 
         {/* Error */}
         {job.status === "error" && (

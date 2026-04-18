@@ -1,0 +1,42 @@
+Building a Type-Safe File Converter in TypeScript
+
+This tutorial walks through building a robust file conversion module in TypeScript, covering input validation, format detection, stream processing, and error handling.
+
+Prerequisites
+
+• Node.js 20+
+• TypeScript 5.3+
+• npm install zod sharp mammoth
+
+Project Structure
+
+
+
+Step 1: Define the Type System
+
+Start with a discriminated union for all supported formats:
+
+
+
+Step 2: Build the Format Registry
+
+
+
+Step 3: Implement the Markdown Converter
+
+[\s\S]*?
+
+Step 4: Add Zod Validation to the API Route
+
+
+
+Step 5: Write Tests
+
+js\nconsole.log('hi')\n
+
+Common Pitfalls
+
+• Buffer vs Uint8Array: When passing file data to new Blob(), always use new Blob([new Uint8Array(buffer)]) rather than new Blob([buffer]) to avoid TypeScript type errors.
+• MIME types: Always set explicit MIME types when creating File objects for multipart uploads — browsers may report "" for .docx files.
+• Puppeteer memory: Always call browser.close() in a finally block. Browser processes do not self-terminate on route handler exit.
+• React Strict Mode double-fire: Guard useEffect with a useRef flag when the effect must run exactly once (e.g., auto-triggering a network request on mount).

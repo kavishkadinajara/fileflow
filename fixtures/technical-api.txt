@@ -1,0 +1,192 @@
+FileFlowOne API Reference
+
+ FileFlowOne API Reference
+
+A comprehensive reference for the FileFlowOne REST conversion API. All endpoints accept JSON and return JSON unless otherwise noted.
+
+ Authentication
+
+All API requests must include a valid bearer token in the Authorization header.
+
+
+Authorization: Bearer <yourtoken>
+
+
+Tokens are issued via the /auth/token endpoint and expire after 24 hours. Rotate tokens regularly to maintain security.
+
+ Base URL
+
+
+https://api.fileflowone.com/v1
+
+
+All paths in this document are relative to this base URL.
+
+ Endpoints
+
+ POST /convert
+
+Convert a file from one format to another.
+
+ Request Body
+
+  
+    FieldTypeRequiredDescription
+  
+  
+    fileBase64stringYesBase64-encoded source file content
+    fileNamestringYesOriginal filename including extension
+    fromFormatstringYesSource format code e.g. md, docx
+    toFormatstringYesTarget format code e.g. html, pdf
+    optionsobjectNoFormat-specific conversion options
+  
+
+ Supported Format Pairs
+
+  - md → html, docx, pdf, txt
+
+  - html → md, docx, pdf, txt
+
+  - docx → md, html, pdf, txt
+
+  - pdf → md, html, txt, docx
+
+ Example Request
+
+
+{
+  "fileBase64": "IyBIZWxsbyBXb3JsZA==",
+  "fileName": "document.md",
+  "fromFormat": "md",
+  "toFormat": "html",
+  "options": {
+    "mdHighlightCode": true
+  }
+}
+
+
+ Success Response 200 OK
+
+
+{
+  "success": true,
+  "fileBase64": "PCFET0NUWVBFIGh0bWw+...",
+  "fileName": "document.html",
+  "mimeType": "text/html"
+}
+
+
+ Error Response 400 Bad Request
+
+
+{
+  "success": false,
+  "error": "Conversion from 'png' to 'docx' is not supported."
+}
+
+
+ POST /slm-score
+
+Score semantic fidelity between two documents using the SFI algorithm.
+
+ Request — multipart/form-data
+
+  
+    FieldTypeRequiredDescription
+  
+  
+    originalfilefileYesSource document
+    convertedfilefileYesConverted document
+  
+
+ Response
+
+
+{
+  "sfiscore": 0.847,
+  "grade": "A",
+  "breakdown": {
+    "structural": { "score": 0.92, "weight": 0.35, "weighted": 0.322 },
+    "semantic":   { "score": 0.81, "weight": 0.45, "weighted": 0.365 },
+    "functional": { "score": 0.80, "weight": 0.20, "weighted": 0.160 }
+  },
+  "conversionpair": { "sourceformat": "md", "targetformat": "html" },
+  "processingtimems": 412
+}
+
+
+ Grade Scale
+
+  
+    GradeSFI RangeMeaning
+  
+  
+    A≥ 0.85Excellent
+    B0.70 – 0.84Good
+    C0.55 – 0.69Fair
+    D0.40 – 0.54Poor
+    F< 0.40Very Poor
+  
+
+ GET /health
+
+
+{ "status": "ok" }
+
+
+ Error Codes
+
+  
+    HTTP StatusCodeDescription
+  
+  
+    400INVALIDFORMATPAIRConversion pair not supported
+    400INVALIDREQUESTMalformed request body
+    413FILETOOLARGEInput file exceeds 50 MB limit
+    422EXTRACTIONFAILEDCould not extract text from source file
+    503BACKENDUNAVAILABLEPython scoring backend is not reachable
+  
+
+ Rate Limits
+
+  - Free tier: 100 conversions / hour
+
+  - Pro tier: 5,000 conversions / hour
+
+  - Enterprise: unlimited
+
+Rate limit headers are included in every response:
+
+
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 87
+X-RateLimit-Reset: 1712000000
+
+
+ SDKs and Client Libraries
+
+  - JavaScript/TypeScript SDKhttps://github.com/fileflowone/sdk-js — npm install @fileflowone/sdk
+
+  - Python SDKhttps://github.com/fileflowone/sdk-python — pip install fileflowone
+
+  - Go SDKhttps://github.com/fileflowone/sdk-go — go get github.com/fileflowone/sdk-go
+
+ Changelog
+
+ v1.2.0 — 2026-03-01
+
+  - Added PDF extraction via pdfminer.six for better text quality
+
+  - Improved DOCX heading detection for auto-generated documents
+
+  - SFI scoring now gives full structural score for lossy targets PDF, TXT
+
+ v1.1.0 — 2026-01-15
+
+  - Round-trip chain scoring endpoint
+
+  - Batch conversion support up to 20 files per request
+
+ v1.0.0 — 2025-12-01
+
+  - Initial public release

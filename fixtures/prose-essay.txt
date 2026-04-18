@@ -1,0 +1,19 @@
+The Case for Plain Text
+
+There is a quiet revolution happening in how thoughtful people store and manage their written work. After decades of lock-in to proprietary word processing formats, a growing community of writers, researchers, and engineers has converged on a counterintuitive answer: the best format for long-lived documents is plain text.
+
+The argument is simple. Plain text files are readable by every computer ever made and every computer likely to be made. They require no special software to open. They can be read in a terminal, a browser, a phone, or printed on paper. They do not corrupt. They do not have version incompatibilities. They take up almost no space. A thousand plain text documents fits comfortably in a folder smaller than a single high-resolution photograph.
+
+Compare this to the alternatives. A .docx file from Microsoft Word 2003 may fail to render correctly in Word 2026. A Pages document cannot be opened without a Mac. A proprietary note-taking app stores your thoughts in a database you cannot read without the app, and when the company folds or changes its pricing, you discover that your notes were never really yours. PDF is better — at least you can read it — but you cannot easily edit it, and the text extraction quality is inconsistent enough that automated processing remains unreliable.
+
+Plain text does have real limitations. It cannot natively represent rich formatting: bold, italic, tables, images, embedded media. These are genuine losses. But two things soften this criticism. First, the vast majority of what most people write does not actually require rich formatting. An idea, a note, a journal entry, a draft — these are text, and text is what plain text stores perfectly. Second, lightweight markup languages like Markdown allow a reasonable subset of formatting to be expressed in plain text in a way that remains readable without rendering. A Markdown file looks like a sensible document even to someone who has never heard of Markdown.
+
+The case for plain text is ultimately a case for ownership. A plain text file is yours. It will still be yours in twenty years. It will outlast the company that made your word processor, the platform that hosted your notes, and the app that managed your tasks. It requires no account, no subscription, no internet connection. You can put it anywhere — a USB drive, a version-controlled repository, an email attachment, a printed page.
+
+There is also a pragmatic argument from the perspective of tooling. Plain text is the universal interface of the Unix philosophy. Every text processing tool ever written — grep, sed, awk, sort, wc, diff — works on plain text. Version control systems like Git handle plain text files with surgical precision, tracking every character change across the entire history of a document. None of this works with binary formats.
+
+The counter-argument is usually that rich formatting matters for professional documents — proposals, reports, presentations. This is true for the final deliverable. But it is not true for the working draft, the notes, the research, the outline, or the thinking that precedes the final document. The insight is that the two concerns are separable: you can write in plain text and convert to a polished format at the end. This is exactly the workflow that Markdown-to-PDF and Markdown-to-DOCX converters enable.
+
+We are living in a moment when the tools for this workflow have never been better. Editors that render Markdown live, converters that produce publication-quality PDFs from plain text, version control systems that handle thousands of documents with ease — all of this exists and is mostly free. The barrier to adopting a plain-text-first workflow is lower than it has ever been.
+
+The choice of file format is not a technical decision. It is a statement about who controls your writing. Plain text is the answer that keeps control with you.

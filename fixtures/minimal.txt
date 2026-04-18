@@ -1,0 +1,21 @@
+Quick Start
+
+Install dependencies and run the development server.
+
+Installation
+
+
+
+Open http://localhost:3000 in your browser.
+
+Environment Variables
+
+Create a .env.local file:
+
+
+
+The GROQ_API_KEY is only required if you use the AI features. All conversion features work without it.
+
+Starting the Python Backend
+
+The Python backend is required for SFI scoring and PDF extraction.

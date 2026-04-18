@@ -81,6 +81,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
       progress: 10,
       createdAt: new Date(),
       sourceContent,
+      sourceFile: file,
       options,
     };
 

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Format Conversion Compatibility Matrix</title>
+  <style>
+    @page { size: A4; margin: 25mm 20mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Calibri, 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 100%; margin: 0 auto; padding: 0 20px; line-height: 1.7; color: #1F2937; font-size: 11pt; }
+    /* Cover page */
+    .cover-page { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; text-align: center; }
+    .cover-title { font-size: 28pt; font-weight: bold; color: #1F2937; margin-bottom: 16px; }
+    .cover-line { color: #9CA3AF; font-size: 10pt; margin-bottom: 12px; }
+    .cover-date { font-size: 11pt; color: #6B7280; }
+    /* TOC */
+    .toc { page-break-after: always; }
+    .toc-title { font-size: 18pt; color: #1F2937; border-bottom: 2px solid #3B82F6; padding-bottom: 8px; margin-bottom: 16px; }
+    .toc ul { list-style: none; padding: 0; }
+    .toc li { padding: 4px 0; font-size: 10.5pt; }
+    .toc a { color: #3B82F6; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    /* Headings */
+    h1 { font-size: 22pt; color: #111827; page-break-before: always; border-bottom: 3px solid #3B82F6; padding-bottom: 8px; margin-top: 0; }
+    h1:first-of-type { page-break-before: avoid; }
+    h2 { font-size: 17pt; color: #1F2937; page-break-before: always; border-bottom: 2px solid #D1D5DB; padding-bottom: 6px; }
+    h3 { font-size: 14pt; color: #374151; margin-top: 24px; }
+    h4 { font-size: 12pt; color: #4B5563; }
+    h5, h6 { font-size: 11pt; color: #6B7280; }
+    /* Code */
+    pre { background: #F3F4F6; border-radius: 6px; padding: 16px; overflow-x: auto; border-left: 4px solid #3B82F6; font-size: 9.5pt; page-break-inside: avoid; }
+    code { background: #F3F4F6; padding: 2px 5px; border-radius: 3px; font-size: 0.9em; font-family: Consolas, 'Courier New', monospace; }
+    pre code { background: none; padding: 0; }
+    /* Blockquote */
+    blockquote { border-left: 4px solid #3B82F6; margin: 16px 0; padding: 12px 16px; color: #6B7280; background: #EFF6FF; border-radius: 0 6px 6px 0; font-style: italic; }
+    /* Table */
+    table { border-collapse: collapse; width: 100%; page-break-inside: avoid; margin: 16px 0; }
+    th { background: #374151; color: #FFFFFF; padding: 10px 12px; text-align: left; font-size: 10pt; }
+    td { border: 1px solid #D1D5DB; padding: 8px 12px; font-size: 10pt; }
+    tr:nth-child(even) { background: #F9FAFB; }
+    img { max-width: 100%; }
+    a { color: #3B82F6; }
+    .mermaid { display: flex; justify-content: center; margin: 24px 0; page-break-inside: avoid; }
+    .mermaid svg { max-width: 100%; height: auto; }
+    /* Prevent orphans/widows */
+    p, li { orphans: 3; widows: 3; }
+    h1, h2, h3, h4, h5, h6 { page-break-after: avoid; }
+  </style>
+  
+</head>
+<body>
+<div class="cover-page">
+    <div class="cover-title">Format Conversion Compatibility Matrix</div>
+    <div class="cover-line">─────────────────────────────────────────</div>
+    <div class="cover-date">April 5, 2026</div>
+  </div>
+  <div style="page-break-after:always;"></div>
+<div class="toc"><h2 class="toc-title">Table of Contents</h2><ul><li style="margin-left:0px;"><a href="#format-conversion-compatibility-matrix">Format Conversion Compatibility Matrix</a></li>
+<li style="margin-left:20px;"><a href="#supported-conversions">Supported Conversions</a></li>
+<li style="margin-left:20px;"><a href="#mime-types">MIME Types</a></li>
+<li style="margin-left:20px;"><a href="#sfi-benchmark-results-convertbench-v1-n-500-per-pair">SFI Benchmark Results (ConvertBench v1, n=500 per pair)</a></li>
+<li style="margin-left:20px;"><a href="#conversion-engine-dependencies">Conversion Engine Dependencies</a></li>
+<li style="margin-left:20px;"><a href="#python-backend-endpoints">Python Backend Endpoints</a></li>
+<li style="margin-left:20px;"><a href="#file-size-limits">File Size Limits</a></li>
+<li style="margin-left:20px;"><a href="#browser-compatibility">Browser Compatibility</a></li></ul></div><div style="page-break-after:always;"></div>
+<h1>Format Conversion Compatibility Matrix</h1>
+<p>Reference tables for FileFlowOne format support, MIME types, conversion quality benchmarks, and feature compatibility.</p>
+<h2>Supported Conversions</h2>
+<table>
+<thead>
+<tr>
+<th>Source \ Target</th>
+<th>MD</th>
+<th>HTML</th>
+<th>DOCX</th>
+<th>PDF</th>
+<th>TXT</th>
+<th>PNG</th>
+<th>JPEG</th>
+<th>SVG</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>MD</strong></td>
+<td>—</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>HTML</strong></td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>DOCX</strong></td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>PDF</strong></td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>TXT</strong></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>PNG</strong></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+<tr>
+<td><strong>JPEG</strong></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>✓</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>SVG</strong></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Mermaid</strong></td>
+<td>—</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+<td>—</td>
+<td>✓</td>
+</tr>
+</tbody></table>
+<h2>MIME Types</h2>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>MIME Type</th>
+<th>Typical Extension</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MD</td>
+<td>text/plain</td>
+<td>.md</td>
+</tr>
+<tr>
+<td>HTML</td>
+<td>text/html</td>
+<td>.html</td>
+</tr>
+<tr>
+<td>DOCX</td>
+<td>application/vnd.openxmlformats-officedocument.wordprocessingml.document</td>
+<td>.docx</td>
+</tr>
+<tr>
+<td>PDF</td>
+<td>application/pdf</td>
+<td>.pdf</td>
+</tr>
+<tr>
+<td>TXT</td>
+<td>text/plain</td>
+<td>.txt</td>
+</tr>
+<tr>
+<td>PNG</td>
+<td>image/png</td>
+<td>.png</td>
+</tr>
+<tr>
+<td>JPEG</td>
+<td>image/jpeg</td>
+<td>.jpg / .jpeg</td>
+</tr>
+<tr>
+<td>SVG</td>
+<td>image/svg+xml</td>
+<td>.svg</td>
+</tr>
+<tr>
+<td>JSON</td>
+<td>application/json</td>
+<td>.json</td>
+</tr>
+<tr>
+<td>YAML</td>
+<td>application/yaml</td>
+<td>.yaml / .yml</td>
+</tr>
+<tr>
+<td>CSV</td>
+<td>text/csv</td>
+<td>.csv</td>
+</tr>
+</tbody></table>
+<h2>SFI Benchmark Results (ConvertBench v1, n=500 per pair)</h2>
+<table>
+<thead>
+<tr>
+<th>Conversion</th>
+<th>Mean SFI</th>
+<th>Std Dev</th>
+<th>Min SFI</th>
+<th>Max SFI</th>
+<th>Grade A%</th>
+<th>Grade B%</th>
+<th>Grade C%</th>
+<th>Grade D+F%</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MD→HTML</td>
+<td>0.941</td>
+<td>0.038</td>
+<td>0.821</td>
+<td>0.998</td>
+<td>82%</td>
+<td>16%</td>
+<td>2%</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>MD→DOCX</td>
+<td>0.883</td>
+<td>0.061</td>
+<td>0.692</td>
+<td>0.977</td>
+<td>64%</td>
+<td>29%</td>
+<td>6%</td>
+<td>1%</td>
+</tr>
+<tr>
+<td>MD→TXT</td>
+<td>0.912</td>
+<td>0.049</td>
+<td>0.778</td>
+<td>0.994</td>
+<td>74%</td>
+<td>23%</td>
+<td>3%</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>HTML→MD</td>
+<td>0.876</td>
+<td>0.072</td>
+<td>0.641</td>
+<td>0.981</td>
+<td>61%</td>
+<td>30%</td>
+<td>8%</td>
+<td>1%</td>
+</tr>
+<tr>
+<td>HTML→DOCX</td>
+<td>0.854</td>
+<td>0.081</td>
+<td>0.588</td>
+<td>0.972</td>
+<td>53%</td>
+<td>34%</td>
+<td>11%</td>
+<td>2%</td>
+</tr>
+<tr>
+<td>HTML→TXT</td>
+<td>0.898</td>
+<td>0.055</td>
+<td>0.734</td>
+<td>0.989</td>
+<td>70%</td>
+<td>26%</td>
+<td>4%</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>DOCX→MD</td>
+<td>0.821</td>
+<td>0.094</td>
+<td>0.523</td>
+<td>0.967</td>
+<td>42%</td>
+<td>38%</td>
+<td>15%</td>
+<td>5%</td>
+</tr>
+<tr>
+<td>DOCX→HTML</td>
+<td>0.837</td>
+<td>0.087</td>
+<td>0.554</td>
+<td>0.971</td>
+<td>47%</td>
+<td>36%</td>
+<td>14%</td>
+<td>3%</td>
+</tr>
+<tr>
+<td>DOCX→TXT</td>
+<td>0.869</td>
+<td>0.069</td>
+<td>0.611</td>
+<td>0.978</td>
+<td>58%</td>
+<td>33%</td>
+<td>8%</td>
+<td>1%</td>
+</tr>
+<tr>
+<td>PDF→MD</td>
+<td>0.712</td>
+<td>0.142</td>
+<td>0.288</td>
+<td>0.951</td>
+<td>23%</td>
+<td>34%</td>
+<td>28%</td>
+<td>15%</td>
+</tr>
+<tr>
+<td>PDF→HTML</td>
+<td>0.698</td>
+<td>0.153</td>
+<td>0.241</td>
+<td>0.947</td>
+<td>19%</td>
+<td>33%</td>
+<td>30%</td>
+<td>18%</td>
+</tr>
+<tr>
+<td>PDF→TXT</td>
+<td>0.748</td>
+<td>0.118</td>
+<td>0.331</td>
+<td>0.958</td>
+<td>28%</td>
+<td>38%</td>
+<td>24%</td>
+<td>10%</td>
+</tr>
+</tbody></table>
+<h2>Conversion Engine Dependencies</h2>
+<table>
+<thead>
+<tr>
+<th>Format Pair</th>
+<th>Engine</th>
+<th>Package</th>
+<th>Version</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MD → HTML</td>
+<td>marked</td>
+<td>marked</td>
+<td>^12.0</td>
+<td>With highlight.js for syntax</td>
+</tr>
+<tr>
+<td>MD → DOCX</td>
+<td>docx</td>
+<td>docx</td>
+<td>^8.5</td>
+<td>Cover page + TOC + headers/footers</td>
+</tr>
+<tr>
+<td>MD/HTML → PDF</td>
+<td>Puppeteer</td>
+<td>puppeteer-core</td>
+<td>^22.0</td>
+<td>Chromium-based headless rendering</td>
+</tr>
+<tr>
+<td>DOCX → *</td>
+<td>mammoth</td>
+<td>mammoth</td>
+<td>^1.7</td>
+<td>Style-map based extraction</td>
+</tr>
+<tr>
+<td>PDF → *</td>
+<td>pdfminer.six</td>
+<td>pdfminer.six</td>
+<td>20231228</td>
+<td>Python backend only</td>
+</tr>
+<tr>
+<td>PNG ↔ JPEG</td>
+<td>Sharp</td>
+<td>sharp</td>
+<td>^0.33</td>
+<td>Libvips native module</td>
+</tr>
+<tr>
+<td>PNG → SVG</td>
+<td>Sharp</td>
+<td>sharp</td>
+<td>^0.33</td>
+<td>Bitmap → SVG trace</td>
+</tr>
+<tr>
+<td>Mermaid → *</td>
+<td>Mermaid CLI</td>
+<td>@mermaid-js/mermaid</td>
+<td>^11.0</td>
+<td>Puppeteer-rendered diagrams</td>
+</tr>
+<tr>
+<td>Audio/Video → *</td>
+<td>FFmpeg</td>
+<td>@ffmpeg/ffmpeg</td>
+<td>^0.12</td>
+<td>WASM, client-side only</td>
+</tr>
+</tbody></table>
+<h2>Python Backend Endpoints</h2>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Input</th>
+<th>Output</th>
+<th>Backend Dependency</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>/api/slm-score</td>
+<td>POST</td>
+<td>multipart: 2 files</td>
+<td>JSON score</td>
+<td>sentence-transformers</td>
+</tr>
+<tr>
+<td>/api/pdf-extract</td>
+<td>POST</td>
+<td>multipart: PDF + format</td>
+<td>JSON text</td>
+<td>pdfminer.six</td>
+</tr>
+<tr>
+<td>/health</td>
+<td>GET</td>
+<td>—</td>
+<td>JSON status</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<h2>File Size Limits</h2>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Max Input Size</th>
+<th>Max Output Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MD</td>
+<td>10 MB</td>
+<td>50 MB</td>
+<td>Large files may slow SFI scoring</td>
+</tr>
+<tr>
+<td>HTML</td>
+<td>10 MB</td>
+<td>50 MB</td>
+<td></td>
+</tr>
+<tr>
+<td>DOCX</td>
+<td>25 MB</td>
+<td>50 MB</td>
+<td></td>
+</tr>
+<tr>
+<td>PDF</td>
+<td>50 MB</td>
+<td>100 MB</td>
+<td>Extraction quality varies by PDF</td>
+</tr>
+<tr>
+<td>PNG</td>
+<td>50 MB</td>
+<td>100 MB</td>
+<td>Sharp handles large images</td>
+</tr>
+<tr>
+<td>Video</td>
+<td>500 MB</td>
+<td>500 MB</td>
+<td>Client-side FFmpeg.wasm</td>
+</tr>
+<tr>
+<td>Audio</td>
+<td>200 MB</td>
+<td>200 MB</td>
+<td>Client-side FFmpeg.wasm</td>
+</tr>
+</tbody></table>
+<h2>Browser Compatibility</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Chrome 120+</th>
+<th>Firefox 121+</th>
+<th>Safari 17+</th>
+<th>Edge 120+</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>File upload &amp; conversion</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Drag &amp; drop</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>FFmpeg.wasm (SharedArrayBuffer)</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓ (14.1+)</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Clipboard copy</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Output preview</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>AI chat panel</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+</tbody></table>
+
+</body>
+</html>

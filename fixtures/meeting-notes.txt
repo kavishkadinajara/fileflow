@@ -1,0 +1,113 @@
+FileFlowOne — Weekly Engineering Sync
+Date: 2026-03-18
+Attendees: Kavishka (lead), Backend (TBH), Frontend (TBH)
+Note-taker: Kavishka
+
+---
+
+AGENDA
+1. Sprint review: what shipped last week
+2. Sprint planning: priorities for this week
+3. Blockers / open questions
+4. Infrastructure discussion: Python backend deployment
+
+---
+
+1. SPRINT REVIEW
+
+Shipped last week:
+- SFI Grade C/D/F warning banner (Priority 3 from Gap 1 list). Yellow/orange/red inline
+  banner shows on any conversion scoring below A/B grade. Works well for immediately
+  communicating quality issues to users.
+
+- Round-trip chain scoring component (Priority 4). Chains A→B→A conversions, scores
+  each leg, shows fidelity-retention bar. Currently manual-trigger (user clicks Run).
+  Possible future: auto-run for conversions > some threshold SFI.
+
+- Benchmark runner script (Priority 5, scripts/benchmark.py). Calls /api/convert and
+  /api/slm-score across all fixture files, writes benchmark_results.csv. Depends on
+  fixtures/ directory which we committed to creating this sprint.
+
+Not shipped / moved to this week:
+- ConvertBench fixture dataset (Priority 6). Harder than expected — need to represent
+  5 content archetypes with enough variation that benchmarks are meaningful.
+
+---
+
+2. SPRINT PLANNING
+
+This week (by end of sprint, Friday March 22):
+
+HIGH priority:
+  [ ] ConvertBench fixture dataset — 12+ source files across 5 archetypes
+      Format: .md, .html, .txt source files + generate_fixtures.py to produce .docx/.pdf
+      Acceptance: benchmark.py runs end-to-end with no errors on all pairs
+
+  [ ] generate_fixtures.py script — auto-generates DOCX + PDF from MD sources
+      so benchmark can include those format pairs without committing binary files
+
+  [ ] Fix: Round-trip score sometimes shows "Conversion failed" for PDF pairs
+      Cause: /api/convert doesn't support all round-trip pairs (PDF→MD→PDF fails because
+      MD→PDF exists but the intermediate file is just text, loses structure)
+      Resolution: filter round-trip pairs to only those where both legs are supported
+
+MEDIUM priority:
+  [ ] Python backend: add startup pre-loading for sentence-transformer model
+      After INC-2026-002, cold-start scoring timeouts are still occasionally happening
+      on the dev machine after backend restart
+      Approach: load model at module import time rather than on first request
+
+  [ ] SFI score caching: if same (original_file hash, converted_file hash) seen recently,
+      return cached result rather than re-scoring
+      Rationale: round-trip scoring calls /api/slm-score 2x per run, and re-running the
+      same files repeatedly (e.g. during benchmark development) is slow
+
+LOW / stretch:
+  [ ] CLAUDE.md update to document fixtures/ and scripts/
+  [ ] benchmark.py: add --pairs flag to run only specific conversion pairs
+  [ ] Investigate PPTX support: what library? python-pptx looks feasible
+
+---
+
+3. BLOCKERS / OPEN QUESTIONS
+
+Q: Should the benchmark runner be gated behind an env flag so it doesn't run in CI?
+A: Not in CI at all for now — it's a research tool, not a regression test. Add a note
+   in README that it requires both servers running.
+
+Q: File size for fixture documents — should we aim for realistic sizes?
+A: Yes. Mix of short (1–2 pages), medium (5–10 pages), and long (15+ pages) documents
+   gives better signal. Short documents are edge cases for the chunking logic; long
+   documents stress-test latency.
+
+Q: What about non-English documents?
+A: Out of scope for v1 of ConvertBench. Note it in the dataset README as a known gap.
+
+Q: Do we commit the generated .docx and .pdf fixtures to the repo?
+A: No — binary files bloat git history badly. generate_fixtures.py + a README explaining
+   how to regenerate them is the right approach. The .md and .html sources are the ground
+   truth; everything else is derived.
+
+---
+
+4. INFRASTRUCTURE
+
+Python backend deployment options discussed:
+- Current: manual uvicorn on dev machine. Not viable for production.
+- Option A: Docker container on same VPS as Next.js. Simple, cheap.
+- Option B: Render.com free tier. Zero-config, but cold starts on free tier could
+  reintroduce the model warm-up problem.
+- Option C: Modal.com — serverless Python with GPU support for the sentence-transformer
+  inference. Would speed up scoring significantly. $0.04/hr on-demand.
+
+Decision: Implement Option A (Docker) for self-hosted tier. Evaluate Modal for the
+public cloud version. Add to Q2 roadmap.
+
+ACTION ITEMS:
+- Kavishka: Write Dockerfile for python_backend by next sync
+- Kavishka: Draft Modal deployment guide for sentence-transformer endpoint
+- Everyone: Review open issues on GitHub before Friday sync
+
+---
+
+Next sync: Tuesday March 19, 10:00 AM

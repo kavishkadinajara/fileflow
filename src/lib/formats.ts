@@ -243,6 +243,11 @@ export const SUPPORTED_CONVERSIONS: ConversionPair[] = [
   { from: "html", to: "docx" },
   { from: "html", to: "txt" },
   { from: "html", to: "png" },
+  // PDF →
+  { from: "pdf", to: "md"   },
+  { from: "pdf", to: "html" },
+  { from: "pdf", to: "txt"  },
+  { from: "pdf", to: "docx" },
   // DOCX →
   { from: "docx", to: "html" },
   { from: "docx", to: "md" },

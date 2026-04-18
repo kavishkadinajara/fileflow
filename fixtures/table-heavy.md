@@ -1,0 +1,95 @@
+# Format Conversion Compatibility Matrix
+
+Reference tables for FileFlowOne format support, MIME types, conversion quality benchmarks, and feature compatibility.
+
+## Supported Conversions
+
+| Source \ Target | MD  | HTML | DOCX | PDF | TXT | PNG | JPEG | SVG |
+|-----------------|-----|------|------|-----|-----|-----|------|-----|
+| **MD**          | —   | ✓    | ✓    | ✓   | ✓   | —   | —    | —   |
+| **HTML**        | ✓   | —    | ✓    | ✓   | ✓   | ✓   | ✓    | —   |
+| **DOCX**        | ✓   | ✓    | —    | ✓   | ✓   | —   | —    | —   |
+| **PDF**         | ✓   | ✓    | ✓    | —   | ✓   | —   | —    | —   |
+| **TXT**         | —   | —    | —    | —   | —   | —   | —    | —   |
+| **PNG**         | —   | —    | —    | —   | —   | —   | ✓    | ✓   |
+| **JPEG**        | —   | —    | —    | —   | —   | ✓   | —    | —   |
+| **SVG**         | —   | —    | —    | ✓   | —   | ✓   | —    | —   |
+| **Mermaid**     | —   | ✓    | —    | ✓   | —   | ✓   | —    | ✓   |
+
+## MIME Types
+
+| Format  | MIME Type                                                                 | Typical Extension |
+|---------|---------------------------------------------------------------------------|-------------------|
+| MD      | text/plain                                                                | .md               |
+| HTML    | text/html                                                                 | .html             |
+| DOCX    | application/vnd.openxmlformats-officedocument.wordprocessingml.document   | .docx             |
+| PDF     | application/pdf                                                           | .pdf              |
+| TXT     | text/plain                                                                | .txt              |
+| PNG     | image/png                                                                 | .png              |
+| JPEG    | image/jpeg                                                                | .jpg / .jpeg      |
+| SVG     | image/svg+xml                                                             | .svg              |
+| JSON    | application/json                                                          | .json             |
+| YAML    | application/yaml                                                          | .yaml / .yml      |
+| CSV     | text/csv                                                                  | .csv              |
+
+## SFI Benchmark Results (ConvertBench v1, n=500 per pair)
+
+| Conversion | Mean SFI | Std Dev | Min SFI | Max SFI | Grade A% | Grade B% | Grade C% | Grade D+F% |
+|------------|----------|---------|---------|---------|----------|----------|----------|------------|
+| MD→HTML    | 0.941    | 0.038   | 0.821   | 0.998   | 82%      | 16%      | 2%       | 0%         |
+| MD→DOCX    | 0.883    | 0.061   | 0.692   | 0.977   | 64%      | 29%      | 6%       | 1%         |
+| MD→TXT     | 0.912    | 0.049   | 0.778   | 0.994   | 74%      | 23%      | 3%       | 0%         |
+| HTML→MD    | 0.876    | 0.072   | 0.641   | 0.981   | 61%      | 30%      | 8%       | 1%         |
+| HTML→DOCX  | 0.854    | 0.081   | 0.588   | 0.972   | 53%      | 34%      | 11%      | 2%         |
+| HTML→TXT   | 0.898    | 0.055   | 0.734   | 0.989   | 70%      | 26%      | 4%       | 0%         |
+| DOCX→MD    | 0.821    | 0.094   | 0.523   | 0.967   | 42%      | 38%      | 15%      | 5%         |
+| DOCX→HTML  | 0.837    | 0.087   | 0.554   | 0.971   | 47%      | 36%      | 14%      | 3%         |
+| DOCX→TXT   | 0.869    | 0.069   | 0.611   | 0.978   | 58%      | 33%      | 8%       | 1%         |
+| PDF→MD     | 0.712    | 0.142   | 0.288   | 0.951   | 23%      | 34%      | 28%      | 15%        |
+| PDF→HTML   | 0.698    | 0.153   | 0.241   | 0.947   | 19%      | 33%      | 30%      | 18%        |
+| PDF→TXT    | 0.748    | 0.118   | 0.331   | 0.958   | 28%      | 38%      | 24%      | 10%        |
+
+## Conversion Engine Dependencies
+
+| Format Pair      | Engine              | Package              | Version  | Notes                                |
+|------------------|---------------------|----------------------|----------|--------------------------------------|
+| MD → HTML        | marked              | marked               | ^12.0    | With highlight.js for syntax         |
+| MD → DOCX        | docx                | docx                 | ^8.5     | Cover page + TOC + headers/footers   |
+| MD/HTML → PDF    | Puppeteer           | puppeteer-core       | ^22.0    | Chromium-based headless rendering    |
+| DOCX → *         | mammoth             | mammoth              | ^1.7     | Style-map based extraction           |
+| PDF → *          | pdfminer.six        | pdfminer.six         | 20231228 | Python backend only                  |
+| PNG ↔ JPEG       | Sharp               | sharp                | ^0.33    | Libvips native module                |
+| PNG → SVG        | Sharp               | sharp                | ^0.33    | Bitmap → SVG trace                   |
+| Mermaid → *      | Mermaid CLI         | @mermaid-js/mermaid  | ^11.0    | Puppeteer-rendered diagrams          |
+| Audio/Video → *  | FFmpeg              | @ffmpeg/ffmpeg       | ^0.12    | WASM, client-side only               |
+
+## Python Backend Endpoints
+
+| Endpoint          | Method | Input                      | Output      | Backend Dependency     |
+|-------------------|--------|----------------------------|-------------|------------------------|
+| /api/slm-score    | POST   | multipart: 2 files         | JSON score  | sentence-transformers  |
+| /api/pdf-extract  | POST   | multipart: PDF + format    | JSON text   | pdfminer.six           |
+| /health           | GET    | —                          | JSON status | —                      |
+
+## File Size Limits
+
+| Format  | Max Input Size | Max Output Size | Notes                              |
+|---------|----------------|----------------|------------------------------------|
+| MD      | 10 MB          | 50 MB          | Large files may slow SFI scoring   |
+| HTML    | 10 MB          | 50 MB          |                                    |
+| DOCX    | 25 MB          | 50 MB          |                                    |
+| PDF     | 50 MB          | 100 MB         | Extraction quality varies by PDF   |
+| PNG     | 50 MB          | 100 MB         | Sharp handles large images         |
+| Video   | 500 MB         | 500 MB         | Client-side FFmpeg.wasm            |
+| Audio   | 200 MB         | 200 MB         | Client-side FFmpeg.wasm            |
+
+## Browser Compatibility
+
+| Feature                  | Chrome 120+ | Firefox 121+ | Safari 17+ | Edge 120+ |
+|--------------------------|-------------|--------------|------------|-----------|
+| File upload & conversion | ✓           | ✓            | ✓          | ✓         |
+| Drag & drop              | ✓           | ✓            | ✓          | ✓         |
+| FFmpeg.wasm (SharedArrayBuffer) | ✓    | ✓            | ✓ (14.1+)  | ✓         |
+| Clipboard copy           | ✓           | ✓            | ✓          | ✓         |
+| Output preview           | ✓           | ✓            | ✓          | ✓         |
+| AI chat panel            | ✓           | ✓            | ✓          | ✓         |

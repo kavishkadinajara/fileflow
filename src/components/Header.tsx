@@ -1,13 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { BookOpen, Moon, Sun } from "lucide-react";
+import { BarChart3, BookOpen, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
-  { href: "/guide", label: "Guide", icon: BookOpen },
+  { href: "/guide",     label: "Guide",     icon: BookOpen  },
+  { href: "/benchmark", label: "Benchmark", icon: BarChart3 },
 ];
 
 export function Header() {

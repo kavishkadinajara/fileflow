@@ -12,6 +12,7 @@ import {
   yamlToJson, yamlToTxt,
 } from "@/lib/converters/data";
 import { docxToHtml, docxToMd, docxToPdf, docxToTxt } from "@/lib/converters/docx";
+import { pdfToDocx, pdfToHtml, pdfToMd, pdfToTxt } from "@/lib/converters/pdfExtract";
 import { imageToJpeg, imageToPng, pngToSvg, svgToPng } from "@/lib/converters/image";
 import { mermaidToHtml, mermaidToPdf, mermaidToPng, mermaidToSvg } from "@/lib/converters/mermaid";
 import { htmlToPdf, htmlToPng } from "@/lib/converters/pdf";
@@ -189,6 +190,20 @@ async function runConversion(input: ConversionInput): Promise<ConversionResult> 
   }
   if (fromFormat === "docx" && toFormat === "pdf") {
     return { resultBuffer: await docxToPdf(fileBuffer) };
+  }
+
+  // ── PDF ───────────────────────────────────────────────────────────────────
+  if (fromFormat === "pdf" && toFormat === "txt") {
+    return { resultText: await pdfToTxt(fileBuffer) };
+  }
+  if (fromFormat === "pdf" && toFormat === "md") {
+    return { resultText: await pdfToMd(fileBuffer) };
+  }
+  if (fromFormat === "pdf" && toFormat === "html") {
+    return { resultText: await pdfToHtml(fileBuffer) };
+  }
+  if (fromFormat === "pdf" && toFormat === "docx") {
+    return { resultBuffer: await pdfToDocx(fileBuffer) };
   }
 
   // ── JSON ──────────────────────────────────────────────────────────────────

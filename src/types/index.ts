@@ -57,6 +57,8 @@ export interface ConversionJob {
   error?: string;
   createdAt: Date;
   sourceContent?: string;
+  /** Original File object — retained for SFI quality scoring */
+  sourceFile?: File;
   options?: ConvertOptions;
 }
 

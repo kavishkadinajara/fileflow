@@ -1,4 +1,6 @@
 import { FORMAT_META, isConversionSupported } from "@/lib/formats";
+import { getTemplate } from "@/lib/styles/templates";
+import type { StyleConfig } from "@/types/style";
 import type { FileFormat } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -18,6 +20,8 @@ import { mermaidToHtml, mermaidToPdf, mermaidToPng, mermaidToSvg } from "@/lib/c
 import { htmlToPdf, htmlToPng } from "@/lib/converters/pdf";
 import { convertSql } from "@/lib/converters/sql";
 import { htmlToMd, htmlToTxt, mdToDocx, mdToHtml, mdToTxt } from "@/lib/converters/text";
+import { mdToStyledHtml } from "@/lib/converters/styledHtml";
+import { mdToStyledDocx } from "@/lib/converters/styledDocx";
 
 // ─── Validation ──────────────────────────────────────────────────────────────
 
@@ -34,6 +38,10 @@ const RequestSchema = z.object({
       mermaidTheme: z.enum(["default", "dark", "forest", "neutral"]).optional(),
     })
     .optional(),
+  /** Apply a built-in template by id (e.g. "academic", "business-report") */
+  styleId: z.string().optional(),
+  /** Apply a custom StyleConfig (overrides styleId). Schema is loose to keep route flexible. */
+  customStyle: z.record(z.string(), z.any()).optional(),
 });
 
 // ─── Route Handler ───────────────────────────────────────────────────────────
@@ -51,7 +59,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: parsed.error.message }, { status: 400 });
   }
 
-  const { fileBase64, fileName, fromFormat, toFormat, options = {} } = parsed.data;
+  const { fileBase64, fileName, fromFormat, toFormat, options = {}, styleId, customStyle } = parsed.data;
+
+  // Resolve StyleConfig: customStyle wins, then built-in template by id
+  let style: StyleConfig | undefined;
+  if (customStyle) {
+    style = customStyle as unknown as StyleConfig;
+  } else if (styleId) {
+    const tpl = getTemplate(styleId);
+    if (tpl) style = tpl.config;
+  }
 
   if (!isConversionSupported(fromFormat as FileFormat, toFormat as FileFormat)) {
     return NextResponse.json(
@@ -76,6 +93,7 @@ export async function POST(req: NextRequest) {
       fileBuffer,
       fileText,
       options,
+      style,
     });
 
     const outBase64 = resultBuffer
@@ -108,6 +126,7 @@ interface ConversionInput {
   fileBuffer: Buffer;
   fileText: string;
   options: Record<string, unknown>;
+  style?: StyleConfig;
 }
 
 interface ConversionResult {
@@ -118,20 +137,29 @@ interface ConversionResult {
 }
 
 async function runConversion(input: ConversionInput): Promise<ConversionResult> {
-  const { fromFormat, toFormat, fileBuffer, fileText, options } = input;
+  const { fromFormat, toFormat, fileBuffer, fileText, options, style } = input;
 
   // ── Markdown ──────────────────────────────────────────────────────────────
   if (fromFormat === "md" && toFormat === "html") {
-    return { resultText: await mdToHtml(fileText) };
+    return { resultText: style ? await mdToStyledHtml(fileText, style) : await mdToHtml(fileText) };
   }
   if (fromFormat === "md" && toFormat === "txt") {
     return { resultText: mdToTxt(fileText) };
   }
   if (fromFormat === "md" && toFormat === "docx") {
-    const buf = await mdToDocx(fileText);
+    const buf = style ? await mdToStyledDocx(fileText, style) : await mdToDocx(fileText);
     return { resultBuffer: buf };
   }
   if (fromFormat === "md" && toFormat === "pdf") {
+    if (style) {
+      const html = await mdToStyledHtml(fileText, style);
+      const buf = await htmlToPdf(html, {
+        format: style.page.size as "A4",
+        landscape: style.page.orientation === "landscape",
+        styled: true,
+      });
+      return { resultBuffer: buf };
+    }
     const html = await mdToHtml(fileText);
     const buf = await htmlToPdf(html, {
       format: (options.pdfPageSize as "A4") ?? "A4",

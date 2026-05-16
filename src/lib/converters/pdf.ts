@@ -4,9 +4,11 @@
 import { launchBrowser } from "./browser";
 
 export interface PdfOptions {
-  format?: "A4" | "A3" | "Letter" | "Legal";
+  format?: "A4" | "A3" | "A5" | "Letter" | "Legal" | "Tabloid";
   landscape?: boolean;
   professional?: boolean;
+  /** When true, defer entirely to the HTML's own @page / header / footer styling. */
+  styled?: boolean;
 }
 
 export async function htmlToPdf(html: string, opts: PdfOptions = {}): Promise<Buffer> {
@@ -24,6 +26,16 @@ export async function htmlToPdf(html: string, opts: PdfOptions = {}): Promise<Bu
         },
         { timeout: 15000 }
       ).catch(() => {});
+    }
+    // Styled HTML supplies its own @page, headers, footers, and page numbers — bypass Puppeteer's.
+    if (opts.styled) {
+      const pdf = await page.pdf({
+        format: opts.format ?? "A4",
+        landscape: opts.landscape ?? false,
+        printBackground: true,
+        preferCSSPageSize: true,
+      });
+      return Buffer.from(pdf);
     }
     const pdf = await page.pdf({
       format: opts.format ?? "A4",

@@ -3,6 +3,6 @@ python_backend/
 .gitignore
 README.md
 CLAUDE.md
-supabase/
+/supabase/
 .env.local
 .env.*.local

@@ -1,11 +1,22 @@
 {
+  "buildCommand": "npm run build",
+  "framework": "nextjs",
   "functions": {
     "src/app/api/convert/route.ts": {
       "maxDuration": 60,
       "memory": 1024
     },
     "src/app/api/ai-modify/route.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 512
+    },
+    "src/app/api/chat/route.ts": {
+      "maxDuration": 30,
+      "memory": 256
+    },
+    "src/app/api/ai-tools/route.ts": {
+      "maxDuration": 30,
+      "memory": 256
     }
   }
 }

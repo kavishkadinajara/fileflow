@@ -1,0 +1,8 @@
+python_backend/
+.git/
+.gitignore
+README.md
+CLAUDE.md
+supabase/
+.env.local
+.env.*.local

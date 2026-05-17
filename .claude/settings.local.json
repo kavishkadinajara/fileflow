@@ -11,7 +11,8 @@
       "Bash(python -c ' *)",
       "Bash(rm resp.json)",
       "Bash(node \"e:/Projects/mdconvertor/scripts/debug-detect.mjs\")",
-      "Bash(xxd)"
+      "Bash(xxd)",
+      "PowerShell(New-Item -ItemType Directory -Force \"e:\\\\Projects\\\\mdconvertor\\\\.github\\\\workflows\")"
     ]
   }
 }

@@ -1,5 +1,6 @@
 {
-  "buildCommand": "rm -rf .next && npm run build",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
   "framework": "nextjs",
   "functions": {
     "src/app/api/convert/route.ts": {

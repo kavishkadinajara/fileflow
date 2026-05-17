@@ -1,9 +1,11 @@
 "use client";
 
+import { SaveToCloudDialog } from "@/components/auth/SaveToCloudDialog";
 import { Button } from "@/components/ui/button";
+import { isCloudEnabled } from "@/lib/supabase/client";
 import { useStudioStore } from "@/store/studioStore";
 import type { StyleConfig } from "@/types/style";
-import { ArrowLeft, Check, Download, RotateCcw, Save } from "lucide-react";
+import { ArrowLeft, Check, Cloud, Download, RotateCcw, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -18,6 +20,7 @@ export function StudioToolbar({ style, onNameChange, onReset }: Props) {
   const router = useRouter();
   const saveCustom = useStudioStore((s) => s.saveCustom);
   const [justSaved, setJustSaved] = useState(false);
+  const [cloudOpen, setCloudOpen] = useState(false);
 
   function handleSave() {
     saveCustom(style);
@@ -101,6 +104,18 @@ export function StudioToolbar({ style, onNameChange, onReset }: Props) {
           )}
         </Button>
 
+        {isCloudEnabled() && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCloudOpen(true)}
+            title="Save to your cloud account"
+            className="h-8 gap-1.5 text-xs"
+          >
+            <Cloud className="h-3.5 w-3.5" /> Cloud
+          </Button>
+        )}
+
         <Button
           size="sm"
           onClick={handleSaveAndApply}
@@ -109,6 +124,8 @@ export function StudioToolbar({ style, onNameChange, onReset }: Props) {
           Save & Apply →
         </Button>
       </div>
+
+      <SaveToCloudDialog open={cloudOpen} onOpenChange={setCloudOpen} style={style} />
     </div>
   );
 }

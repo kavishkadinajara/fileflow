@@ -38,6 +38,8 @@ interface ConversionStore {
     styleId?: string,
     /** Inline StyleConfig — wins over styleId when both supplied. Used by Studio. */
     customStyle?: StyleConfig,
+    /** Ask server to detect a style from the source. Wins over styleId/customStyle. */
+    autoDetect?: boolean,
   ) => Promise<void>;
   /** Add a job using modified text content instead of a File object */
   addJobFromContent: (
@@ -70,7 +72,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
   setActiveFile: (ctx) => set({ activeFile: ctx }),
   setEditingJob: (job) => set({ editingJob: job }),
 
-  addJob: async (file, fromFormat, toFormat, options, styleId, customStyle) => {
+  addJob: async (file, fromFormat, toFormat, options, styleId, customStyle, autoDetect) => {
     const id = uuidv4();
 
     // Preserve source content for text-based formats (enables edit & reconvert)
@@ -110,7 +112,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
       const res = await fetch("/api/convert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileBase64, fileName: file.name, fromFormat, toFormat, options, styleId, customStyle }),
+        body: JSON.stringify({ fileBase64, fileName: file.name, fromFormat, toFormat, options, styleId, customStyle, autoDetect }),
       });
 
       clearInterval(tick);

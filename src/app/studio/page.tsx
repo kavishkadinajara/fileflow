@@ -26,6 +26,7 @@ import { DEFAULT_STYLE } from "@/lib/styles/defaults";
 import { getTemplate } from "@/lib/styles/templates";
 import { useStudioStore } from "@/store/studioStore";
 import type { StyleConfig } from "@/types/style";
+import { Monitor, Sliders } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
@@ -71,6 +72,8 @@ function StudioPageInner() {
     setDraft(initial);
   }
 
+  const [mobileTab, setMobileTab] = useState<"editor" | "preview">("editor");
+
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
       <StudioToolbar
@@ -78,9 +81,38 @@ function StudioPageInner() {
         onNameChange={(name) => setStyle({ ...style, name })}
         onReset={handleReset}
       />
+
+      {/* Mobile tab bar — only visible below lg */}
+      <div className="flex lg:hidden border-b bg-background shrink-0">
+        <button
+          onClick={() => setMobileTab("editor")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors ${
+            mobileTab === "editor"
+              ? "border-primary text-foreground"
+              : "border-transparent text-muted-foreground"
+          }`}
+        >
+          <Sliders className="h-3.5 w-3.5" /> Editor
+        </button>
+        <button
+          onClick={() => setMobileTab("preview")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors ${
+            mobileTab === "preview"
+              ? "border-primary text-foreground"
+              : "border-transparent text-muted-foreground"
+          }`}
+        >
+          <Monitor className="h-3.5 w-3.5" /> Preview
+        </button>
+      </div>
+
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[420px_1fr] overflow-hidden">
-        <StudioEditor style={style} onChange={setStyle} />
-        <StudioPreview style={style} />
+        <div className={`${mobileTab === "editor" ? "block" : "hidden"} lg:block overflow-hidden h-full`}>
+          <StudioEditor style={style} onChange={setStyle} />
+        </div>
+        <div className={`${mobileTab === "preview" ? "flex" : "hidden"} lg:flex flex-col overflow-hidden`}>
+          <StudioPreview style={style} />
+        </div>
       </div>
     </div>
   );

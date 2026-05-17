@@ -16,6 +16,7 @@ import { BUILTIN_TEMPLATES } from "@/lib/styles/templates";
 import { useConversionStore } from "@/store/conversionStore";
 import { useStudioStore } from "@/store/studioStore";
 import type { ConvertOptions, DropzoneFile, FileFormat } from "@/types";
+import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
 import { ArrowRight, LayoutGrid, Palette, Settings2, Sliders, Sparkles, Zap } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -67,6 +68,8 @@ export function ConversionConfig({ droppedFile, onRemove }: ConversionConfigProp
     BUILTIN_TEMPLATES.find((t) => t.id !== "preserve-original")?.id ?? BUILTIN_TEMPLATES[0]?.id ?? ""
   );
   const [galleryOpen, setGalleryOpen] = useState(false);
+  // Preserve mode: optionally run heuristic detection on the source.
+  const [autoDetect, setAutoDetect] = useState(false);
   const savedCustom = useStudioStore((s) => s.savedCustom);
 
   const addJob = useConversionStore((s) => s.addJob);
@@ -103,7 +106,8 @@ export function ConversionConfig({ droppedFile, onRemove }: ConversionConfigProp
         STYLEABLE_SOURCES.has(fromFormat) && STYLEABLE_TARGETS.has(toFormat as FileFormat);
       const styleId = styleable && styleMode === "template" ? templateId : undefined;
       const inlineCustom = styleable && styleMode === "custom" ? savedCustom ?? undefined : undefined;
-      addJob(file, fromFormat, toFormat as FileFormat, options, styleId, inlineCustom);
+      const detectFlag = styleable && styleMode === "preserve" && autoDetect ? true : undefined;
+      addJob(file, fromFormat, toFormat as FileFormat, options, styleId, inlineCustom, detectFlag);
     }
     onRemove();
   };
@@ -112,6 +116,9 @@ export function ConversionConfig({ droppedFile, onRemove }: ConversionConfigProp
     STYLEABLE_SOURCES.has(fromFormat) &&
     !!toFormat &&
     STYLEABLE_TARGETS.has(toFormat as FileFormat);
+
+  // G → open gallery when template mode active
+  useKeyboardShortcut("g", () => setGalleryOpen(true), { enabled: isStyleable && styleMode === "template" });
   const selectedTemplate = BUILTIN_TEMPLATES.find((t) => t.id === templateId);
 
   // Group outputs by category
@@ -397,6 +404,30 @@ export function ConversionConfig({ droppedFile, onRemove }: ConversionConfigProp
             </button>
           </div>
 
+          {/* As-is panel: optional smart detect */}
+          {styleMode === "preserve" && (
+            <label className="flex items-start gap-2 p-2.5 rounded-lg border border-input bg-background cursor-pointer hover:border-primary/40 transition-colors">
+              <input
+                type="checkbox"
+                checked={autoDetect}
+                onChange={(e) => setAutoDetect(e.target.checked)}
+                className="mt-0.5 h-3.5 w-3.5 rounded border-input text-primary focus:ring-1 focus:ring-primary/40 shrink-0"
+              />
+              <div className="min-w-0">
+                <span className="flex items-center gap-1 text-[11px] font-semibold leading-tight">
+                  <Sparkles className="h-2.5 w-2.5 text-primary" />
+                  Smart detect
+                  <span className="ml-1 px-1 py-0.5 rounded bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-wider">
+                    AI
+                  </span>
+                </span>
+                <span className="block text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                  Analyse the source and pick a matching professional style automatically.
+                </span>
+              </div>
+            </label>
+          )}
+
           {/* Custom mode — link out to /studio */}
           {styleMode === "custom" && (
             <div className="space-y-2">
@@ -450,11 +481,12 @@ export function ConversionConfig({ droppedFile, onRemove }: ConversionConfigProp
                 <button
                   type="button"
                   onClick={() => setGalleryOpen(true)}
-                  title="Browse all styles with previews"
-                  className="h-8 px-2.5 rounded-md border border-input bg-background hover:bg-muted text-xs font-medium flex items-center gap-1 transition-colors"
+                  title="Browse all styles with previews (G)"
+                  className="h-8 px-2.5 rounded-md border border-input bg-background hover:bg-muted text-xs font-medium flex items-center gap-1.5 transition-colors"
                 >
                   <LayoutGrid className="h-3 w-3" />
                   Browse
+                  <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-border bg-muted px-1 text-[9px] font-mono text-muted-foreground">G</kbd>
                 </button>
               </div>
               {selectedTemplate && (

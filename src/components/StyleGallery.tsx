@@ -19,10 +19,14 @@ import {
 } from "@/components/ui/dialog";
 import { BUILTIN_TEMPLATES, TEMPLATE_CATEGORIES } from "@/lib/styles/templates";
 import { TemplateThumbnail } from "@/lib/styles/thumbnail";
+import { isCloudEnabled } from "@/lib/supabase/client";
+import { useAuthStore } from "@/store/authStore";
+import { useCloudTemplatesStore } from "@/store/cloudTemplatesStore";
 import type { Template, TemplateCategory } from "@/types/style";
 import {
   Briefcase,
   Check,
+  Cloud,
   Code,
   GraduationCap,
   LayoutGrid,
@@ -30,8 +34,9 @@ import {
   Palette,
   Search,
   User,
+  Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   GraduationCap: <GraduationCap className="h-3.5 w-3.5" />,
@@ -49,14 +54,44 @@ interface StyleGalleryProps {
   onSelect: (template: Template) => void;
 }
 
+type Source = "builtin" | "mine" | "community";
+
 export function StyleGallery({ open, onOpenChange, selectedId, onSelect }: StyleGalleryProps) {
+  const [source, setSource] = useState<Source>("builtin");
   const [category, setCategory] = useState<TemplateCategory | "all">("all");
   const [query, setQuery] = useState("");
   const [previewId, setPreviewId] = useState<string | null>(null);
 
+  const user = useAuthStore((s) => s.user);
+  const { mine, community, refreshMine, refreshCommunity, bindAuth } = useCloudTemplatesStore();
+
+  // Load cloud data on open
+  useEffect(() => {
+    if (!open) return;
+    bindAuth();
+    if (user) refreshMine();
+    refreshCommunity();
+  }, [open, user, refreshMine, refreshCommunity, bindAuth]);
+
+  // Adapt cloud rows into the Template shape the rest of the gallery expects.
+  const cloudAsTemplates: Template[] = useMemo(() => {
+    const rows = source === "mine" ? mine : source === "community" ? community : [];
+    return rows.map((r) => ({
+      id: `cloud-${r.id}`,
+      name: r.name,
+      description: r.description,
+      category: r.category,
+      tags: r.tags,
+      builtin: false,
+      config: r.config,
+    }));
+  }, [source, mine, community]);
+
+  const sourceTemplates: Template[] = source === "builtin" ? BUILTIN_TEMPLATES : cloudAsTemplates;
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return BUILTIN_TEMPLATES.filter((t) => {
+    return sourceTemplates.filter((t) => {
       if (category !== "all" && t.category !== category) return false;
       if (!q) return true;
       return (
@@ -65,7 +100,7 @@ export function StyleGallery({ open, onOpenChange, selectedId, onSelect }: Style
         t.tags.some((tag) => tag.toLowerCase().includes(q))
       );
     });
-  }, [category, query]);
+  }, [sourceTemplates, category, query]);
 
   const previewTemplate = useMemo(
     () => BUILTIN_TEMPLATES.find((t) => t.id === previewId) ?? BUILTIN_TEMPLATES.find((t) => t.id === selectedId),
@@ -90,6 +125,26 @@ export function StyleGallery({ open, onOpenChange, selectedId, onSelect }: Style
             Pick a professional style for your output document — preview live before applying.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Source tabs (built-in / cloud / community) */}
+        {isCloudEnabled() && (
+          <div className="px-6 pt-3 border-b">
+            <div className="flex items-center gap-1">
+              <SourceTab active={source === "builtin"} onClick={() => setSource("builtin")} icon={<LayoutGrid className="h-3.5 w-3.5" />}>
+                Built-in
+                <span className="ml-1 text-[10px] text-muted-foreground">{BUILTIN_TEMPLATES.length}</span>
+              </SourceTab>
+              <SourceTab active={source === "mine"} onClick={() => setSource("mine")} icon={<Cloud className="h-3.5 w-3.5" />}>
+                My Cloud
+                <span className="ml-1 text-[10px] text-muted-foreground">{mine.length}</span>
+              </SourceTab>
+              <SourceTab active={source === "community"} onClick={() => setSource("community")} icon={<Users className="h-3.5 w-3.5" />}>
+                Community
+                <span className="ml-1 text-[10px] text-muted-foreground">{community.length}</span>
+              </SourceTab>
+            </div>
+          </div>
+        )}
 
         {/* Search + Category filter bar */}
         <div className="px-6 py-3 border-b shrink-0 space-y-3 bg-muted/30">
@@ -223,6 +278,22 @@ export function StyleGallery({ open, onOpenChange, selectedId, onSelect }: Style
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SourceTab({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${
+        active
+          ? "border-primary text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
+      }`}
+    >
+      {icon}
+      {children}
+    </button>
   );
 }
 

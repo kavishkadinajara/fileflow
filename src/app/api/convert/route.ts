@@ -1,6 +1,7 @@
 import { FORMAT_META, isConversionSupported } from "@/lib/formats";
 import { getTemplate, PRESERVE_TEMPLATE_ID } from "@/lib/styles/templates";
 import { DEFAULT_STYLE, mergeStyle } from "@/lib/styles/defaults";
+import { detectStyle } from "@/lib/styles/detect";
 import type { StyleConfig } from "@/types/style";
 import type { FileFormat } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -43,6 +44,8 @@ const RequestSchema = z.object({
   styleId: z.string().optional(),
   /** Apply a custom StyleConfig (overrides styleId). Schema is loose to keep route flexible. */
   customStyle: z.record(z.string(), z.any()).optional(),
+  /** Run the style-detection engine on the source and apply the inferred style. */
+  autoDetect: z.boolean().optional(),
 });
 
 // ─── Route Handler ───────────────────────────────────────────────────────────
@@ -60,15 +63,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: parsed.error.message }, { status: 400 });
   }
 
-  const { fileBase64, fileName, fromFormat, toFormat, options = {}, styleId, customStyle } = parsed.data;
+  const { fileBase64, fileName, fromFormat, toFormat, options = {}, styleId, customStyle, autoDetect } = parsed.data;
+
+  // Decode early — both conversion and detection need the buffer.
+  let fileBufferEarly: Buffer;
+  try {
+    fileBufferEarly = Buffer.from(fileBase64, "base64");
+  } catch {
+    return NextResponse.json({ success: false, error: "Invalid base64 file data" }, { status: 400 });
+  }
+  const fileTextEarly = fileBufferEarly.toString("utf-8");
 
   // Resolve StyleConfig.
-  //   1. customStyle (user-built in Studio) — wins outright
-  //   2. styleId (built-in template gallery)
-  //   3. fallback: preserve-original template — true "as-is" rendering
-  //      for MD → HTML/PDF/DOCX. For other formats this is ignored.
+  //   1. autoDetect    — run detection engine on source
+  //   2. customStyle   — user-built in Studio, wins outright
+  //   3. styleId       — built-in template gallery
+  //   4. fallback      — preserve-original template
   let style: StyleConfig | undefined;
-  if (customStyle) {
+  let detectionReport: import("@/lib/styles/detect").DetectionReport | undefined;
+  if (autoDetect) {
+    // Binary formats (docx/pdf) need the raw buffer; text formats use the decoded string.
+    const binaryFormats: FileFormat[] = ["docx", "pdf", "png", "jpeg"];
+    const source: string | Buffer = binaryFormats.includes(fromFormat as FileFormat) ? fileBufferEarly : fileTextEarly;
+    const detected = await detectStyle(fromFormat as FileFormat, source);
+    style = detected.style;
+    detectionReport = detected.report;
+  } else if (customStyle) {
     style = mergeStyle(DEFAULT_STYLE, customStyle as Parameters<typeof mergeStyle<StyleConfig>>[1]);
   } else if (styleId) {
     const tpl = getTemplate(styleId);
@@ -85,14 +105,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let fileBuffer: Buffer;
-  try {
-    fileBuffer = Buffer.from(fileBase64, "base64");
-  } catch {
-    return NextResponse.json({ success: false, error: "Invalid base64 file data" }, { status: 400 });
-  }
-
-  const fileText = fileBuffer.toString("utf-8");
+  const fileBuffer = fileBufferEarly;
+  const fileText = fileTextEarly;
 
   try {
     const { resultBuffer, resultText, mimeType, ext } = await runConversion({
@@ -116,6 +130,8 @@ export async function POST(req: NextRequest) {
       fileBase64: outBase64,
       fileName: outFileName,
       mimeType: mimeType ?? FORMAT_META[toFormat as FileFormat].mime,
+      // When detection ran, include the report so the UI can show what was inferred.
+      detection: detectionReport,
     });
   } catch (err) {
     console.error("[convert] error:", err);

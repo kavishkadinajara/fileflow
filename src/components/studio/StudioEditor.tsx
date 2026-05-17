@@ -47,7 +47,7 @@ export function StudioEditor({ style, onChange }: Props) {
   const [openSection, setOpenSection] = useState<string>("page");
 
   return (
-    <div className="border-r overflow-y-auto bg-background">
+    <div className="border-r overflow-y-auto bg-background h-full">
       <div className="p-3 border-b sticky top-0 bg-background z-10">
         <h2 className="text-xs font-semibold text-foreground/80 uppercase tracking-wide">
           Style Editor

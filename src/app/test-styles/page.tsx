@@ -81,7 +81,11 @@ export default function TestStylesPage() {
     setResultUrl(null);
     setPreviewHtml(null);
     try {
-      const base64 = btoa(unescape(encodeURIComponent(SAMPLE_MD)));
+      // UTF-8 safe base64 encode (Sinhala/Unicode chars in sample MD would break btoa(raw))
+      const utf8Bytes = new TextEncoder().encode(SAMPLE_MD);
+      let encBinary = "";
+      utf8Bytes.forEach((b) => { encBinary += String.fromCharCode(b); });
+      const base64 = btoa(encBinary);
       const res = await fetch("/api/convert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

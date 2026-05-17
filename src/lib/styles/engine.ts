@@ -31,12 +31,14 @@ export function styleConfigToCss(s: StyleConfig): string {
       margin-bottom: ${h.marginBottom}pt;
       ${h.borderBottom ? `border-bottom: ${h.borderBottom.width}px ${h.borderBottom.style} ${h.borderBottom.color};` : ""}
       ${h.textTransform ? `text-transform: ${h.textTransform};` : ""}
-      ${h.pageBreakBefore ? "page-break-before: always;" : ""}
-      page-break-after: avoid;
+      ${h.pageBreakBefore ? "page-break-before: always; break-before: page;" : ""}
+      /* Professional polish: never leave a heading orphaned at the bottom of a page */
+      page-break-after: avoid; break-after: avoid;
+      page-break-inside: avoid; break-inside: avoid;
       ${h.decoration === "background-fill" ? `background: ${colors.primary}; color: ${colors.background}; padding: 8px 12px; border-radius: 4px;` : ""}
       ${h.decoration === "side-bar" ? `border-left: 4px solid ${colors.primary}; padding-left: 12px;` : ""}
     }
-    ${sel}:first-of-type { page-break-before: avoid; }
+    ${sel}:first-of-type { page-break-before: avoid; break-before: avoid; }
   `;
 
   const bulletChar = (() => {
@@ -72,6 +74,15 @@ export function styleConfigToCss(s: StyleConfig): string {
       margin: 0 0 ${t.paragraphSpacing}pt 0;
       ${t.paragraphIndent ? `text-indent: ${t.paragraphIndent}pt;` : ""}
       orphans: 3; widows: 3;
+    }
+    /* Professional polish: heading must stay with the paragraph that follows it */
+    h1 + p, h2 + p, h3 + p, h4 + p, h5 + p, h6 + p,
+    h1 + ul, h2 + ul, h3 + ul, h4 + ul,
+    h1 + ol, h2 + ol, h3 + ol, h4 + ol,
+    h1 + table, h2 + table, h3 + table, h4 + table,
+    h1 + pre, h2 + pre, h3 + pre, h4 + pre,
+    h1 + blockquote, h2 + blockquote, h3 + blockquote, h4 + blockquote {
+      page-break-before: avoid; break-before: avoid;
     }
     ${headingRule("h1", t.h1)}
     ${headingRule("h2", t.h2)}

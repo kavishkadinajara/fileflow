@@ -49,6 +49,23 @@ function mmToTwip(mm: number): number {
   return Math.round(mm * 56.6929);
 }
 
+/** Page sizes in twips. Letter/Legal in inches; everything else in mm. */
+const PAGE_SIZES_TWIPS = {
+  A3:      { width: 16838, height: 23811 },
+  A4:      { width: 11906, height: 16838 },
+  A5:      { width:  8391, height: 11906 },
+  Letter:  { width: 12240, height: 15840 },
+  Legal:   { width: 12240, height: 20160 },
+  Tabloid: { width: 15840, height: 24480 },
+} as const;
+
+function getPageDims(size: keyof typeof PAGE_SIZES_TWIPS, orientation: "portrait" | "landscape") {
+  const base = PAGE_SIZES_TWIPS[size] ?? PAGE_SIZES_TWIPS.A4;
+  return orientation === "landscape"
+    ? { width: base.height, height: base.width }
+    : base;
+}
+
 interface Segment {
   type: "text" | "mermaid";
   content: string;
@@ -111,7 +128,7 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
     sections.push({
       properties: {
         page: {
-          size: { width: 11906, height: 16838 },
+          size: getPageDims(page.size as keyof typeof PAGE_SIZES_TWIPS, page.orientation),
           margin: { top: mmToTwip(page.margin.top), bottom: mmToTwip(page.margin.bottom), left: mmToTwip(page.margin.left), right: mmToTwip(page.margin.right) },
           pageNumbers: { start: 0 },
         },
@@ -154,6 +171,7 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
     sections.push({
       properties: {
         page: {
+          size: getPageDims(page.size as keyof typeof PAGE_SIZES_TWIPS, page.orientation),
           margin: { top: mmToTwip(page.margin.top), bottom: mmToTwip(page.margin.bottom), left: mmToTwip(page.margin.left), right: mmToTwip(page.margin.right) },
         },
       },
@@ -219,6 +237,8 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
         if (lang) {
           children.push(new Paragraph({
             spacing: { before: 200 },
+            // Language label must stay attached to the code below it.
+            keepNext: true,
             children: [new TextRun({ text: lang.toUpperCase(), bold: true, size: pt(7), color: hex(colors.muted), font: t.body.family })],
           }));
         }
@@ -227,6 +247,8 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
             children: [new TextRun({ text: cl || " ", font: codeBlock.font, size: pt(codeBlock.fontSize), color: hex(codeBlock.textColor) })],
             shading: { type: ShadingType.SOLID, fill: hex(codeBlock.background), color: hex(codeBlock.background) },
             spacing: { line: 276 },
+            // Keep all lines of a code block together — don't split across pages.
+            keepLines: true,
             border: codeBlock.borderLeft ? {
               left: { style: DocxBorderStyle.SINGLE, size: codeBlock.borderLeft.width * 4, color: hex(codeBlock.borderLeft.color), space: 8 },
             } : undefined,
@@ -248,6 +270,10 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
           const colCount = tableRows[0].length;
           const docxRows = tableRows.map((row, rIdx) =>
             new TableRow({
+              // Keep each row intact — don't break a cell across pages.
+              cantSplit: true,
+              // First row is header — repeat on each page if table spans multiple pages.
+              tableHeader: rIdx === 0,
               children: row.map((cell) =>
                 new TableCell({
                   children: [new Paragraph({
@@ -309,6 +335,10 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
             alignment: hConfig.align === "center" ? AlignmentType.CENTER : hConfig.align === "right" ? AlignmentType.RIGHT : AlignmentType.LEFT,
             spacing: { before: needsBreak ? 0 : pt(hConfig.marginTop), after: pt(hConfig.marginBottom) },
             children: runs,
+            // Professional polish: keep heading with the paragraph that follows,
+            // and don't split a heading across pages.
+            keepNext: true,
+            keepLines: true,
             border: hConfig.borderBottom ? {
               bottom: { style: DocxBorderStyle.SINGLE, size: hConfig.borderBottom.width * 4, color: hex(hConfig.borderBottom.color), space: 4 },
             } : undefined,
@@ -411,7 +441,9 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
       alignment: structure.pageNumbers.position.includes("right") ? AlignmentType.RIGHT
               : structure.pageNumbers.position.includes("left") ? AlignmentType.LEFT
               : AlignmentType.CENTER,
-      border: { top: { style: DocxBorderStyle.SINGLE, size: 1, color: "E5E7EB", space: 4 } },
+      border: structure.footer.borderBottom?.width ? {
+        top: { style: DocxBorderStyle.SINGLE, size: structure.footer.borderBottom.width * 4, color: hex(structure.footer.borderBottom.color), space: 4 },
+      } : undefined,
       children: structure.pageNumbers.enabled ? buildPageNumberRuns(structure.pageNumbers.format, structure.pageNumbers.fontSize, structure.pageNumbers.color, t.body.family) : [
         new TextRun({ text: structure.footer.text ?? "", size: pt(structure.footer.fontSize), color: hex(structure.footer.color), font: t.body.family }),
       ],
@@ -421,6 +453,7 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
   sections.push({
     properties: {
       page: {
+        size: getPageDims(page.size as keyof typeof PAGE_SIZES_TWIPS, page.orientation),
         margin: { top: mmToTwip(page.margin.top), bottom: mmToTwip(page.margin.bottom), left: mmToTwip(page.margin.left), right: mmToTwip(page.margin.right) },
         pageNumbers: { start: structure.pageNumbers.startFrom, formatType: NumberFormat.DECIMAL },
       },

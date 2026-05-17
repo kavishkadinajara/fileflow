@@ -34,9 +34,11 @@ function splitMermaid(md: string): Segment[] {
 }
 
 function addHeadingAnchors(html: string): string {
-  return html.replace(/<(h[1-6])>(.+?)<\/\1>/g, (_, tag, text) => {
+  // Match h1-h6 with any existing attributes, then ensure an id="..." anchor exists.
+  return html.replace(/<(h[1-6])([^>]*)>([\s\S]+?)<\/\1>/g, (_, tag, attrs, text) => {
+    if (/\bid\s*=/.test(attrs)) return `<${tag}${attrs}>${text}</${tag}>`;
     const clean = text.replace(/<[^>]+>/g, "");
-    return `<${tag} id="${slugify(clean)}">${text}</${tag}>`;
+    return `<${tag}${attrs} id="${slugify(clean)}">${text}</${tag}>`;
   });
 }
 

@@ -5,6 +5,7 @@
  * To add a new template: create a new file in this directory and register it here.
  */
 import type { Template, TemplateCategory } from "@/types/style";
+import { preserveOriginal } from "./preserve";
 import { academic } from "./academic";
 import { businessReport } from "./businessReport";
 import { minimalist } from "./minimalist";
@@ -18,7 +19,11 @@ import { classicLetter } from "./classicLetter";
 import { blog } from "./blog";
 import { pitchDeck } from "./pitchDeck";
 
+/** Special id used by the API when the user picks As-is mode. */
+export const PRESERVE_TEMPLATE_ID = "preserve-original";
+
 export const BUILTIN_TEMPLATES: Template[] = [
+  preserveOriginal,
   thesis,
   academic,
   businessReport,

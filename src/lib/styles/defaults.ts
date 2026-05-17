@@ -162,7 +162,9 @@ export function mergeStyle<T extends object>(base: T, override: DeepPartial<T>):
     const v = (override as any)[k];
     if (v && typeof v === "object" && !Array.isArray(v) && (base as any)[k]) {
       out[k] = mergeStyle((base as any)[k], v);
-    } else if (v !== undefined) {
+    } else {
+      // Explicitly assign — including `undefined`, which lets templates
+      // remove a default field (e.g. borderBottom: undefined for clean headings).
       out[k] = v;
     }
   }

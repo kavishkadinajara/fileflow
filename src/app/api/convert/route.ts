@@ -1,5 +1,6 @@
 import { FORMAT_META, isConversionSupported } from "@/lib/formats";
-import { getTemplate } from "@/lib/styles/templates";
+import { getTemplate, PRESERVE_TEMPLATE_ID } from "@/lib/styles/templates";
+import { DEFAULT_STYLE, mergeStyle } from "@/lib/styles/defaults";
 import type { StyleConfig } from "@/types/style";
 import type { FileFormat } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -61,13 +62,20 @@ export async function POST(req: NextRequest) {
 
   const { fileBase64, fileName, fromFormat, toFormat, options = {}, styleId, customStyle } = parsed.data;
 
-  // Resolve StyleConfig: customStyle wins, then built-in template by id
+  // Resolve StyleConfig.
+  //   1. customStyle (user-built in Studio) — wins outright
+  //   2. styleId (built-in template gallery)
+  //   3. fallback: preserve-original template — true "as-is" rendering
+  //      for MD → HTML/PDF/DOCX. For other formats this is ignored.
   let style: StyleConfig | undefined;
   if (customStyle) {
-    style = customStyle as unknown as StyleConfig;
+    style = mergeStyle(DEFAULT_STYLE, customStyle as Parameters<typeof mergeStyle<StyleConfig>>[1]);
   } else if (styleId) {
     const tpl = getTemplate(styleId);
     if (tpl) style = tpl.config;
+  } else {
+    const preserve = getTemplate(PRESERVE_TEMPLATE_ID);
+    if (preserve) style = preserve.config;
   }
 
   if (!isConversionSupported(fromFormat as FileFormat, toFormat as FileFormat)) {

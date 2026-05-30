@@ -267,7 +267,7 @@ export default function PrivacyPage() {
         <section id="changes" className="scroll-mt-20 space-y-3">
           <h2 className="text-xl font-semibold text-foreground tracking-tight">9. Changes to This Policy</h2>
           <p>
-            We may update this Privacy Policy periodically. Changes will be reflected in the "Last Updated"
+            We may update this Privacy Policy periodically. Changes will be reflected in the &ldquo;Last Updated&rdquo;
             date. Significant changes will be announced via our GitHub repository.
           </p>
           <p>

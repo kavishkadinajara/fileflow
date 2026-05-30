@@ -101,7 +101,7 @@ export default function MyTemplatesPage() {
             My Templates
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Styles you've saved to the cloud — accessible from any device.
+            Styles you&apos;ve saved to the cloud — accessible from any device.
           </p>
         </div>
         <Button onClick={() => router.push("/studio")} size="sm" className="bg-gradient-brand text-white border-0 hover:opacity-90">

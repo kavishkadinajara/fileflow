@@ -1,6 +1,7 @@
 import { base64ToBlob, downloadBlob, fileToBase64 } from "@/lib/utils";
 import { convertMedia } from "@/lib/converters/media";
 import type { ConversionJob, ConvertOptions, FileFormat } from "@/types";
+import type { StyleConfig } from "@/types/style";
 import JSZip from "jszip";
 import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
@@ -32,7 +33,13 @@ interface ConversionStore {
     file: File,
     fromFormat: FileFormat,
     toFormat: FileFormat,
-    options?: ConvertOptions
+    options?: ConvertOptions,
+    /** Built-in template id (e.g. "academic"). Undefined → preserve / as-is. */
+    styleId?: string,
+    /** Inline StyleConfig — wins over styleId when both supplied. Used by Studio. */
+    customStyle?: StyleConfig,
+    /** Ask server to detect a style from the source. Wins over styleId/customStyle. */
+    autoDetect?: boolean,
   ) => Promise<void>;
   /** Add a job using modified text content instead of a File object */
   addJobFromContent: (
@@ -40,7 +47,9 @@ interface ConversionStore {
     fileName: string,
     fromFormat: FileFormat,
     toFormat: FileFormat,
-    options?: ConvertOptions
+    options?: ConvertOptions,
+    styleId?: string,
+    customStyle?: StyleConfig,
   ) => Promise<void>;
   removeJob: (id: string) => void;
   clearJobs: () => void;
@@ -63,7 +72,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
   setActiveFile: (ctx) => set({ activeFile: ctx }),
   setEditingJob: (job) => set({ editingJob: job }),
 
-  addJob: async (file, fromFormat, toFormat, options) => {
+  addJob: async (file, fromFormat, toFormat, options, styleId, customStyle, autoDetect) => {
     const id = uuidv4();
 
     // Preserve source content for text-based formats (enables edit & reconvert)
@@ -103,7 +112,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
       const res = await fetch("/api/convert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileBase64, fileName: file.name, fromFormat, toFormat, options }),
+        body: JSON.stringify({ fileBase64, fileName: file.name, fromFormat, toFormat, options, styleId, customStyle, autoDetect }),
       });
 
       clearInterval(tick);
@@ -171,7 +180,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
     downloadBlob(blob, `fileflow-batch-${date}.zip`);
   },
 
-  addJobFromContent: async (content, fileName, fromFormat, toFormat, options) => {
+  addJobFromContent: async (content, fileName, fromFormat, toFormat, options, styleId, customStyle) => {
     // If same format, just provide the AI-modified content as a direct download (no API call needed)
     if (fromFormat === toFormat) {
       const id = uuidv4();
@@ -195,7 +204,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
     // Different format: create File object and use normal conversion pipeline
     const blob = new Blob([content], { type: "text/plain" });
     const file = new File([blob], fileName, { type: "text/plain" });
-    return get().addJob(file, fromFormat, toFormat, options);
+    return get().addJob(file, fromFormat, toFormat, options, styleId, customStyle);
   },
 
   addMediaJob: async (file, fromFormat, toFormat, options) => {

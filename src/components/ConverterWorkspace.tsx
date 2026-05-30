@@ -3,6 +3,7 @@
 import { ConversionConfig } from "@/components/ConversionConfig";
 import { DraftRestoreBanner, type DraftData } from "@/components/DraftRestoreBanner";
 import { FileUploader } from "@/components/FileUploader";
+import { StyleOnboardingTip } from "@/components/StyleOnboardingTip";
 import { JobList } from "@/components/JobList";
 import { LivePreview } from "@/components/LivePreview";
 import { TextEditor } from "@/components/TextEditor";
@@ -173,6 +174,9 @@ export function ConverterWorkspace() {
 
   return (
     <div className="space-y-5">
+      {/* One-time style system onboarding tip */}
+      <StyleOnboardingTip />
+
       {/* Draft restore banner */}
       {draft && (
         <DraftRestoreBanner

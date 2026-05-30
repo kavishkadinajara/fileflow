@@ -8,6 +8,12 @@ import puppeteer from "puppeteer-core";
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
+/**
+ * `waitUntil` for setContent. Typed loosely because the bundled puppeteer-core
+ * types (22.x vs 24.x) disagree on whether setContent accepts "networkidle0".
+ */
+export const WAIT_UNTIL = "networkidle0" as never;
+
 const SYSTEM_BROWSERS = [
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",

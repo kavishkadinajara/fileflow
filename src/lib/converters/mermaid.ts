@@ -1,7 +1,7 @@
 /**
  * Mermaid diagram → SVG / PNG / PDF / HTML (server-side via Puppeteer)
  */
-import { launchBrowser } from "./browser";
+import { launchBrowser, WAIT_UNTIL } from "./browser";
 
 const MERMAID_CDN =
   "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
@@ -32,7 +32,7 @@ export async function mermaidToSvg(code: string, theme = "default"): Promise<str
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    await page.setContent(buildMermaidHtml(code, theme), { waitUntil: "networkidle0" });
+    await page.setContent(buildMermaidHtml(code, theme), { waitUntil: WAIT_UNTIL });
     await page.waitForSelector(".mermaid svg", { timeout: 15000 });
     const svg = await page.evaluate(() => {
       const el = document.querySelector(".mermaid svg");
@@ -50,7 +50,7 @@ export async function mermaidToPng(code: string, theme = "default"): Promise<Buf
     const page = await browser.newPage();
     // Use 3x device scale for high-quality PNG output
     await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 3 });
-    await page.setContent(buildMermaidHtml(code, theme), { waitUntil: "networkidle0" });
+    await page.setContent(buildMermaidHtml(code, theme), { waitUntil: WAIT_UNTIL });
     await page.waitForSelector(".mermaid svg", { timeout: 15000 });
     const element = await page.$(".mermaid");
     const screenshot = await element!.screenshot({ type: "png", omitBackground: false });
@@ -64,7 +64,7 @@ export async function mermaidToPdf(code: string, theme = "default"): Promise<Buf
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    await page.setContent(buildMermaidHtml(code, theme), { waitUntil: "networkidle0" });
+    await page.setContent(buildMermaidHtml(code, theme), { waitUntil: WAIT_UNTIL });
     await page.waitForSelector(".mermaid svg", { timeout: 15000 });
     const pdf = await page.pdf({ format: "A4", printBackground: true });
     return Buffer.from(pdf);

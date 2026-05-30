@@ -4,12 +4,15 @@
 
 ### Universal File Converter — Drag, Drop, Convert
 
+[![Live Demo](https://img.shields.io/badge/Live-fileflow--one.kavishkadinajara.com-22c55e?logo=vercel&logoColor=white)](https://fileflow-one.kavishkadinajara.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A powerful, fully **local** file conversion tool built with Next.js — no cloud uploads, no data leaves your machine. Convert documents, diagrams, data files, images, and SQL dialects with a clean drag-and-drop interface.
+A powerful file conversion tool built with Next.js — convert documents, diagrams, data files, images, and SQL dialects with a clean drag-and-drop interface. Apply professional **style templates**, build your own in the **Style Studio**, or let it auto-detect and preserve your source document's look.
+
+**🌐 Live:** [fileflow-one.kavishkadinajara.com](https://fileflow-one.kavishkadinajara.com/)
 
 </div>
 
@@ -18,12 +21,16 @@ A powerful, fully **local** file conversion tool built with Next.js — no cloud
 ## ✨ Features
 
 - **30+ format conversions** across documents, images, data, and SQL
+- **Style system** — apply a consistent look across HTML, PDF, and DOCX output from a single `StyleConfig`
+- **Style Studio** — visual editor (`/studio`) to build custom document styles: colors, headings, typography, page layout, structure, and content blocks with live preview
+- **13 professional templates** — Academic, Thesis, Technical, Business Report, Blog, Magazine, Ebook, Pitch Deck, Resume, Classic Letter, Minimalist, Modern Colorful, and Preserve Original
+- **Automatic style detection** — infers and preserves the source document's style when converting Markdown and Word files
+- **Cloud templates & accounts** — sign in (Supabase) to save custom styles to the cloud, access them from any device, and share to the community gallery
 - **Professional report generation** — Markdown → DOCX/PDF with cover page, auto-generated Table of Contents, page headers/footers, and page numbering
 - **Mermaid diagram support** — renders flowcharts, sequence diagrams, ER diagrams, and more as high-resolution PNG images embedded in DOCX and PDF output
 - **SQL dialect conversion** — bidirectional conversion between MS SQL Server, MySQL/MariaDB, and PostgreSQL with data type mapping, function translation, and syntax adaptation
 - **Auto-detect text format** — paste or drop a `.txt` / `.sql` file and the app reads the content to identify whether it's JSON, YAML, CSV, Markdown, SQL (with dialect detection), Mermaid, or HTML
 - **Batch processing** — convert multiple files in parallel with a live progress indicator per job
-- **100% local** — all conversions run server-side with no third-party API calls
 
 ---
 
@@ -194,7 +201,15 @@ e:\Projects\mdconvertor\
 
 ## ⚙️ Configuration
 
-No environment variables are required. All conversions run entirely on the local server.
+All core conversions run server-side and need no configuration. A few optional environment variables unlock extra features:
+
+| Variable | Required | Enables |
+| -------- | -------- | ------- |
+| `GROQ_API_KEY` | Optional | AI features (chat, modify, content detection / humanization) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Optional | Cloud templates + accounts |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Optional | Cloud templates + accounts |
+
+Without Supabase configured, cloud/auth features are simply hidden — the converter works fully without them. Copy `.env.example` to `.env.local` to set values.
 
 ### Puppeteer / Chrome
 

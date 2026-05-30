@@ -1,7 +1,7 @@
 /**
  * HTML → PDF converter (server-side via Puppeteer)
  */
-import { launchBrowser } from "./browser";
+import { launchBrowser, WAIT_UNTIL } from "./browser";
 
 export interface PdfOptions {
   format?: "A4" | "A3" | "A5" | "Letter" | "Legal" | "Tabloid";
@@ -15,7 +15,7 @@ export async function htmlToPdf(html: string, opts: PdfOptions = {}): Promise<Bu
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, { waitUntil: WAIT_UNTIL });
     // Wait for Mermaid diagrams to finish rendering (if any)
     const hasMermaid = html.includes('class="mermaid"');
     if (hasMermaid) {
@@ -60,7 +60,7 @@ export async function htmlToPng(html: string): Promise<Buffer> {
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1280, height: 900 });
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, { waitUntil: WAIT_UNTIL });
     // Wait for Mermaid diagrams to finish rendering (if any)
     const hasMermaid = html.includes('class="mermaid"');
     if (hasMermaid) {

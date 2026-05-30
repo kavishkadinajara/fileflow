@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@/components/auth/UserButton";
 import { Button } from "@/components/ui/button";
 import { BarChart3, BookOpen, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -89,6 +90,9 @@ export function Header() {
             </svg>
             GitHub
           </a>
+
+          {/* User / Sign in (renders nothing when Supabase not configured) */}
+          <UserButton />
 
           {/* Theme toggle */}
           <Button

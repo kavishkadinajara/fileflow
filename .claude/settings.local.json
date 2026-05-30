@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST http://localhost:3001/api/convert -H 'Content-Type: application/json' -d '{\"fileBase64\":\"IyBNYWluIFRpdGxlCgpUaGlzIGlzIGEgcGFyYWdyYXBoLg==\",\"fileName\":\"doc.md\",\"fromFormat\":\"md\",\"toFormat\":\"docx\",\"styleId\":\"business-report\"}' -o /tmp/biz_docx.json -w '\\\\nStatus: %{http_code}\\\\n')",
+      "Bash(npx tsc *)",
+      "Bash(curl -s -o /dev/null -w \"Studio + templateId: %{http_code}\\\\n\" \"http://localhost:3001/studio?templateId=thesis\")",
+      "Bash(cat /tmp/regex_test.js)",
+      "Read(//tmp/**)",
+      "Bash(base64 -w0 /tmp/thesis.md)",
+      "Bash(curl -s -X POST http://localhost:3001/api/convert -H 'Content-Type: application/json' -d '{\"fileBase64\":\"__TRACKED_VAR__\",\"fileName\":\"t.md\",\"fromFormat\":\"md\",\"toFormat\":\"html\",\"autoDetect\":true}')",
+      "Bash(python -c ' *)",
+      "Bash(rm resp.json)",
+      "Bash(node \"e:/Projects/mdconvertor/scripts/debug-detect.mjs\")",
+      "Bash(xxd)",
+      "PowerShell(New-Item -ItemType Directory -Force \"e:\\\\Projects\\\\mdconvertor\\\\.github\\\\workflows\")"
+    ]
+  }
+}

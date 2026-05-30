@@ -9,12 +9,24 @@ import {
   SelectSeparator,
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { StyleGallery } from "@/components/StyleGallery";
 import { MEDIA_FORMATS } from "@/lib/converters/media";
 import { FORMAT_META, formatBytes, getSupportedOutputs } from "@/lib/formats";
+import { BUILTIN_TEMPLATES } from "@/lib/styles/templates";
 import { useConversionStore } from "@/store/conversionStore";
+import { useStudioStore } from "@/store/studioStore";
 import type { ConvertOptions, DropzoneFile, FileFormat } from "@/types";
-import { ArrowRight, Settings2, Zap } from "lucide-react";
+import { useKeyboardShortcut } from "@/hooks/use-keyboard-shortcut";
+import { ArrowRight, LayoutGrid, Palette, Settings2, Sliders, Sparkles, Zap } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
+
+// Styled outputs are document formats produced from Markdown.
+// Style picker only makes sense for these source→target pairs.
+const STYLEABLE_TARGETS = new Set<FileFormat>(["pdf", "docx", "html"]);
+const STYLEABLE_SOURCES = new Set<FileFormat>(["md"]);
+
+type StyleMode = "preserve" | "template" | "custom";
 
 const CATEGORY_LABELS: Record<string, string> = {
   document: "Documents",
@@ -49,6 +61,16 @@ export function ConversionConfig({ droppedFile, onRemove }: ConversionConfigProp
   const [options, setOptions] = useState<ConvertOptions>({});
   const [showOptions, setShowOptions] = useState(false);
   const [qualityPreset, setQualityPreset] = useState<QualityPreset>("balanced");
+  // Style mode + template (only active for MD → PDF/DOCX/HTML)
+  const [styleMode, setStyleMode] = useState<StyleMode>("preserve");
+  // Default to first non-preserve template (preserve has order=0)
+  const [templateId, setTemplateId] = useState<string>(
+    BUILTIN_TEMPLATES.find((t) => t.id !== "preserve-original")?.id ?? BUILTIN_TEMPLATES[0]?.id ?? ""
+  );
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  // Preserve mode: optionally run heuristic detection on the source.
+  const [autoDetect, setAutoDetect] = useState(false);
+  const savedCustom = useStudioStore((s) => s.savedCustom);
 
   const addJob = useConversionStore((s) => s.addJob);
   const addMediaJob = useConversionStore((s) => s.addMediaJob);
@@ -80,10 +102,24 @@ export function ConversionConfig({ droppedFile, onRemove }: ConversionConfigProp
     if (MEDIA_FORMATS.has(fromFormat)) {
       addMediaJob(file, fromFormat, toFormat as FileFormat, options);
     } else {
-      addJob(file, fromFormat, toFormat as FileFormat, options);
+      const styleable =
+        STYLEABLE_SOURCES.has(fromFormat) && STYLEABLE_TARGETS.has(toFormat as FileFormat);
+      const styleId = styleable && styleMode === "template" ? templateId : undefined;
+      const inlineCustom = styleable && styleMode === "custom" ? savedCustom ?? undefined : undefined;
+      const detectFlag = styleable && styleMode === "preserve" && autoDetect ? true : undefined;
+      addJob(file, fromFormat, toFormat as FileFormat, options, styleId, inlineCustom, detectFlag);
     }
     onRemove();
   };
+
+  const isStyleable =
+    STYLEABLE_SOURCES.has(fromFormat) &&
+    !!toFormat &&
+    STYLEABLE_TARGETS.has(toFormat as FileFormat);
+
+  // G → open gallery when template mode active
+  useKeyboardShortcut("g", () => setGalleryOpen(true), { enabled: isStyleable && styleMode === "template" });
+  const selectedTemplate = BUILTIN_TEMPLATES.find((t) => t.id === templateId);
 
   // Group outputs by category
   const grouped = supportedOutputs.reduce<Record<string, FileFormat[]>>((acc, fmt) => {
@@ -312,6 +348,168 @@ export function ConversionConfig({ droppedFile, onRemove }: ConversionConfigProp
           )}
         </div>
       )}
+
+      {/* ── Style picker (MD → PDF/DOCX/HTML only) ───────────────────────── */}
+      {isStyleable && (
+        <div className="rounded-xl border bg-muted/30 p-3 space-y-3">
+          <p className="text-xs font-medium flex items-center gap-1.5 text-foreground/80">
+            <Palette className="h-3 w-3 text-primary" />
+            Document Style
+          </p>
+
+          {/* Mode toggle: Preserve vs Template vs Custom */}
+          <div className="grid grid-cols-3 gap-1">
+            <button
+              onClick={() => setStyleMode("preserve")}
+              className={`rounded-lg border py-1.5 px-1 text-center transition-all ${
+                styleMode === "preserve"
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-background hover:bg-muted border-input"
+              }`}
+            >
+              <span className="block text-[11px] font-semibold leading-none">As-is</span>
+              <span className={`block text-[9px] mt-0.5 leading-none ${
+                styleMode === "preserve" ? "opacity-75" : "text-muted-foreground"
+              }`}>Preserve</span>
+            </button>
+            <button
+              onClick={() => setStyleMode("template")}
+              className={`rounded-lg border py-1.5 px-1 text-center transition-all ${
+                styleMode === "template"
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-background hover:bg-muted border-input"
+              }`}
+            >
+              <span className="flex items-center justify-center gap-1 text-[11px] font-semibold leading-none">
+                <Sparkles className="h-2.5 w-2.5" /> Template
+              </span>
+              <span className={`block text-[9px] mt-0.5 leading-none ${
+                styleMode === "template" ? "opacity-75" : "text-muted-foreground"
+              }`}>Pick a style</span>
+            </button>
+            <button
+              onClick={() => setStyleMode("custom")}
+              className={`rounded-lg border py-1.5 px-1 text-center transition-all ${
+                styleMode === "custom"
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-background hover:bg-muted border-input"
+              }`}
+            >
+              <span className="flex items-center justify-center gap-1 text-[11px] font-semibold leading-none">
+                <Sliders className="h-2.5 w-2.5" /> Custom
+              </span>
+              <span className={`block text-[9px] mt-0.5 leading-none ${
+                styleMode === "custom" ? "opacity-75" : "text-muted-foreground"
+              }`}>{savedCustom ? "Your style" : "Build one"}</span>
+            </button>
+          </div>
+
+          {/* As-is panel: optional smart detect */}
+          {styleMode === "preserve" && (
+            <label className="flex items-start gap-2 p-2.5 rounded-lg border border-input bg-background cursor-pointer hover:border-primary/40 transition-colors">
+              <input
+                type="checkbox"
+                checked={autoDetect}
+                onChange={(e) => setAutoDetect(e.target.checked)}
+                className="mt-0.5 h-3.5 w-3.5 rounded border-input text-primary focus:ring-1 focus:ring-primary/40 shrink-0"
+              />
+              <div className="min-w-0">
+                <span className="flex items-center gap-1 text-[11px] font-semibold leading-tight">
+                  <Sparkles className="h-2.5 w-2.5 text-primary" />
+                  Smart detect
+                  <span className="ml-1 px-1 py-0.5 rounded bg-primary/10 text-primary text-[8px] font-bold uppercase tracking-wider">
+                    AI
+                  </span>
+                </span>
+                <span className="block text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                  Analyse the source and pick a matching professional style automatically.
+                </span>
+              </div>
+            </label>
+          )}
+
+          {/* Custom mode — link out to /studio */}
+          {styleMode === "custom" && (
+            <div className="space-y-2">
+              {savedCustom ? (
+                <div className="p-2.5 rounded-lg border border-input bg-background space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Sliders className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="text-xs font-medium truncate">{savedCustom.name}</span>
+                    </div>
+                    <Link
+                      href={`/studio${templateId ? `?templateId=${templateId}` : ""}`}
+                      className="text-[10px] text-primary hover:underline whitespace-nowrap"
+                    >
+                      Edit →
+                    </Link>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Will be applied on next convert.
+                  </p>
+                </div>
+              ) : (
+                <Link
+                  href={`/studio${templateId ? `?templateId=${templateId}` : ""}`}
+                  className="flex items-center justify-center gap-1.5 w-full h-9 rounded-lg bg-gradient-brand text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+                >
+                  <Sliders className="h-3.5 w-3.5" />
+                  Open Style Studio →
+                </Link>
+              )}
+            </div>
+          )}
+
+          {/* Template picker — only when Template mode active */}
+          {styleMode === "template" && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Select value={templateId} onValueChange={setTemplateId}>
+                  <SelectTrigger className="h-8 text-xs flex-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {BUILTIN_TEMPLATES
+                      .filter((t) => t.id !== "preserve-original")
+                      .map((t) => (
+                        <SelectItem key={t.id} value={t.id} className="text-xs">
+                          <span className="font-medium">{t.name}</span>
+                          <span className="text-muted-foreground ml-1.5 capitalize">— {t.category}</span>
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <button
+                  type="button"
+                  onClick={() => setGalleryOpen(true)}
+                  title="Browse all styles with previews (G)"
+                  className="h-8 px-2.5 rounded-md border border-input bg-background hover:bg-muted text-xs font-medium flex items-center gap-1.5 transition-colors"
+                >
+                  <LayoutGrid className="h-3 w-3" />
+                  Browse
+                  <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-border bg-muted px-1 text-[9px] font-mono text-muted-foreground">G</kbd>
+                </button>
+              </div>
+              {selectedTemplate && (
+                <p className="text-[10px] text-muted-foreground leading-snug">
+                  {selectedTemplate.description}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Style Gallery modal */}
+      <StyleGallery
+        open={galleryOpen}
+        onOpenChange={setGalleryOpen}
+        selectedId={templateId}
+        onSelect={(t) => {
+          setTemplateId(t.id);
+          setStyleMode("template");
+        }}
+      />
+
 
       <Button
         className="w-full bg-gradient-brand hover:opacity-90 text-white border-0 transition-opacity duration-200"

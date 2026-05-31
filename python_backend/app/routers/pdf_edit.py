@@ -35,15 +35,24 @@ def _open_doc(data: bytes):
 @router.post("/pdf-overlay")
 async def pdf_overlay(
     file: UploadFile = File(..., description="Original PDF"),
-    replacements: str = Form(..., description='JSON array: [{"find": "...", "replace": "..."}]'),
+    replacements: str = Form(
+        ...,
+        description=(
+            'JSON array of replacements. Each item: '
+            '{"find": str, "replace": str, "occurrence"?: "all"|"first"|int, '
+            '"matchCase"?: bool}. The new text is redrawn in the matched span\'s '
+            "own font, size, and colour."
+        ),
+    ),
 ) -> Response:
-    """Find/replace text on every page while preserving layout via redaction.
+    """Find/replace text on the original PDF, matching the replaced text's style.
 
-    For each match we redact (erase) the original span and draw the replacement
-    text in its place using the span's own font size — keeping images and the
-    rest of the page pixel-identical.
+    Reads each matched span's font family/weight/slant, size, and colour, then
+    redraws the replacement in a matching base-14 font — so the edit blends in
+    and images / surrounding text stay pixel-identical. Supports targeted
+    replacement (first / n-th / all) and case-insensitive matching.
     """
-    import fitz
+    from app.services.pdf_overlay import Replacement, apply_replacements
 
     data = await file.read()
     if not data:
@@ -55,45 +64,32 @@ async def pdf_overlay(
     except (json.JSONDecodeError, AssertionError) as exc:
         raise HTTPException(status_code=422, detail="`replacements` must be a JSON array.") from exc
 
-    doc = _open_doc(data)
+    reps: list[Replacement] = []
+    for pair in pairs:
+        if not isinstance(pair, dict) or not str(pair.get("find", "")):
+            continue
+        occ = pair.get("occurrence", "all")
+        # Normalise occurrence: accept "all" / "first" / a 1-based integer.
+        if isinstance(occ, str) and occ not in ("all", "first"):
+            occ = int(occ) if occ.isdigit() else "all"
+        reps.append(Replacement(
+            find=str(pair["find"]),
+            replace=str(pair.get("replace", "")),
+            occurrence=occ,
+            match_case=bool(pair.get("matchCase", True)),
+        ))
 
-    for page in doc:
-        # Capture match rectangles BEFORE redacting — once text is erased,
-        # search_for can no longer find it. Each entry: (rect, replacement).
-        draws: list[tuple] = []
-        for pair in pairs:
-            find = str(pair.get("find", ""))
-            replace = str(pair.get("replace", ""))
-            if not find:
-                continue
-            for rect in page.search_for(find):
-                page.add_redact_annot(rect, fill=(1, 1, 1))
-                if replace:
-                    draws.append((rect, replace))
+    if not reps:
+        raise HTTPException(status_code=422, detail="No valid replacements supplied.")
 
-        # Erase all matched spans in one pass.
-        page.apply_redactions()
+    try:
+        out = apply_replacements(data, reps)
+    except Exception as exc:  # noqa: BLE001
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=422, detail=f"PDF overlay failed: {exc}") from exc
 
-        # Draw the replacement text where the originals were. We anchor at the
-        # baseline (bottom-left of the original span) with insert_text rather
-        # than insert_textbox — a textbox clips/silently drops text when the
-        # original rect is too tight for the font, whereas insert_text always
-        # renders. Font size is derived from the original line height.
-        for rect, replace in draws:
-            font_size = max(6.0, min(rect.height * 0.78, 24.0))
-            # rect.y1 is the bottom of the span; nudge up slightly to sit on the baseline.
-            page.insert_text(
-                fitz.Point(rect.x0, rect.y1 - rect.height * 0.18),
-                replace,
-                fontsize=font_size,
-                fontname="helv",
-                color=(0, 0, 0),
-            )
-
-    out = io.BytesIO()
-    doc.save(out)
-    doc.close()
-    return Response(content=out.getvalue(), media_type="application/pdf")
+    return Response(content=out, media_type="application/pdf")
 
 
 @router.post("/pdf-decorate")

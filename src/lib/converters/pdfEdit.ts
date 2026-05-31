@@ -115,6 +115,10 @@ async function postToPython(path: string, form: FormData): Promise<Buffer> {
 export interface TextReplacement {
   find: string;
   replace: string;
+  /** Which matches to replace: "all" (default), "first", or a 1-based index. */
+  occurrence?: "all" | "first" | number;
+  /** Case-sensitive matching (default true). */
+  matchCase?: boolean;
 }
 
 /**

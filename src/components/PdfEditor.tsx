@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { fileToBase64, downloadBlob, base64ToBlob } from "@/lib/utils";
 import { useConversionStore } from "@/store/conversionStore";
 import type { ConvertOptions } from "@/types";
-import { Download, FileText, Layers, Loader2, RefreshCw, Sparkles, Wand2 } from "lucide-react";
+import { Download, FileText, Layers, Loader2, RefreshCw, Replace, Sparkles, Wand2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface PdfEditorProps {
@@ -54,6 +54,14 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
   const [aiBusy, setAiBusy] = useState(false);
   const [aiNote, setAiNote] = useState<string | null>(null);
   const [rebuilt, setRebuilt] = useState(false);
+
+  // Font-matching in-place edit (overlay) — find/replace on the original PDF.
+  const [findText, setFindText] = useState("");
+  const [replaceText, setReplaceText] = useState("");
+  const [occurrence, setOccurrence] = useState<"all" | "first">("all");
+  const [matchCase, setMatchCase] = useState(true);
+  const [overlayBusy, setOverlayBusy] = useState(false);
+  const [overlayError, setOverlayError] = useState<string | null>(null);
 
   // ── Extract the PDF to editable markdown on mount ──────────────────────────
   useEffect(() => {
@@ -137,6 +145,37 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
       setDecorateError(err instanceof Error ? err.message : "Decorate failed");
     } finally {
       setDecorating(false);
+    }
+  }
+
+  // Font-matching in-place edit on the ORIGINAL PDF: find/replace text while
+  // preserving the matched span's font, size, colour, and the page layout.
+  async function handleOverlayEdit() {
+    if (!findText) return;
+    setOverlayBusy(true);
+    setOverlayError(null);
+    try {
+      const fileBase64 = await fileToBase64(file);
+      const res = await fetch("/api/pdf-overlay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileBase64,
+          fileName: file.name,
+          mode: "overlay",
+          replacements: [{ find: findText, replace: replaceText, occurrence, matchCase }],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error ?? "Overlay edit failed");
+      const blob = base64ToBlob(data.fileBase64, data.mimeType);
+      addResultJob(blob, data.fileName, "pdf", "pdf");
+      setFindText("");
+      setReplaceText("");
+    } catch (err) {
+      setOverlayError(err instanceof Error ? err.message : "Overlay edit failed");
+    } finally {
+      setOverlayBusy(false);
     }
   }
 
@@ -327,6 +366,58 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
             </p>
             {decorateError && (
               <p className="text-[11px] text-rose-600 dark:text-rose-400">{decorateError}</p>
+            )}
+          </div>
+
+          {/* Find & Replace on the original (font-matching in-place edit) */}
+          <div className="rounded-lg border bg-muted/20 p-3 space-y-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              <Replace className="h-3.5 w-3.5" />
+              Edit original text (keeps font &amp; layout)
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input
+                type="text"
+                value={findText}
+                onChange={(e) => setFindText(e.target.value)}
+                placeholder="Find text…"
+                className="h-8 rounded-md border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <input
+                type="text"
+                value={replaceText}
+                onChange={(e) => setReplaceText(e.target.value)}
+                placeholder="Replace with…"
+                className="h-8 rounded-md border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <select
+                value={occurrence}
+                onChange={(e) => setOccurrence(e.target.value as "all" | "first")}
+                className="h-8 rounded-md border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                <option value="all">All matches</option>
+                <option value="first">First match only</option>
+              </select>
+              <Toggle label="Match case" checked={matchCase} onChange={setMatchCase} />
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 gap-1.5 text-xs ml-auto"
+                onClick={handleOverlayEdit}
+                disabled={overlayBusy || !findText}
+              >
+                {overlayBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Replace className="h-3.5 w-3.5" />}
+                Apply to original
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Replaces text directly in the original PDF, redrawn in the same font, size &amp;
+              colour — images and layout stay untouched (needs the Python backend).
+            </p>
+            {overlayError && (
+              <p className="text-[11px] text-rose-600 dark:text-rose-400">{overlayError}</p>
             )}
           </div>
         </>

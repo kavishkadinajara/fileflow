@@ -21,7 +21,16 @@ const Schema = z.object({
   fileBase64: z.string().min(1),
   fileName: z.string().min(1).max(255),
   mode: z.enum(["overlay", "decorate"]),
-  replacements: z.array(z.object({ find: z.string(), replace: z.string() })).optional(),
+  replacements: z
+    .array(
+      z.object({
+        find: z.string(),
+        replace: z.string(),
+        occurrence: z.union([z.literal("all"), z.literal("first"), z.number().int().positive()]).optional(),
+        matchCase: z.boolean().optional(),
+      }),
+    )
+    .optional(),
   headerText: z.string().optional(),
   footerText: z.string().optional(),
   addPageNumbers: z.boolean().optional(),

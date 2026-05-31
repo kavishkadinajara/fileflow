@@ -154,3 +154,37 @@ async def pdf_decorate(
     doc.save(out)
     doc.close()
     return Response(content=out.getvalue(), media_type="application/pdf")
+
+
+@router.post("/pdf-patch")
+async def pdf_patch(
+    file: UploadFile = File(..., description="Original PDF"),
+    edited_text: str = Form(..., description="The edited text (as extracted, then changed)"),
+) -> Response:
+    """Surgically patch the PDF to reflect edited_text.
+
+    Diffs the edited text against the text originally extracted from the PDF,
+    isolates the minimal changed phrases, and patches ONLY those spots via the
+    font-matching overlay — every untouched region stays pixel-identical. The
+    number of patches applied is returned in the X-Patch-Count header.
+    """
+    from app.services.pdf_diff import patch_pdf
+
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=422, detail="Uploaded file is empty.")
+    if not edited_text.strip():
+        raise HTTPException(status_code=422, detail="edited_text is empty.")
+
+    try:
+        out, changes = patch_pdf(data, edited_text)
+    except Exception as exc:  # noqa: BLE001
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=422, detail=f"PDF patch failed: {exc}") from exc
+
+    return Response(
+        content=out,
+        media_type="application/pdf",
+        headers={"X-Patch-Count": str(len(changes))},
+    )

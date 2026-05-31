@@ -63,6 +63,12 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
   const [overlayBusy, setOverlayBusy] = useState(false);
   const [overlayError, setOverlayError] = useState<string | null>(null);
 
+  // Surgical patch — diff the edited content against the original and patch only
+  // the changes in place (font-matched), keeping the rest pixel-identical.
+  const [patching, setPatching] = useState(false);
+  const [patchNote, setPatchNote] = useState<string | null>(null);
+  const [patchError, setPatchError] = useState<string | null>(null);
+
   // ── Extract the PDF to editable markdown on mount ──────────────────────────
   useEffect(() => {
     let cancelled = false;
@@ -176,6 +182,36 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
       setOverlayError(err instanceof Error ? err.message : "Overlay edit failed");
     } finally {
       setOverlayBusy(false);
+    }
+  }
+
+  // Surgical patch: send the edited content; the backend diffs it against the
+  // original extraction and patches only the changed phrases in place.
+  async function handlePatchOriginal() {
+    if (!content.trim()) return;
+    setPatching(true);
+    setPatchNote(null);
+    setPatchError(null);
+    try {
+      const fileBase64 = await fileToBase64(file);
+      const res = await fetch("/api/pdf-patch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileBase64, fileName: file.name, editedText: content }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error ?? "Patch failed");
+      if (data.patchCount === 0) {
+        setPatchNote("No changes detected to patch.");
+        return;
+      }
+      const blob = base64ToBlob(data.fileBase64, data.mimeType);
+      addResultJob(blob, data.fileName, "pdf", "pdf");
+      setPatchNote(`Patched ${data.patchCount} change${data.patchCount === 1 ? "" : "s"} ✓`);
+    } catch (err) {
+      setPatchError(err instanceof Error ? err.message : "Patch failed");
+    } finally {
+      setPatching(false);
     }
   }
 
@@ -341,10 +377,23 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
             </div>
           </div>
 
-          {/* Build actions — two modes */}
+          {/* Build actions */}
           <div className="space-y-2">
+            {/* Surgical patch — the headline action for editing the text above */}
+            <Button
+              onClick={handlePatchOriginal}
+              className="w-full gap-2"
+              disabled={patching || !content.trim()}
+              title="Diff your edits against the original and patch only the changed words in place — the rest of the PDF stays pixel-identical"
+            >
+              {patching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+              Patch original (surgical)
+            </Button>
+            {patchNote && <p className="text-[11px] text-emerald-600 dark:text-emerald-400">{patchNote}</p>}
+            {patchError && <p className="text-[11px] text-rose-600 dark:text-rose-400">{patchError}</p>}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <Button onClick={handleRebuild} className="gap-2" disabled={!content.trim()}>
+              <Button onClick={handleRebuild} variant="outline" className="gap-2" disabled={!content.trim()}>
                 {rebuilt ? <RefreshCw className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                 {rebuilt ? "Added to jobs ✓" : "Rebuild PDF"}
               </Button>
@@ -360,9 +409,10 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
               </Button>
             </div>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              <strong>Rebuild</strong> re-flows your edited text into a clean PDF (full formatting).{" "}
-              <strong>Decorate original</strong> keeps the source layout & images, only stamping the
-              header / footer / page numbers (needs the Python backend).
+              <strong>Patch original</strong> edits only the words you changed, keeping the source
+              layout & images pixel-identical. <strong>Rebuild</strong> re-flows everything into a
+              clean new PDF. <strong>Decorate</strong> only stamps header / footer / page numbers.
+              (Patch &amp; Decorate need the Python backend.)
             </p>
             {decorateError && (
               <p className="text-[11px] text-rose-600 dark:text-rose-400">{decorateError}</p>

@@ -151,3 +151,34 @@ export async function decoratePdf(buffer: Buffer, opts: DecorateOptions): Promis
   form.append("options", JSON.stringify(opts));
   return postToPython("/api/pdf-decorate", form);
 }
+
+/**
+ * Surgically patch the original PDF to reflect `editedText`: diffs it against the
+ * text originally extracted, then patches only the changed phrases (font-matched).
+ * Everything the user didn't change stays pixel-identical. Returns the new PDF
+ * plus how many patches were applied.
+ */
+export async function patchPdf(
+  buffer: Buffer,
+  editedText: string,
+): Promise<{ buffer: Buffer; patchCount: number }> {
+  const form = new FormData();
+  form.append("file", new Blob([new Uint8Array(buffer)], { type: "application/pdf" }), "input.pdf");
+  form.append("edited_text", editedText);
+
+  let res: Response;
+  try {
+    res = await fetch(`${PYTHON_BACKEND}/api/pdf-patch`, { method: "POST", body: form });
+  } catch {
+    throw new Error(
+      "PDF patching requires the Python backend. Start it with: cd python_backend && python -m uvicorn app.main:app --reload",
+    );
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail ?? `PDF patch failed (${res.status})`);
+  }
+  const arrayBuf = await res.arrayBuffer();
+  const patchCount = parseInt(res.headers.get("X-Patch-Count") ?? "0", 10) || 0;
+  return { buffer: Buffer.from(arrayBuf), patchCount };
+}

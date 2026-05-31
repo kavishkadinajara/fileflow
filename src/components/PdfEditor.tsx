@@ -13,8 +13,24 @@ import { Button } from "@/components/ui/button";
 import { fileToBase64, downloadBlob, base64ToBlob } from "@/lib/utils";
 import { useConversionStore } from "@/store/conversionStore";
 import type { ConvertOptions } from "@/types";
-import { Download, FileText, Layers, Loader2, RefreshCw, Replace, Sparkles, Wand2 } from "lucide-react";
+import { AlignLeft, Download, FileText, Layers, Loader2, RefreshCw, Replace, Sparkles, Wand2 } from "lucide-react";
 import { useEffect, useState } from "react";
+
+interface ReflowBlock {
+  id: string;
+  text: string;
+  x: number; y: number; w: number; h: number;
+  size: number;
+  font: string;
+  color: string;
+  bold: boolean;
+  italic: boolean;
+}
+interface ReflowPage {
+  width: number;
+  height: number;
+  blocks: ReflowBlock[];
+}
 
 interface PdfEditorProps {
   file: File;
@@ -68,6 +84,12 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
   const [patching, setPatching] = useState(false);
   const [patchNote, setPatchNote] = useState<string | null>(null);
   const [patchError, setPatchError] = useState<string | null>(null);
+
+  // Smart Reflow — edit positioned blocks, rebuild keeping the original layout.
+  const [reflowPages, setReflowPages] = useState<ReflowPage[] | null>(null);
+  const [reflowLoading, setReflowLoading] = useState(false);
+  const [reflowBusy, setReflowBusy] = useState(false);
+  const [reflowError, setReflowError] = useState<string | null>(null);
 
   // ── Extract the PDF to editable markdown on mount ──────────────────────────
   useEffect(() => {
@@ -212,6 +234,60 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
       setPatchError(err instanceof Error ? err.message : "Patch failed");
     } finally {
       setPatching(false);
+    }
+  }
+
+  // Smart Reflow: extract positioned blocks so the user can edit text in place.
+  async function handleLoadReflow() {
+    setReflowLoading(true);
+    setReflowError(null);
+    try {
+      const fileBase64 = await fileToBase64(file);
+      const res = await fetch("/api/pdf-reflow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "extract", fileBase64, fileName: file.name }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error ?? "Layout extraction failed");
+      setReflowPages(data.pages as ReflowPage[]);
+    } catch (err) {
+      setReflowError(err instanceof Error ? err.message : "Layout extraction failed");
+    } finally {
+      setReflowLoading(false);
+    }
+  }
+
+  function editReflowBlock(pageIdx: number, blockId: string, text: string) {
+    setReflowPages((pages) => {
+      if (!pages) return pages;
+      return pages.map((pg, i) =>
+        i !== pageIdx
+          ? pg
+          : { ...pg, blocks: pg.blocks.map((b) => (b.id === blockId ? { ...b, text } : b)) },
+      );
+    });
+  }
+
+  // Rebuild the PDF from the edited blocks, keeping every block's original position.
+  async function handleReflowRebuild() {
+    if (!reflowPages) return;
+    setReflowBusy(true);
+    setReflowError(null);
+    try {
+      const res = await fetch("/api/pdf-reflow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "render", fileName: file.name, pages: reflowPages }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error ?? "Reflow rebuild failed");
+      const blob = base64ToBlob(data.fileBase64, data.mimeType);
+      addResultJob(blob, data.fileName, "pdf", "pdf");
+    } catch (err) {
+      setReflowError(err instanceof Error ? err.message : "Reflow rebuild failed");
+    } finally {
+      setReflowBusy(false);
     }
   }
 
@@ -468,6 +544,73 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
             </p>
             {overlayError && (
               <p className="text-[11px] text-rose-600 dark:text-rose-400">{overlayError}</p>
+            )}
+          </div>
+
+          {/* Smart Reflow — edit positioned blocks, rebuild keeping the layout */}
+          <div className="rounded-lg border bg-muted/20 p-3 space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <AlignLeft className="h-3.5 w-3.5" />
+                Smart Reflow (keep exact layout)
+              </div>
+              {!reflowPages && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 gap-1.5 text-xs"
+                  onClick={handleLoadReflow}
+                  disabled={reflowLoading}
+                >
+                  {reflowLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <AlignLeft className="h-3.5 w-3.5" />}
+                  Load layout blocks
+                </Button>
+              )}
+            </div>
+
+            {reflowPages && (
+              <div className="space-y-2">
+                <div className="max-h-72 overflow-y-auto space-y-3 rounded-md border bg-background p-2">
+                  {reflowPages.map((page, pi) => (
+                    <div key={pi} className="space-y-1.5">
+                      <div className="text-[10px] font-semibold text-muted-foreground">
+                        Page {pi + 1} · {page.blocks.length} blocks
+                      </div>
+                      {page.blocks.map((b) => (
+                        <input
+                          key={b.id}
+                          type="text"
+                          value={b.text}
+                          onChange={(e) => editReflowBlock(pi, b.id, e.target.value)}
+                          style={{
+                            fontWeight: b.bold ? 700 : 400,
+                            fontStyle: b.italic ? "italic" : "normal",
+                            color: b.color,
+                          }}
+                          className="w-full h-7 rounded border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  className="w-full gap-2"
+                  onClick={handleReflowRebuild}
+                  disabled={reflowBusy}
+                >
+                  {reflowBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <AlignLeft className="h-4 w-4" />}
+                  Rebuild (keep layout)
+                </Button>
+              </div>
+            )}
+
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Edit any line; the rebuilt PDF keeps every block at its{" "}
+              <strong>original position, font &amp; colour</strong> — visually near-identical to the
+              source, but editable (needs the Python backend).
+            </p>
+            {reflowError && (
+              <p className="text-[11px] text-rose-600 dark:text-rose-400">{reflowError}</p>
             )}
           </div>
         </>

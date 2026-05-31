@@ -17,7 +17,7 @@ import io
 import json
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 
 router = APIRouter(prefix="/api", tags=["PDF Edit"])
 
@@ -188,3 +188,49 @@ async def pdf_patch(
         media_type="application/pdf",
         headers={"X-Patch-Count": str(len(changes))},
     )
+
+
+@router.post("/pdf-reflow-extract")
+async def pdf_reflow_extract(
+    file: UploadFile = File(..., description="Original PDF"),
+) -> JSONResponse:
+    """Extract the PDF as positioned, editable layout blocks (Smart Reflow).
+
+    Each page returns its size (points) and every text line as a block with its
+    absolute position and style. The UI lets the user edit block text; the edited
+    layout is sent back to /pdf-reflow-render to produce layout-preserving HTML.
+    """
+    from app.services.pdf_reflow import extract_layout
+
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=422, detail="Uploaded file is empty.")
+    try:
+        pages = extract_layout(data)
+    except Exception as exc:  # noqa: BLE001
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=422, detail=f"Layout extraction failed: {exc}") from exc
+    return JSONResponse({"pages": pages})
+
+
+@router.post("/pdf-reflow-render")
+async def pdf_reflow_render(payload: dict) -> JSONResponse:
+    """Render edited layout blocks to absolute-positioned HTML (Smart Reflow).
+
+    Input: {"pages": [...]} (the layout from /pdf-reflow-extract, with edited
+    block text). Output: {"html": "..."} which the Next.js side prints to PDF via
+    the existing Puppeteer pipeline, preserving each block's original position.
+    """
+    from app.services.pdf_reflow import render_layout_html
+
+    pages = payload.get("pages")
+    if not isinstance(pages, list) or not pages:
+        raise HTTPException(status_code=422, detail="`pages` must be a non-empty list.")
+    try:
+        html = render_layout_html(pages)
+    except Exception as exc:  # noqa: BLE001
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=422, detail=f"Layout render failed: {exc}") from exc
+    return JSONResponse({"html": html})

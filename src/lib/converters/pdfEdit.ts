@@ -182,3 +182,73 @@ export async function patchPdf(
   const patchCount = parseInt(res.headers.get("X-Patch-Count") ?? "0", 10) || 0;
   return { buffer: Buffer.from(arrayBuf), patchCount };
 }
+
+// ─── Smart Reflow (layout-preserving editable rebuild) ───────────────────────
+
+/** One positioned, editable text block from a page's layout. */
+export interface ReflowBlock {
+  id: string;
+  text: string;
+  x: number; y: number; w: number; h: number;
+  size: number;
+  font: string;
+  color: string;
+  bold: boolean;
+  italic: boolean;
+}
+
+export interface ReflowPage {
+  width: number;
+  height: number;
+  blocks: ReflowBlock[];
+}
+
+/**
+ * Extract the PDF as positioned, editable layout pages (Smart Reflow). Each block
+ * carries its original coordinates and style so an edited rebuild keeps the layout.
+ */
+export async function extractLayout(buffer: Buffer): Promise<ReflowPage[]> {
+  const form = new FormData();
+  form.append("file", new Blob([new Uint8Array(buffer)], { type: "application/pdf" }), "input.pdf");
+
+  let res: Response;
+  try {
+    res = await fetch(`${PYTHON_BACKEND}/api/pdf-reflow-extract`, { method: "POST", body: form });
+  } catch {
+    throw new Error(
+      "Smart Reflow requires the Python backend. Start it with: cd python_backend && python -m uvicorn app.main:app --reload",
+    );
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail ?? `Layout extraction failed (${res.status})`);
+  }
+  const data = (await res.json()) as { pages: ReflowPage[] };
+  return data.pages;
+}
+
+/**
+ * Render edited layout pages back to a PDF, preserving each block's original
+ * position and style. Python emits absolute-positioned HTML; Puppeteer prints it.
+ */
+export async function reflowToPdf(pages: ReflowPage[]): Promise<Buffer> {
+  let res: Response;
+  try {
+    res = await fetch(`${PYTHON_BACKEND}/api/pdf-reflow-render`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pages }),
+    });
+  } catch {
+    throw new Error(
+      "Smart Reflow requires the Python backend. Start it with: cd python_backend && python -m uvicorn app.main:app --reload",
+    );
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail ?? `Layout render failed (${res.status})`);
+  }
+  const { html } = (await res.json()) as { html: string };
+  // The HTML carries its own @page sizes; print in styled mode so Puppeteer honours them.
+  return htmlToPdf(html, { styled: true });
+}

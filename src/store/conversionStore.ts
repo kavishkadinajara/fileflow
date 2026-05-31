@@ -51,6 +51,13 @@ interface ConversionStore {
     styleId?: string,
     customStyle?: StyleConfig,
   ) => Promise<void>;
+  /** Add an already-converted result (binary blob) directly to the job list. */
+  addResultJob: (
+    blob: Blob,
+    fileName: string,
+    fromFormat: FileFormat,
+    toFormat: FileFormat,
+  ) => void;
   removeJob: (id: string) => void;
   clearJobs: () => void;
   downloadJob: (id: string) => void;
@@ -205,6 +212,22 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
     const blob = new Blob([content], { type: "text/plain" });
     const file = new File([blob], fileName, { type: "text/plain" });
     return get().addJob(file, fromFormat, toFormat, options, styleId, customStyle);
+  },
+
+  addResultJob: (blob, fileName, fromFormat, toFormat) => {
+    const id = uuidv4();
+    const job: ConversionJob = {
+      id,
+      fileName,
+      fromFormat,
+      toFormat,
+      status: "done",
+      progress: 100,
+      resultUrl: URL.createObjectURL(blob),
+      resultBlob: blob,
+      createdAt: new Date(),
+    };
+    set((state) => ({ jobs: [job, ...state.jobs] }));
   },
 
   addMediaJob: async (file, fromFormat, toFormat, options) => {

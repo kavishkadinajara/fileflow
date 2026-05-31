@@ -1,17 +1,9 @@
-import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
-
-const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
+import { getModel, modelIdFor } from "@/lib/ai/provider";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
-
-// ─── Model configuration ────────────────────────────────────────────────────
-// Llama 4 Maverick for detection — strong reasoning, large context
-// Llama 3.3 70B for humanization — best for creative rewriting
-const DETECT_MODEL = "meta-llama/llama-4-maverick-17b-128e-instruct";
-const HUMANIZE_MODEL = "llama-3.3-70b-versatile";
 
 // ─── AI Detection (improved prompt with sentence-level analysis) ─────────────
 
@@ -95,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     if (action === "detect") {
       const { text } = await generateText({
-        model: groq(DETECT_MODEL),
+        model: getModel("detect"),
         system: DETECT_SYSTEM,
         messages: [
           {
@@ -116,12 +108,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: "Failed to parse AI response" }, { status: 500 });
       }
 
-      return NextResponse.json({ success: true, ...result, truncated, model: DETECT_MODEL });
+      return NextResponse.json({ success: true, ...result, truncated, model: modelIdFor("detect") });
     }
 
     if (action === "humanize") {
       const { text } = await generateText({
-        model: groq(HUMANIZE_MODEL),
+        model: getModel("rewrite"),
         system: HUMANIZE_SYSTEM,
         messages: [
           {
@@ -133,7 +125,7 @@ export async function POST(req: NextRequest) {
         temperature: 0.8,
       });
 
-      return NextResponse.json({ success: true, humanized: text, truncated, model: HUMANIZE_MODEL });
+      return NextResponse.json({ success: true, humanized: text, truncated, model: modelIdFor("rewrite") });
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

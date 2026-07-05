@@ -190,6 +190,113 @@ async def pdf_patch(
     )
 
 
+@router.post("/pdf-compose")
+async def pdf_compose(
+    file: UploadFile = File(..., description="Original PDF"),
+    edited_text: str = Form("", description="Edited extracted text (for in-place text edits)"),
+    boxes: str = Form("[]", description='JSON array of added text boxes: [{page,x,y,w,h,text,size?,color?,font?,align?}]'),
+) -> Response:
+    """Apply both edit kinds in one pass: font-matched text edits + new text boxes.
+
+    `edited_text` drives the surgical diff/patch of EXISTING text (font-matched,
+    rest pixel-identical). `boxes` are brand-new text the user added by clicking
+    empty areas (form blanks, dotted lines) — drawn at absolute page coordinates.
+    Both are composed onto the original; the patch count is returned in
+    X-Patch-Count and the box count in X-Box-Count.
+    """
+    from app.services.pdf_diff import compute_replacements
+    from app.services.pdf_overlay import TextBox, apply_edits
+
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=422, detail="Uploaded file is empty.")
+
+    try:
+        box_list = json.loads(boxes or "[]")
+        assert isinstance(box_list, list)
+    except (json.JSONDecodeError, AssertionError) as exc:
+        raise HTTPException(status_code=422, detail="`boxes` must be a JSON array.") from exc
+
+    reps, changes = ([], [])
+    if edited_text.strip():
+        reps, changes = compute_replacements(data, edited_text)
+
+    parsed_boxes: list[TextBox] = []
+    for b in box_list:
+        if not isinstance(b, dict) or not str(b.get("text", "")).strip():
+            continue
+        color = b.get("color", (0.0, 0.0, 0.0))
+        if isinstance(color, list):
+            color = tuple(float(c) for c in color)
+        parsed_boxes.append(TextBox(
+            page=int(b.get("page", 0)),
+            x=float(b.get("x", 0)), y=float(b.get("y", 0)),
+            w=float(b.get("w", 120)), h=float(b.get("h", 20)),
+            text=str(b["text"]),
+            size=float(b.get("size", 11.0)),
+            color=color if isinstance(color, tuple) and len(color) == 3 else (0.0, 0.0, 0.0),
+            font=str(b.get("font", "helv")),
+            align=int(b.get("align", 0)),
+        ))
+
+    if not reps and not parsed_boxes:
+        # Nothing to do — return the original untouched.
+        return Response(content=data, media_type="application/pdf",
+                        headers={"X-Patch-Count": "0", "X-Box-Count": "0"})
+
+    try:
+        out = apply_edits(data, reps, parsed_boxes)
+    except Exception as exc:  # noqa: BLE001
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=422, detail=f"PDF compose failed: {exc}") from exc
+
+    return Response(
+        content=out,
+        media_type="application/pdf",
+        headers={"X-Patch-Count": str(len(changes)), "X-Box-Count": str(len(parsed_boxes))},
+    )
+
+
+@router.post("/pdf-tables")
+async def pdf_tables(
+    file: UploadFile = File(..., description="Original PDF"),
+    fmt: str = Form("json", description="json (preview) | xlsx | csv"),
+) -> Response:
+    """Extract every table from a PDF and return a preview, an Excel book, or CSV.
+
+    Deterministic detection (ruled + char-projection borderless) with per-column
+    type inference and a confidence score. `fmt=json` returns the detected tables
+    for preview; `fmt=xlsx`/`csv` return the downloadable spreadsheet. The table
+    count is echoed in X-Table-Count.
+    """
+    from app.services.pdf_tables import (
+        extract_tables_from_pdf, tables_to_csv, tables_to_xlsx, tables_summary,
+    )
+
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=422, detail="Uploaded file is empty.")
+
+    try:
+        tables = extract_tables_from_pdf(data)
+    except Exception as exc:  # noqa: BLE001
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=422, detail=f"Table extraction failed: {exc}") from exc
+
+    count = {"X-Table-Count": str(len(tables))}
+    if fmt == "xlsx":
+        return Response(
+            content=tables_to_xlsx(tables),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers=count,
+        )
+    if fmt == "csv":
+        return Response(content=tables_to_csv(tables), media_type="text/csv; charset=utf-8", headers=count)
+    return JSONResponse({"tables": tables_summary(tables)}, headers=count)
+
+
 @router.post("/pdf-reflow-extract")
 async def pdf_reflow_extract(
     file: UploadFile = File(..., description="Original PDF"),
@@ -211,6 +318,33 @@ async def pdf_reflow_extract(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=422, detail=f"Layout extraction failed: {exc}") from exc
+    return JSONResponse({"pages": pages})
+
+
+@router.post("/pdf-visual-extract")
+async def pdf_visual_extract(
+    file: UploadFile = File(..., description="Original PDF"),
+    dpi: int = Form(144, description="Render DPI for the page background images"),
+) -> JSONResponse:
+    """Render each page as a background image plus its editable text blocks.
+
+    Powers the WYSIWYG fill-in editor: the UI shows the page exactly as it looks
+    (logo, colour bands, dotted lines) and overlays a transparent editable field on
+    each text block. Blocks reuse the Smart Reflow layout pass, so their positions
+    match what the surgical patcher edits on download.
+    """
+    from app.services.pdf_reflow import render_visual_pages
+
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=422, detail="Uploaded file is empty.")
+    safe_dpi = max(72, min(300, int(dpi)))
+    try:
+        pages = render_visual_pages(data, dpi=safe_dpi)
+    except Exception as exc:  # noqa: BLE001
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=422, detail=f"Visual extraction failed: {exc}") from exc
     return JSONResponse({"pages": pages})
 
 

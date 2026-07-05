@@ -336,7 +336,29 @@ class Line:
 
     @property
     def text(self) -> str:
-        return "".join(s.text for s in self.spans).strip()
+        """Concatenate spans, inserting a space across visible horizontal gaps.
+
+        Spans on one baseline are stored separately by PyMuPDF, often with a real
+        word/column gap between them (e.g. a form's "Label :" and its value). Joining
+        them with no separator yields "Label :Value" — which then can't be re-found
+        in the PDF (whose own text has the space), silently breaking surgical edits.
+        We bridge a gap with a single space when it is at least a thin-space wide
+        (~18% of font size) and neither side already carries whitespace there, so the
+        extracted text matches what a reader — and page.search_for — sees.
+        """
+        if not self.spans:
+            return ""
+        ordered = sorted(self.spans, key=lambda s: s.x0)
+        parts: list[str] = [ordered[0].text]
+        for prev, cur in zip(ordered, ordered[1:]):
+            gap = cur.x0 - prev.x1
+            need_space = (
+                gap >= max(1.0, min(prev.size, cur.size) * 0.18)
+                and not parts[-1].endswith((" ", "\t"))
+                and not cur.text.startswith((" ", "\t"))
+            )
+            parts.append((" " if need_space else "") + cur.text)
+        return "".join(parts).strip()
 
     @property
     def y(self) -> float:
@@ -519,7 +541,93 @@ def detect_borderless_table(block: Block, body_size: float) -> list[list[str]] |
 
     if well_aligned < 2 or well_aligned < len(aligned) * 0.6:
         return None
+
+    # Final guard: reject multi-column PAGE PROSE masquerading as a table. A
+    # research paper's two text columns align to two x-anchors just like a 2-column
+    # table, but they are flowing sentences, not data. _looks_like_prose_grid tells
+    # them apart by cell shape + linguistic texture (see its docstring).
+    if _looks_like_prose_grid(matrix, anchors, block, body_size):
+        return None
     return matrix
+
+
+# Sentence-flow signals — prose cells read like language; data cells don't.
+_RE_WORD = re.compile(r"[^\W\d_]{2,}", re.UNICODE)   # >=2-letter words (any script)
+_RE_SENTENCE_END = re.compile(r"[.;,:]$")
+
+
+def _looks_like_prose_grid(matrix: list[list[str]], anchors: list[float],
+                           block: "Block", body_size: float) -> bool:
+    """True when an aligned grid is really side-by-side text columns, not a table.
+
+    A genuine borderless table and a two-column page layout both align to a set of
+    x-anchors, so alignment alone can't separate them. The reliable differences are
+    *cell shape* and *linguistic texture*:
+
+      • Column count — page layouts have exactly 2 (occasionally 3) columns; data
+        tables routinely have more. Only 2-column grids are ambiguous, so we only
+        scrutinise those (≥4 columns is taken as a real table).
+
+      • Cell width — table cells are short, bounded values; prose cells are long
+        runs that nearly fill their column. If most cells span a large fraction of
+        their column's available width, it's prose.
+
+      • Word count & flow — table cells hold 1–3 tokens (a number, a short label);
+        prose cells hold many words and frequently end mid-sentence (no terminal
+        punctuation) or in a comma. A high mean words-per-cell with sentence-like
+        endings is the signature of wrapped paragraphs.
+
+    Requiring SEVERAL of these to agree keeps short genuine 2-column tables
+    (e.g. "Metric | Value" rows) from being suppressed.
+    """
+    n_cols = len(anchors)
+    if n_cols >= 4:
+        return False                      # many columns ⇒ trust it's a table
+    rows = [r for r in matrix if any(c for c in r)]
+    if len(rows) < 3:
+        return False                      # too few rows to judge texture reliably
+
+    # Per-column available width (anchor span); fall back to block width.
+    block_w = max(1.0, max(s.x1 for ln in block.lines for s in ln.spans)
+                  - min(s.x0 for ln in block.lines for s in ln.spans))
+    if n_cols >= 2:
+        col_w = (anchors[-1] - anchors[0]) / (n_cols - 1)
+    else:
+        col_w = block_w
+    col_w = max(col_w, body_size * 4)
+
+    # Collect texture stats over non-empty cells.
+    words_per_cell: list[int] = []
+    long_cells = 0
+    sentence_flow = 0
+    total = 0
+    approx_char_w = max(body_size * 0.5, 3.0)   # mean glyph advance
+    for r in rows:
+        for cell in r:
+            cell = cell.strip()
+            if not cell:
+                continue
+            total += 1
+            wc = len(_RE_WORD.findall(cell))
+            words_per_cell.append(wc)
+            # Estimated rendered width of this cell vs its column width.
+            if len(cell) * approx_char_w >= col_w * 0.55:
+                long_cells += 1
+            # Prose flow: many words and a sentence-like ending (comma / no period
+            # at all → wrapped line) rather than a terminal value.
+            if wc >= 5 and (_RE_SENTENCE_END.search(cell) or not cell[-1].isdigit()):
+                sentence_flow += 1
+
+    if total == 0:
+        return False
+    mean_words = sum(words_per_cell) / total
+    long_frac = long_cells / total
+    flow_frac = sentence_flow / total
+
+    # Two independent prose signals must agree: cells are wide AND read like text.
+    wide = long_frac >= 0.5
+    texty = mean_words >= 4.0 and flow_frac >= 0.4
+    return wide and texty
 
 
 # ──────────────────────────────────────────────────────────────────────────────

@@ -2,14 +2,15 @@
 
 import { UserButton } from "@/components/auth/UserButton";
 import { Button } from "@/components/ui/button";
-import { BarChart3, BookOpen, Moon, Sun } from "lucide-react";
+import { BarChart3, BookOpen, Moon, ScanLine, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
-  { href: "/guide",     label: "Guide",     icon: BookOpen  },
-  { href: "/benchmark", label: "Benchmark", icon: BarChart3 },
+  { href: "/ats",       label: "Resume ATS", icon: ScanLine  },
+  { href: "/guide",     label: "Guide",      icon: BookOpen  },
+  { href: "/benchmark", label: "Benchmark",  icon: BarChart3 },
 ];
 
 export function Header() {

@@ -183,6 +183,51 @@ export async function patchPdf(
   return { buffer: Buffer.from(arrayBuf), patchCount };
 }
 
+/** A brand-new text box the user added by clicking an empty area of the page. */
+export interface AddedTextBox {
+  page: number;
+  x: number; y: number; w: number; h: number;   // PDF points, top-left origin
+  text: string;
+  size?: number;
+  color?: [number, number, number];             // 0..1 RGB
+  font?: string;                                 // base-14 fontname
+  align?: 0 | 1 | 2;                             // left / centre / right
+}
+
+/**
+ * Compose both edit kinds onto the original PDF in one pass: font-matched edits to
+ * EXISTING text (via `editedText` diff) plus brand-new text `boxes` stamped at
+ * absolute coordinates. Untouched content stays pixel-identical. Returns the new
+ * PDF plus how many text patches and boxes were applied.
+ */
+export async function composePdf(
+  buffer: Buffer,
+  editedText: string,
+  boxes: AddedTextBox[],
+): Promise<{ buffer: Buffer; patchCount: number; boxCount: number }> {
+  const form = new FormData();
+  form.append("file", new Blob([new Uint8Array(buffer)], { type: "application/pdf" }), "input.pdf");
+  form.append("edited_text", editedText);
+  form.append("boxes", JSON.stringify(boxes));
+
+  let res: Response;
+  try {
+    res = await fetch(`${PYTHON_BACKEND}/api/pdf-compose`, { method: "POST", body: form });
+  } catch {
+    throw new Error(
+      "PDF editing requires the Python backend. Start it with: cd python_backend && python -m uvicorn app.main:app --reload",
+    );
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail ?? `PDF compose failed (${res.status})`);
+  }
+  const arrayBuf = await res.arrayBuffer();
+  const patchCount = parseInt(res.headers.get("X-Patch-Count") ?? "0", 10) || 0;
+  const boxCount = parseInt(res.headers.get("X-Box-Count") ?? "0", 10) || 0;
+  return { buffer: Buffer.from(arrayBuf), patchCount, boxCount };
+}
+
 // ─── Smart Reflow (layout-preserving editable rebuild) ───────────────────────
 
 /** One positioned, editable text block from a page's layout. */
@@ -225,6 +270,55 @@ export async function extractLayout(buffer: Buffer): Promise<ReflowPage[]> {
   }
   const data = (await res.json()) as { pages: ReflowPage[] };
   return data.pages;
+}
+
+/** A page rendered as a fill-in surface: background image + editable blocks. */
+export interface VisualPage {
+  width: number;        // page width, points (the blocks' coordinate space)
+  height: number;       // page height, points
+  imageW: number;       // rendered PNG width, pixels
+  imageH: number;       // rendered PNG height, pixels
+  image: string;        // base64 PNG (no data-URI prefix)
+  blocks: ReflowBlock[];
+}
+
+/**
+ * Extract the PDF as WYSIWYG fill-in pages: each page's rendered image plus its
+ * positioned, editable text blocks. The image lets the UI show the form exactly as
+ * it looks; the blocks let the user type in place. Blocks share the reflow/patch
+ * coordinate space, so edits round-trip cleanly through the surgical patcher.
+ */
+export async function extractVisual(buffer: Buffer, dpi = 144): Promise<VisualPage[]> {
+  const form = new FormData();
+  form.append("file", new Blob([new Uint8Array(buffer)], { type: "application/pdf" }), "input.pdf");
+  form.append("dpi", String(dpi));
+
+  let res: Response;
+  try {
+    res = await fetch(`${PYTHON_BACKEND}/api/pdf-visual-extract`, { method: "POST", body: form });
+  } catch {
+    throw new Error(
+      "Visual PDF editing requires the Python backend. Start it with: cd python_backend && python -m uvicorn app.main:app --reload",
+    );
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail ?? `Visual extraction failed (${res.status})`);
+  }
+  const data = (await res.json()) as {
+    pages: Array<{
+      width: number; height: number; image_w: number; image_h: number;
+      image: string; blocks: ReflowBlock[];
+    }>;
+  };
+  return data.pages.map((p) => ({
+    width: p.width,
+    height: p.height,
+    imageW: p.image_w,
+    imageH: p.image_h,
+    image: p.image,
+    blocks: p.blocks,
+  }));
 }
 
 /**

@@ -25,8 +25,9 @@ export type AiProvider = "groq" | "gemini" | "openai" | "deepseek";
  * - detect      — AI-content detection (needs strong reasoning)
  * - rewrite     — humanization / creative rewriting
  * - pdf-format  — structured JSON output for PDF auto-formatting
+ * - summarize   — grounded abstractive summarisation (faithful, low temperature)
  */
-export type AiTask = "chat" | "modify" | "detect" | "rewrite" | "pdf-format";
+export type AiTask = "chat" | "modify" | "detect" | "rewrite" | "pdf-format" | "summarize";
 
 const DEFAULT_PRIORITY: AiProvider[] = ["groq", "gemini", "openai", "deepseek"];
 
@@ -55,6 +56,7 @@ const MODEL_MAP: Record<AiProvider, Record<AiTask, string>> = {
     detect: "meta-llama/llama-4-maverick-17b-128e-instruct",
     rewrite: "llama-3.3-70b-versatile",
     "pdf-format": "llama-3.3-70b-versatile",
+    summarize: "llama-3.3-70b-versatile",
   },
   gemini: {
     chat: "gemini-2.0-flash",
@@ -62,6 +64,7 @@ const MODEL_MAP: Record<AiProvider, Record<AiTask, string>> = {
     detect: "gemini-2.0-flash",
     rewrite: "gemini-2.0-flash",
     "pdf-format": "gemini-2.0-flash",
+    summarize: "gemini-2.0-flash",
   },
   openai: {
     chat: "gpt-4o-mini",
@@ -69,6 +72,7 @@ const MODEL_MAP: Record<AiProvider, Record<AiTask, string>> = {
     detect: "gpt-4o",
     rewrite: "gpt-4o-mini",
     "pdf-format": "gpt-4o-mini",
+    summarize: "gpt-4o-mini",
   },
   deepseek: {
     chat: "deepseek-chat",
@@ -76,6 +80,7 @@ const MODEL_MAP: Record<AiProvider, Record<AiTask, string>> = {
     detect: "deepseek-chat",
     rewrite: "deepseek-chat",
     "pdf-format": "deepseek-chat",
+    summarize: "deepseek-chat",
   },
 };
 

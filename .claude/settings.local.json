@@ -12,7 +12,12 @@
       "Bash(rm resp.json)",
       "Bash(node \"e:/Projects/mdconvertor/scripts/debug-detect.mjs\")",
       "Bash(xxd)",
-      "PowerShell(New-Item -ItemType Directory -Force \"e:\\\\Projects\\\\mdconvertor\\\\.github\\\\workflows\")"
+      "PowerShell(New-Item -ItemType Directory -Force \"e:\\\\Projects\\\\mdconvertor\\\\.github\\\\workflows\")",
+      "Bash(git stash *)",
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(.venv/Scripts/python.exe -c \"from app.services.pdf_overlay import apply_replacements, _decode_color, _available_width, _style_at, _apply_redactions_keep_graphics; from app.services.pdf_diff import patch_pdf; from app.services.pdf_reflow import render_visual_pages; print\\('Python imports clean'\\)\")",
+      "Bash(npx next *)",
+      "Bash(PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -c ' *)"
     ]
   }
 }

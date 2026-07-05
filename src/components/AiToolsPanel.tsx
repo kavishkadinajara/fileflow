@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { analyzeText, computeStatisticalScore, type StatisticalResult } from "@/lib/text-analysis";
+import { summarizeExtractive, type ExtractiveResult } from "@/lib/summarize/extractive";
 import { cn } from "@/lib/utils";
 import type { FileFormat } from "@/types";
 import {
@@ -15,9 +16,11 @@ import {
   ChevronUp,
   Copy,
   Cpu,
+  FileText,
   Layers,
   Loader2,
   RefreshCw,
+  ScrollText,
   Sparkles,
   User,
   Wand2,
@@ -44,7 +47,11 @@ interface AiToolsPanelProps {
   onClose: () => void;
 }
 
-type PanelView = "menu" | "detecting" | "detected" | "humanizing" | "humanized" | "verifying" | "error";
+type PanelView = "menu" | "detecting" | "detected" | "humanizing" | "humanized" | "verifying" | "summarized" | "error";
+
+type SummaryLength = "short" | "medium" | "long";
+const LENGTH_RATIO: Record<SummaryLength, number> = { short: 0.18, medium: 0.3, long: 0.45 };
+const LANG_LABEL: Record<string, string> = { en: "English", si: "Sinhala", ta: "Tamil", other: "—" };
 
 // ─── Score Gauge ──────────────────────────────────────────────────────────────
 
@@ -133,8 +140,45 @@ export function AiToolsPanel({ content, format, onApplyHumanized, onClose }: AiT
   const [showStats, setShowStats] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Summariser state.
+  const [extractive, setExtractive] = useState<ExtractiveResult | null>(null);
+  const [abstractive, setAbstractive] = useState<string>("");
+  const [summaryLength, setSummaryLength] = useState<SummaryLength>("medium");
+  const [polishing, setPolishing] = useState(false);
+
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
   const isShort = wordCount < 20;
+
+  // Extractive summary runs instantly client-side — no API key needed.
+  function runSummarize(length: SummaryLength = summaryLength) {
+    if (!content.trim()) return;
+    setSummaryLength(length);
+    setAbstractive("");
+    setExtractive(summarizeExtractive(content, { ratio: LENGTH_RATIO[length] }));
+    setView("summarized");
+  }
+
+  // Optional: polish the extracted key sentences into fluent prose via the LLM.
+  // Grounded in the extractive output, so the model can't drift from the source.
+  async function polishSummary() {
+    if (!extractive?.summary.trim()) return;
+    setPolishing(true);
+    try {
+      const res = await fetch("/api/ai-tools", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "summarize", content: extractive.summary, language: extractive.language }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Summarize failed");
+      setAbstractive(data.summary);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Something went wrong");
+      setView("error");
+    } finally {
+      setPolishing(false);
+    }
+  }
 
   async function runDetect() {
     if (!content.trim()) return;
@@ -297,12 +341,35 @@ export function AiToolsPanel({ content, format, onApplyHumanized, onClose }: AiT
                 Rewrites with natural style, then auto-verifies the result to show before/after AI scores.
               </p>
             </button>
+
+            <button
+              onClick={() => runSummarize()}
+              disabled={!content.trim()}
+              className="group flex flex-col items-start gap-2 rounded-xl border p-3.5 text-left transition-all hover:border-sky-500/40 hover:bg-sky-500/5 hover:shadow-sm disabled:opacity-40 disabled:cursor-not-allowed sm:col-span-2"
+            >
+              <div className="flex items-center gap-2 w-full">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10">
+                  <ScrollText className="h-4 w-4 text-sky-500" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                    Summarize
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">TextRank + optional AI polish</p>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Picks the key sentences by graph centrality (instant, works without an API key), then
+                optionally polishes them into fluent prose with AI — grounded, so it can&apos;t hallucinate.
+                Works in English, Sinhala &amp; Tamil.
+              </p>
+            </button>
           </div>
 
           {/* Tech stack info */}
           <div className="flex items-center gap-2 px-1 text-[10px] text-muted-foreground/70">
             <Layers className="h-3 w-3" />
-            <span>Powered by Llama 4 Maverick (detection) + Llama 3.3 70B (rewriting) via Groq</span>
+            <span>TextRank (deterministic) · Llama 4 (detection) · Llama 3.3 70B (rewriting / summary) via Groq</span>
           </div>
         </div>
       )}
@@ -560,6 +627,90 @@ export function AiToolsPanel({ content, format, onApplyHumanized, onClose }: AiT
               Redo
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* ── Summary result ───────────────────────────────────────────────── */}
+      {view === "summarized" && extractive && (
+        <div className="p-4 space-y-3">
+          {/* Length control + stats */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="inline-flex rounded-lg border bg-muted/30 p-0.5">
+              {(["short", "medium", "long"] as SummaryLength[]).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => runSummarize(l)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-[11px] font-medium capitalize transition-colors",
+                    summaryLength === l ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {extractive.selected.length}/{extractive.stats.sentenceCount} sentences ·{" "}
+              {Math.round(extractive.stats.compression * 100)}% of original · {LANG_LABEL[extractive.language]}
+            </div>
+          </div>
+
+          {/* Keywords */}
+          {extractive.keywords.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {extractive.keywords.slice(0, 8).map((kw) => (
+                <span key={kw} className="px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-medium">
+                  {kw}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* The summary — abstractive if polished, else the extractive key sentences */}
+          <div className="rounded-lg border bg-muted/10 p-3 max-h-56 overflow-y-auto">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              {abstractive ? (
+                <><Sparkles className="h-3 w-3 text-sky-500" /><span className="text-[10px] font-semibold text-sky-600 dark:text-sky-400">AI-polished summary</span></>
+              ) : (
+                <><BarChart3 className="h-3 w-3 text-muted-foreground" /><span className="text-[10px] font-semibold text-muted-foreground">Extractive (key sentences · deterministic)</span></>
+              )}
+            </div>
+            <p className="text-[12px] leading-relaxed whitespace-pre-wrap break-words text-foreground/90">
+              {abstractive || extractive.summary}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {!abstractive && (
+              <Button size="sm" className="h-7 text-xs gap-1.5 bg-sky-600 hover:bg-sky-700 text-white" onClick={polishSummary} disabled={polishing}>
+                {polishing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                Polish with AI
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant={abstractive ? "default" : "outline"}
+              className="h-7 text-xs gap-1.5"
+              onClick={() => { onApplyHumanized(abstractive || extractive.summary); onClose(); }}
+            >
+              <FileText className="h-3 w-3" />
+              Apply to editor
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => handleCopy(abstractive || extractive.summary)}>
+              {copied ? <><CheckCircle2 className="h-3 w-3 text-emerald-500" />Copied</> : <><Copy className="h-3 w-3" />Copy</>}
+            </Button>
+            {abstractive && (
+              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5 ml-auto" onClick={polishSummary} disabled={polishing}>
+                <RefreshCw className="h-3 w-3" />
+                Redo
+              </Button>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+            Key sentences are ranked by TextRank graph centrality — fully deterministic and free.
+            &quot;Polish with AI&quot; rewrites only those sentences, so the summary stays faithful to your text.
+          </p>
         </div>
       )}
 

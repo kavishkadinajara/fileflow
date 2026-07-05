@@ -68,16 +68,49 @@ MANDATORY REWRITING RULES:
 
 Return ONLY the rewritten text — no preamble, no "Here is the rewritten version:", no explanation.`;
 
+// ─── Summarize (abstractive polish, grounded in extracted key sentences) ──────
+
+const LANG_NAME: Record<string, string> = { en: "English", si: "Sinhala", ta: "Tamil", other: "the source language" };
+
+function summarizeSystem(language: string): string {
+  const lang = LANG_NAME[language] ?? "the source language";
+  return `You are a precise summarisation engine. You will be given the KEY SENTENCES already extracted from a document by a ranking algorithm. Rewrite them into one fluent, coherent summary.
+
+STRICT RULES:
+1. Use ONLY information present in the provided sentences. Do NOT add facts, figures, names, or claims that are not there. If something is not stated, do not invent it.
+2. Write in ${lang} (the same language as the input).
+3. Be concise and well-structured — merge related points, remove redundancy, and order ideas logically.
+4. Keep all specific facts, numbers, and proper nouns exactly as given.
+5. Output 1–2 short paragraphs (or a tight set of bullet points if the content is clearly a list). No preamble, no "Here is the summary:", just the summary itself.`;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { action, content, format } = await req.json();
+    const { action, content, format, language } = await req.json();
 
     if (!content || typeof content !== "string") {
       return NextResponse.json({ success: false, error: "content is required" }, { status: 400 });
     }
 
-    if (!action || !["detect", "humanize"].includes(action)) {
-      return NextResponse.json({ success: false, error: "action must be 'detect' or 'humanize'" }, { status: 400 });
+    if (!action || !["detect", "humanize", "summarize"].includes(action)) {
+      return NextResponse.json({ success: false, error: "action must be 'detect', 'humanize', or 'summarize'" }, { status: 400 });
+    }
+
+    if (action === "summarize") {
+      const workingContent = content.slice(0, 12000);
+      const { text } = await generateText({
+        model: getModel("summarize"),
+        system: summarizeSystem(typeof language === "string" ? language : "en"),
+        messages: [
+          {
+            role: "user",
+            content: `Key sentences extracted from the document:\n\n${workingContent}\n\nWrite the grounded summary now.`,
+          },
+        ],
+        maxOutputTokens: 1024,
+        temperature: 0.3,
+      });
+      return NextResponse.json({ success: true, summary: text.trim(), model: modelIdFor("summarize") });
     }
 
     // Increased context window for better accuracy

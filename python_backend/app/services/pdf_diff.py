@@ -45,7 +45,9 @@ def extract_lines(data: bytes) -> list[DocLine]:
     """Flat reading-order lines of the PDF, each with its page index.
 
     Uses the same span harvest + baseline line-grouping as the structure engine
-    so the line sequence matches the order the user sees and edits.
+    so the line sequence matches the order the user sees and edits. This is the
+    baseline for the VISUAL editor's compose path, whose edited text is the flat
+    per-block lines (same extraction) — so the two sides align.
     """
     import fitz
 
@@ -61,6 +63,22 @@ def extract_lines(data: bytes) -> list[DocLine]:
         return out
     finally:
         doc.close()
+
+
+def markdown_baseline(data: bytes) -> list[DocLine]:
+    """Editor-matching baseline for the Advanced 'Patch original' path.
+
+    That editor shows the structure engine's MARKDOWN, so the patch must diff
+    against the SAME markdown (reduced to visible text via `_strip_md`) — not the
+    flat line extraction. Diffing markdown against flat lines made every table row
+    look changed and corrupted the output by rewriting cells into `| --- |` syntax.
+    Because `extract_structure` is deterministic, re-running it reproduces exactly
+    the text the user started editing, so an unedited document yields zero changes.
+    """
+    from app.services.pdf_structure import extract_structure
+
+    md = extract_structure(data)["md"]
+    return [DocLine(page=0, text=t) for t in _split_edited(md)]
 
 
 def _split_edited(edited_text: str) -> list[str]:
@@ -79,11 +97,32 @@ def _split_edited(edited_text: str) -> list[str]:
 
 
 def _strip_md(t: str) -> str:
-    """Remove leading heading/list markers and surrounding emphasis for comparison."""
+    """Reduce a markdown line to the plain visible text the PDF actually contains.
+
+    The editor shows the structure engine's markdown — headings (`#`), lists
+    (`-`/`1.`), emphasis (`**`/`` ` ``), and GFM tables (`| a | b |` plus `| --- |`
+    separator rows). None of that markup exists in the PDF, so for diffing and for
+    locating text to patch we must compare the *visible* text only. Critically,
+    table rows are flattened to space-joined cells and separator rows are dropped —
+    without this, every table row looks "changed" and the patch tries to rewrite the
+    PDF's cells into `| --- |` syntax (the corruption this fixes).
+    """
     import re
+    t = t.strip()
+    if not t:
+        return ""
+    # GFM table separator row (| --- | :--: |) — only pipes/dashes/colons/spaces.
+    # Also catches `---`/`***` horizontal rules. No PDF counterpart → drop entirely.
+    if set(t) <= set("|-:= "):
+        return ""
+    # Flatten a table content row | a | b | c | → "a b c".
+    if t.startswith("|") or " | " in t:
+        cells = [c.strip() for c in t.strip().strip("|").split("|")]
+        t = " ".join(c for c in cells if c)
     t = re.sub(r"^#{1,6}\s+", "", t)            # headings
-    t = re.sub(r"^[-*]\s+", "", t)              # bullets
+    t = re.sub(r"^[-*+]\s+", "", t)             # bullets
     t = re.sub(r"^\d+\.\s+", "", t)             # ordered list
+    t = t.replace("**", "").replace("__", "").replace("`", "")  # emphasis / code
     return t.strip()
 
 
@@ -202,20 +241,35 @@ def _document_occurrence(original: list[DocLine], line_idx: int, find: str) -> i
     return count
 
 
-def patch_pdf(data: bytes, edited_text: str) -> tuple[bytes, list[Change]]:
-    """Surgically patch the PDF to reflect edited_text; return (pdf_bytes, changes).
+def compute_replacements(data: bytes, edited_text: str) -> tuple[list[Replacement], list[Change]]:
+    """Diff edited_text against the PDF → font-matched Replacements (no apply).
 
-    Locates the changed phrases and applies them through the font-matching overlay
-    so each patch keeps the original font, size, and colour. Untouched content is
-    left byte-for-byte in place.
+    Lets a caller combine these existing-text edits with other operations (e.g.
+    stamping new text boxes) before running a single overlay pass. Returns both the
+    overlay-ready Replacements and the Change descriptors (for reporting counts).
     """
     original = extract_lines(data)
     changes = compute_changes(original, edited_text)
+    reps = [
+        Replacement(find=c.find, replace=c.replace, occurrence=c.occurrence, match_case=True)
+        for c in changes
+    ]
+    return reps, changes
+
+
+def patch_pdf(data: bytes, edited_text: str) -> tuple[bytes, list[Change]]:
+    """Surgically patch the PDF to reflect edited_text; return (pdf_bytes, changes).
+
+    For the Advanced editor, whose `edited_text` is the structure-engine MARKDOWN.
+    Diffs it against the same markdown baseline (so only the user's real edits
+    surface), then applies the changed phrases through the font-matching overlay —
+    each patch keeps the original font, size, and colour; untouched content is left
+    byte-for-byte in place.
+    """
+    original = markdown_baseline(data)
+    changes = compute_changes(original, edited_text)
     if not changes:
         return data, []
-
-    # One Replacement per change, carrying its document-wide occurrence index so
-    # the font-matching overlay patches exactly the instance the user edited.
     reps = [
         Replacement(find=c.find, replace=c.replace, occurrence=c.occurrence, match_case=True)
         for c in changes

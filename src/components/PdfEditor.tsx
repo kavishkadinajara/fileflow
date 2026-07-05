@@ -10,11 +10,13 @@
  * /api/pdf-autoformat to infer the toggles and clean up the markdown.
  */
 import { Button } from "@/components/ui/button";
+import { PdfVisualEditor } from "@/components/PdfVisualEditor";
+import { PdfTablesPanel } from "@/components/PdfTablesPanel";
 import { fileToBase64, downloadBlob, base64ToBlob } from "@/lib/utils";
 import { useConversionStore } from "@/store/conversionStore";
 import type { ConvertOptions } from "@/types";
-import { AlignLeft, Download, FileText, Layers, Loader2, RefreshCw, Replace, Sparkles, Wand2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { AlignLeft, Code2, Download, FileText, Layers, Loader2, MousePointerClick, RefreshCw, Replace, Sparkles, Table2, Wand2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface ReflowBlock {
   id: string;
@@ -61,6 +63,17 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
   const addJobFromContent = useConversionStore((s) => s.addJobFromContent);
   const addResultJob = useConversionStore((s) => s.addResultJob);
 
+  // "visual" = WYSIWYG fill-in (default); "advanced" = markdown/reflow/overlay tools;
+  // "tables" = detect tables → Excel/CSV.
+  type Mode = "visual" | "advanced" | "tables";
+  const [mode, setMode] = useState<Mode>("visual");
+  // Keep-alive: a panel is mounted once visited and hidden (not unmounted) when you
+  // switch away, so heavy extraction runs once and in-progress edits aren't lost.
+  const [visited, setVisited] = useState<Set<Mode>>(() => new Set<Mode>(["visual"]));
+  useEffect(() => {
+    setVisited((v) => (v.has(mode) ? v : new Set(v).add(mode)));
+  }, [mode]);
+
   const [content, setContent] = useState("");
   const [decorating, setDecorating] = useState(false);
   const [decorateError, setDecorateError] = useState<string | null>(null);
@@ -91,8 +104,22 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
   const [reflowBusy, setReflowBusy] = useState(false);
   const [reflowError, setReflowError] = useState<string | null>(null);
 
-  // ── Extract the PDF to editable markdown on mount ──────────────────────────
+  // ── Extract the PDF to editable markdown (only needed for advanced mode) ────
+  // Lazy: skip the markdown extraction entirely while the user is in the visual
+  // editor, and run it the first time they switch to the advanced tools.
+  //
+  // The "have we started" flag is a REF, not state, on purpose: putting it in the
+  // effect deps and flipping it inside the effect would re-trigger the cleanup
+  // (cancelled = true) before the fetch resolved — leaving `extracting` stuck on
+  // forever. A ref mutates without a re-render, so the in-flight extraction
+  // completes normally. The ref resets whenever the file changes.
+  const mdStartedRef = useRef(false);
   useEffect(() => {
+    mdStartedRef.current = false;
+  }, [file]);
+  useEffect(() => {
+    if (mode !== "advanced" || mdStartedRef.current) return;
+    mdStartedRef.current = true;
     let cancelled = false;
     async function extract() {
       setExtracting(true);
@@ -114,14 +141,17 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
         const md = atob(data.fileBase64);
         if (!cancelled) setContent(new TextDecoder().decode(Uint8Array.from(md, (c) => c.charCodeAt(0))));
       } catch (err) {
-        if (!cancelled) setExtractError(err instanceof Error ? err.message : "Extraction failed");
+        if (!cancelled) {
+          setExtractError(err instanceof Error ? err.message : "Extraction failed");
+          mdStartedRef.current = false; // allow a retry after a failure
+        }
       } finally {
         if (!cancelled) setExtracting(false);
       }
     }
     extract();
     return () => { cancelled = true; };
-  }, [file]);
+  }, [file, mode]);
 
   function update<K extends keyof FormatToggles>(key: K, value: FormatToggles[K]) {
     setToggles((t) => ({ ...t, [key]: value }));
@@ -351,8 +381,60 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
         </div>
       </div>
 
-      {/* Editor */}
-      {extracting ? (
+      {/* Mode tabs — Fill in (WYSIWYG) vs Advanced (markdown / reflow / overlay) */}
+      <div className="flex items-center gap-1 rounded-lg border bg-muted/30 p-1 w-fit">
+        <button
+          onClick={() => setMode("visual")}
+          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            mode === "visual" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <MousePointerClick className="h-3.5 w-3.5" />
+          Fill in (visual)
+        </button>
+        <button
+          onClick={() => setMode("tables")}
+          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            mode === "tables" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Table2 className="h-3.5 w-3.5" />
+          Tables → Excel
+        </button>
+        <button
+          onClick={() => setMode("advanced")}
+          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            mode === "advanced" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Code2 className="h-3.5 w-3.5" />
+          Advanced
+        </button>
+      </div>
+
+      {/* Visual fill-in editor (default) — kept mounted once visited so edits and
+          the rendered page images survive a tab switch. */}
+      {visited.has("visual") && (
+        <div className={mode === "visual" ? "" : "hidden"}>
+          <PdfVisualEditor
+            file={file}
+            onResult={(blob, fileName) => addResultJob(blob, fileName, "pdf", "pdf")}
+          />
+        </div>
+      )}
+
+      {/* Tables → Excel/CSV — kept mounted so detection isn't re-run each switch. */}
+      {visited.has("tables") && (
+        <div className={mode === "tables" ? "" : "hidden"}>
+          <PdfTablesPanel
+            file={file}
+            onResult={(blob, fileName) => addResultJob(blob, fileName, "pdf", "pdf")}
+          />
+        </div>
+      )}
+
+      {/* Advanced editor (markdown + reflow + overlay) */}
+      {mode === "advanced" && (extracting ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
           <Loader2 className="h-4 w-4 animate-spin" />
           Extracting editable content from PDF…
@@ -614,7 +696,7 @@ export function PdfEditor({ file, onRemove }: PdfEditorProps) {
             )}
           </div>
         </>
-      )}
+      ))}
     </div>
   );
 }

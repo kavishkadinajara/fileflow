@@ -115,6 +115,55 @@ def extract_layout(data: bytes) -> list[dict]:
         doc.close()
 
 
+def render_visual_pages(data: bytes, dpi: int = 144) -> list[dict]:
+    """Render every page as a background image plus its editable text blocks.
+
+    This powers the WYSIWYG fill-in surface: the UI paints each page exactly as it
+    looks (logo, colour bands, dotted form lines — everything), then overlays a
+    transparent, editable field on top of each text block at its real position. The
+    user sees the actual form and types straight into it.
+
+    For every page we return:
+      - width / height — page size in **points** (the coordinate space the blocks
+        live in), so the front end can position fields against the image precisely.
+      - image_w / image_h — the rendered PNG's pixel size, so the field layer can be
+        scaled to whatever width the page image is displayed at.
+      - image — a base64 PNG (data-URI body, no prefix) of the page.
+      - blocks — the same positioned, editable blocks as extract_layout.
+
+    The render DPI trades sharpness for payload size; 144 (2× the 72-pt base) keeps
+    text crisp on screen without bloating the JSON.
+    """
+    import fitz
+
+    doc = fitz.open(stream=data, filetype="pdf")
+    try:
+        # Reuse the layout pass for blocks so positions match the patch/diff path
+        # exactly — the editor and the download patcher agree on every line.
+        layouts = extract_layout(data)
+        zoom = dpi / 72.0
+        matrix = fitz.Matrix(zoom, zoom)
+        pages: list[dict] = []
+        for pi, page in enumerate(doc):
+            pix = page.get_pixmap(matrix=matrix, alpha=False)
+            import base64
+
+            png_b64 = base64.b64encode(pix.tobytes("png")).decode("ascii")
+            layout = layouts[pi] if pi < len(layouts) else {"width": page.rect.width,
+                                                             "height": page.rect.height, "blocks": []}
+            pages.append({
+                "width": layout["width"],
+                "height": layout["height"],
+                "image_w": pix.width,
+                "image_h": pix.height,
+                "image": png_b64,
+                "blocks": layout["blocks"],
+            })
+        return pages
+    finally:
+        doc.close()
+
+
 def _esc(s: str) -> str:
     return (s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
 

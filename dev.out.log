@@ -1,0 +1,19 @@
+
+> mdconvertor@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 5.2s
+ ○ Compiling / ...
+ ✓ Compiled / in 9s (5700 modules)
+ GET / 200 in 9659ms
+ ○ Compiling /ats ...
+ ✓ Compiled /ats in 6.6s (5714 modules)
+ GET /ats 200 in 5856ms
+ ○ Compiling /history ...
+ ✓ Compiled /history in 876ms (5727 modules)
+ GET /history 200 in 1013ms

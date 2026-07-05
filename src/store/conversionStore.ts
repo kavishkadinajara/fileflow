@@ -1,5 +1,6 @@
 import { base64ToBlob, downloadBlob, fileToBase64 } from "@/lib/utils";
 import { convertMedia } from "@/lib/converters/media";
+import { logConversion } from "@/lib/supabase/conversionHistory";
 import type { ConversionJob, ConvertOptions, FileFormat } from "@/types";
 import type { StyleConfig } from "@/types/style";
 import JSZip from "jszip";
@@ -114,6 +115,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
       }));
     }, 600);
 
+    const startedAt = Date.now();
     try {
       const fileBase64 = await fileToBase64(file);
       const res = await fetch("/api/convert", {
@@ -138,6 +140,12 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
             : j
         ),
       }));
+
+      // Log metadata to cloud history (best-effort: no-ops if signed out / cloud off).
+      void logConversion({
+        sourceFormat: fromFormat, targetFormat: toFormat, sourceName: file.name,
+        sizeBytes: file.size, status: "done", durationMs: Date.now() - startedAt,
+      });
     } catch (err) {
       clearInterval(tick);
       set((state) => ({
@@ -147,6 +155,10 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
             : j
         ),
       }));
+      void logConversion({
+        sourceFormat: fromFormat, targetFormat: toFormat, sourceName: file.name,
+        sizeBytes: file.size, status: "error", durationMs: Date.now() - startedAt,
+      });
     }
   },
 

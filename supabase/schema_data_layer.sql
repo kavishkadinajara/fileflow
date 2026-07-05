@@ -5,9 +5,17 @@
 -- Run AFTER schema.sql in: Supabase Dashboard → SQL Editor → New query → Run
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- Shared updated_at trigger (defined in schema.sql as set_updated_at). If you run
--- this file standalone, uncomment the function below.
--- create or replace function public.set_updated_at() ... (see schema.sql)
+-- Shared updated_at trigger. Defined in schema.sql too; `create or replace` makes
+-- running this file standalone (or after schema.sql) safe either way.
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
 
 -- ═════════════════════════════════════════════════════════════════════════════
 -- 1. user_presets — saved conversion settings

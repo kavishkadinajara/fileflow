@@ -24,6 +24,9 @@ export default function PrivacyAuditPage() {
           see, in real time, that no document is uploaded to a third party. Below it: the formal threat
           model and exactly where each feature processes your data.
         </p>
+        <a href="/privacy-router" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+          See the privacy-aware router that decides what may leave your device →
+        </a>
       </section>
 
       <PrivacyAuditDashboard />

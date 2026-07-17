@@ -2,16 +2,17 @@
 
 import { UserButton } from "@/components/auth/UserButton";
 import { Button } from "@/components/ui/button";
-import { BarChart3, BookOpen, Clock, Moon, ScanLine, Sun } from "lucide-react";
+import { BarChart3, BookOpen, Clock, GitCompareArrows, Moon, ScanLine, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 
 const NAV_LINKS = [
-  { href: "/ats",       label: "Resume ATS", icon: ScanLine  },
-  { href: "/guide",     label: "Guide",      icon: BookOpen  },
-  { href: "/benchmark", label: "Benchmark",  icon: BarChart3 },
+  { href: "/ats",       label: "Resume ATS", icon: ScanLine         },
+  { href: "/compare",   label: "Compare",    icon: GitCompareArrows },
+  { href: "/guide",     label: "Guide",      icon: BookOpen         },
+  { href: "/benchmark", label: "Benchmark",  icon: BarChart3        },
 ];
 
 // Shown only when signed in (needs an account to have any history).

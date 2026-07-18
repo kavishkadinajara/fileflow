@@ -100,6 +100,18 @@ const COMPARISON_GROUPS: CompGroup[] = [
     ],
   },
   {
+    group: "Document intelligence",
+    rows: [
+      { feature: "Resume ATS scanner (explainable)", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "PDF tables → typed Excel", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "Summarizer (works offline, grounded AI)", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "Semantic document compare / redline", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "Conversion-quality score (SFI)", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "Round-trip fidelity tracking", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "On-device privacy router (PII-aware)", us: true, cc: false, zamzar: false, ilovepdf: false },
+    ],
+  },
+  {
     group: "PDF Editor",
     rows: [
       { feature: "Fill in a PDF visually (in-browser)", us: true, cc: false, zamzar: false, ilovepdf: true },

@@ -16,14 +16,20 @@ import {
     FileText,
     FileType2,
     GitBranch,
+    GitCompareArrows,
     Keyboard,
     MousePointer2,
     MousePointerClick,
     Pencil,
     Replace,
+    RotateCcw,
+    ScanLine,
     Search,
+    ShieldCheck,
     Sparkles,
     SplitSquareHorizontal,
+    Split,
+    Table2,
     Wand2,
     Workflow,
 } from "lucide-react";
@@ -41,6 +47,106 @@ interface Feature {
 }
 
 const FEATURES: Feature[] = [
+  // ── Smart Tools (free vs paid AI)
+  {
+    icon: ScanLine,
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
+    badge: "Smart Tools",
+    badgeColor: "bg-primary/10 text-primary border-primary/20",
+    title: "Resume ATS Optimizer",
+    benefit: "Upload your CV and a job description to get an explainable ATS match score in ~23 ms — missing skills & keywords, parse-ability warnings, and a grounded AI bullet rewriter. Free alternative to Jobscan.",
+    steps: [
+      "Open the Resume ATS page from the top nav",
+      "Upload your CV (PDF/DOCX) and paste the job description",
+      "Read the score, fix the flagged gaps, and optionally rewrite bullets with AI",
+    ],
+  },
+  {
+    icon: Table2,
+    iconBg: "bg-green-500/10 dark:bg-green-500/15",
+    iconColor: "text-green-500",
+    badge: "Smart Tools",
+    badgeColor: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+    title: "PDF Tables → Excel / CSV",
+    benefit: "A char-level column-projection engine rebuilds tables from a PDF — even borderless ones — and exports typed Excel cells that actually sum and sort, with a confidence flag on tricky tables.",
+    steps: [
+      "Drop a PDF, then open the Tables → Excel tab",
+      "Preview each detected table with column types and a confidence score",
+      "Download as a styled XLSX (one sheet per table) or CSV",
+    ],
+  },
+  {
+    icon: AlignLeft,
+    iconBg: "bg-cyan-500/10 dark:bg-cyan-500/15",
+    iconColor: "text-cyan-500",
+    badge: "Smart Tools",
+    badgeColor: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
+    title: "Hybrid Summarizer",
+    benefit: "A TextRank engine finds the most central sentences entirely in your browser (no API key), then optionally grounds an AI polish — so the summary can't hallucinate. Works for English, Sinhala and Tamil.",
+    steps: [
+      "Open AI Tools on any text content and choose Summarize",
+      "The extractive summary + keywords appear instantly; adjust length",
+      "Optionally click Polish with AI, then Copy or Apply to editor",
+    ],
+  },
+  // ── Research metrics
+  {
+    icon: ShieldCheck,
+    iconBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
+    iconColor: "text-emerald-500",
+    badge: "Research",
+    badgeColor: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    title: "Semantic Fidelity Index",
+    benefit: "The first general metric for conversion quality: it scores how much structural, semantic and functional meaning survives a conversion, with a per-dimension radar — so you know whether the conversion actually worked.",
+    steps: [
+      "Convert a document (e.g. Markdown → PDF)",
+      "The SFI card auto-scores the conversion with a grade",
+      "Expand it for structural / semantic / functional detail",
+    ],
+  },
+  {
+    icon: RotateCcw,
+    iconBg: "bg-violet-500/10 dark:bg-violet-500/15",
+    iconColor: "text-violet-500",
+    badge: "Research",
+    badgeColor: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20",
+    title: "Round-Trip Fidelity Tracker",
+    benefit: "Build a conversion chain (A→B→C→…) and measure the meaning lost at every hop — locally and cumulatively — with a degradation curve and a safe-path recommender. Shows the silent loss no single conversion reveals.",
+    steps: [
+      "Open the Round-Trip page and drop a document",
+      "Build a chain with the hop buttons (or use Close the loop)",
+      "Measure fidelity — read the curve, per-hop table, and safe paths",
+    ],
+  },
+  {
+    icon: GitCompareArrows,
+    iconBg: "bg-blue-500/10 dark:bg-blue-500/15",
+    iconColor: "text-blue-500",
+    badge: "Research",
+    badgeColor: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    title: "Semantic Document Compare",
+    benefit: "Drop two versions of a document and get a Word-style redline — but semantic: a reworded paragraph is one 'modified' block with inline highlights, and a relocated one is flagged 'moved', not deleted and re-added.",
+    steps: [
+      "Open the Compare page from the top nav",
+      "Drop the original and the revised document (any format)",
+      "Read the redline — added / removed / modified / moved with a similarity score",
+    ],
+  },
+  {
+    icon: Split,
+    iconBg: "bg-amber-500/10 dark:bg-amber-500/15",
+    iconColor: "text-amber-500",
+    badge: "Research",
+    badgeColor: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
+    title: "Privacy-Aware Router",
+    benefit: "Before any document reaches an AI model, an on-device classifier decides whether it should stay local, go hybrid, or use the cloud — using PII sensitivity, complexity and predicted local quality. Sensitive docs never leave your device.",
+    steps: [
+      "Open the Privacy Router page (linked from Privacy Audit)",
+      "Paste document text — the three factors compute live in your browser",
+      "See the LOCAL / HYBRID / CLOUD decision and exactly why",
+    ],
+  },
   // ── PDF Editor
   {
     icon: MousePointerClick,
@@ -357,8 +463,10 @@ const FEATURES: Feature[] = [
   },
 ];
 
-const CATEGORY_ORDER = ["PDF", "AI", "Editor", "Preview", "Download", "Workflow"];
+const CATEGORY_ORDER = ["Smart Tools", "Research", "PDF", "AI", "Editor", "Preview", "Download", "Workflow"];
 const CATEGORY_COLORS: Record<string, string> = {
+  "Smart Tools": "text-primary",
+  Research: "text-emerald-500",
   PDF: "text-rose-500",
   AI: "text-violet-500",
   Editor: "text-blue-500",
@@ -391,7 +499,7 @@ export function FeatureShowcase() {
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              PDF Editor · Visual fill-in · Font-matched editing · AI Detection · Humanizer · Live Preview · Templates + more
+              Resume ATS · PDF Tables → Excel · Summarizer · Fidelity Index · Document Compare · Privacy Router · PDF Editor + more
             </p>
           </div>
         </div>

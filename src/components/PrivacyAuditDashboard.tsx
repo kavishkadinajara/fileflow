@@ -36,6 +36,7 @@ const CLASS_META: Record<RequestClass, { label: string; dot: string; text: strin
   "same-site-api": { label: "App API",      dot: "bg-sky-500",     text: "text-sky-600 dark:text-sky-400" },
   supabase:        { label: "Supabase",     dot: "bg-violet-500",  text: "text-violet-600 dark:text-violet-400" },
   "ai-provider":   { label: "AI provider",  dot: "bg-amber-500",   text: "text-amber-600 dark:text-amber-400" },
+  "model-cdn":     { label: "Model weights", dot: "bg-teal-500",    text: "text-teal-600 dark:text-teal-400" },
   "third-party":   { label: "Third-party",  dot: "bg-rose-500",    text: "text-rose-600 dark:text-rose-400" },
 };
 

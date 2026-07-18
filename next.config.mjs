@@ -20,6 +20,10 @@ const nextConfig = {
       'sharp',
       'docx',
       'mammoth',
+      // Client-only inference libs: keep the server compile from bundling their
+      // Node builds (onnxruntime-node ships native .node binaries webpack can't parse).
+      '@huggingface/transformers',
+      'onnxruntime-node',
     ],
   },
 };

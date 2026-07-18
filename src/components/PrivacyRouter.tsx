@@ -1,23 +1,43 @@
 "use client";
 
 /**
- * Privacy-Aware Router — interactive demo of research gap 3.
+ * Privacy-Aware Router — research gap 3, decision AND execution.
  *
  * Paste or type document text and the three routing factors compute live, entirely
  * in the browser (no request is made — which is the whole point of judging
  * sensitivity before deciding whether the document may leave the device). The
- * routing decision (LOCAL / HYBRID / CLOUD) and its reason update as you type.
+ * routing decision (LOCAL / HYBRID / CLOUD) updates as you type, and the Execute
+ * panel then RUNS the document on that route: on-device WebLLM for LOCAL,
+ * pseudonymized cloud for HYBRID, cloud for CLOUD. Every run issues a verifiable
+ * Privacy Receipt and (for local runs) a quality sample that calibrates Factor 3
+ * for this device.
  */
 import {
-  decideRoute,
+  buildDecision,
+  estimateComplexity,
   type RoutingDecision,
   type LocalTier,
 } from "@/lib/privacy/router";
-import { labelFor, type SensitivityCategory } from "@/lib/privacy/sensitivity";
+import { classifySensitivity, labelFor, type SensitivityCategory } from "@/lib/privacy/sensitivity";
+import {
+  predictLocalQualityCalibrated,
+  type CalibratedPrediction,
+} from "@/lib/privacy/calibration";
+import { getEvents } from "@/lib/privacy/networkMonitor";
+import {
+  buildPrivacyReceipt, downloadReceipt, type PrivacyReceipt,
+} from "@/lib/privacy/receipt";
+import {
+  localModelIdFor, resolveExecution, runRouted,
+  type LocalAiTask, type RoutedRunResult, type RunPhase,
+} from "@/lib/local-ai/executor";
+import { interruptLocal, isWebGpuAvailable } from "@/lib/local-ai/webllm";
+import { applyNerBoost, detectNamedEntities, type NamedEntity } from "@/lib/local-ai/ner";
 import {
   Cpu, Cloud, Split, ShieldCheck, Gauge, Layers, Eye, Sparkles,
+  Play, Loader2, AlertTriangle, Download, ScanSearch, Square, ReceiptText, BadgeCheck,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const ROUTE_META = {
   LOCAL: { icon: Cpu, label: "Local", cls: "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
@@ -61,15 +81,335 @@ function sensColor(s: number): string {
   return s >= 0.6 ? "#ef4444" : s >= 0.3 ? "#f59e0b" : "#10b981";
 }
 
+const PHASE_LABELS: Record<RunPhase, string> = {
+  extracting: "Extracting key content on-device…",
+  "loading-model": "Preparing the on-device model…",
+  generating: "Generating on-device — nothing is leaving this browser…",
+  masking: "Pseudonymizing PII on-device…",
+  "leak-check": "NER leak check — scanning masked text for residual names…",
+  "cloud-request": "Cloud model working…",
+  unmasking: "Restoring private values locally…",
+};
+
+const DOWNLOAD_HINTS: Record<LocalTier, string> = {
+  small: "first run downloads ~0.9 GB of weights (cached by the browser afterwards)",
+  medium: "first run downloads ~2.4 GB of weights (cached by the browser afterwards)",
+};
+
+const TASKS: { id: LocalAiTask; label: string }[] = [
+  { id: "summarize", label: "Summarize" },
+  { id: "proofread", label: "Proofread" },
+  { id: "custom", label: "Custom instruction" },
+];
+
+/**
+ * Decision → execution. Runs the document on the decided route, measures the
+ * output, and issues a downloadable Privacy Receipt for the run.
+ */
+function ExecutePanel({ text, tier, decision, onRunComplete }: {
+  text: string; tier: LocalTier; decision: RoutingDecision; onRunComplete: () => void;
+}) {
+  const [task, setTask] = useState<LocalAiTask>("summarize");
+  const [instruction, setInstruction] = useState("");
+  const [leakCheckOn, setLeakCheckOn] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [phase, setPhase] = useState<RunPhase | null>(null);
+  const [progress, setProgress] = useState<{ progress: number; text: string } | null>(null);
+  const [output, setOutput] = useState("");
+  const [result, setResult] = useState<RoutedRunResult | null>(null);
+  const [receipt, setReceipt] = useState<PrivacyReceipt | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  // WebGPU is read in an effect so SSR and the first client render agree.
+  const [webgpu, setWebgpu] = useState(true);
+  useEffect(() => { setWebgpu(isWebGpuAvailable()); }, []);
+  const runSeq = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const planned = useMemo(() => {
+    try {
+      return { ...resolveExecution(decision, webgpu), veto: null as string | null };
+    } catch (err) {
+      return { route: null, fallbackNote: undefined, veto: err instanceof Error ? err.message : String(err) };
+    }
+  }, [decision, webgpu]);
+
+  async function run() {
+    const seq = ++runSeq.current;
+    const abort = new AbortController();
+    abortRef.current = abort;
+    setRunning(true); setError(null); setOutput(""); setResult(null); setReceipt(null); setPhase(null); setProgress(null);
+
+    // The receipt's network window: everything the monitor records after this id.
+    const startEventId = getEvents()[0]?.id ?? 0;
+
+    try {
+      const res = await runRouted({
+        text, task,
+        instruction: task === "custom" ? instruction : undefined,
+        tier, decision,
+        deepLeakCheck: leakCheckOn,
+        signal: abort.signal,
+        onPhase: (p) => { if (seq === runSeq.current) setPhase(p); },
+        onToken: (t) => { if (seq === runSeq.current) setOutput(t); },
+        onProgress: (p) => { if (seq === runSeq.current) setProgress(p); },
+      });
+      if (seq !== runSeq.current) return;
+      setResult(res);
+      setOutput(res.output);
+      onRunComplete();
+
+      const events = getEvents().filter((e) => e.id > startEventId).reverse();
+      const built = await buildPrivacyReceipt({
+        operation: task,
+        text,
+        decision: res.decision,
+        executedRoute: res.executedRoute,
+        fallbackNote: res.fallbackNote,
+        model: res.modelId,
+        durationMs: res.durationMs,
+        maskedCount: res.maskedCount,
+        lostTokens: res.lostTokens,
+        leakCheck: res.leakCheck,
+        measuredQuality: res.quality.score,
+        events,
+      });
+      if (seq === runSeq.current) setReceipt(built);
+    } catch (err) {
+      if (seq !== runSeq.current) return;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("Stopped — the request was cancelled before completion.");
+      } else {
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    } finally {
+      if (seq === runSeq.current) { setRunning(false); setPhase(null); setProgress(null); abortRef.current = null; }
+    }
+  }
+
+  function stop() {
+    abortRef.current?.abort();
+    void interruptLocal(); // local stream ends with the tokens produced so far
+  }
+
+  const plannedHint = planned.route === "LOCAL"
+    ? `Runs entirely in this browser tab on ${localModelIdFor(tier)} — ${DOWNLOAD_HINTS[tier]}. The document never leaves the device.`
+    : planned.route === "HYBRID"
+      ? "PII values are replaced with opaque tokens on-device; only the pseudonymized text goes to the cloud, and the values are restored locally afterwards."
+      : planned.route === "CLOUD"
+        ? "The document is sent to the app's cloud AI route — allowed because no sensitive content was detected."
+        : null;
+
+  return (
+    <div className="rounded-xl border bg-card p-4 space-y-3">
+      <h3 className="text-sm font-semibold flex items-center gap-2">
+        <Play className="h-4 w-4 text-primary" /> Run it — decision → execution
+      </h3>
+
+      {planned.veto ? (
+        <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-600 dark:text-rose-400 flex gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+          <p>{planned.veto}</p>
+        </div>
+      ) : (
+        <>
+          {plannedHint && <p className="text-[11px] text-muted-foreground leading-relaxed">{plannedHint}</p>}
+          {planned.fallbackNote && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> {planned.fallbackNote}
+            </p>
+          )}
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {TASKS.map((t) => (
+              <button key={t.id} onClick={() => setTask(t.id)} disabled={running}
+                className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${task === t.id
+                  ? "border-primary/60 bg-primary/10 text-primary font-semibold"
+                  : "hover:border-primary/40 hover:text-primary"}`}>
+                {t.label}
+              </button>
+            ))}
+            {task === "summarize" && (
+              <span className="text-[10px] text-muted-foreground">
+                grounded — TextRank picks the sentences on-device; the model only rewrites them
+              </span>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            {task === "custom" ? (
+              <input
+                value={instruction}
+                onChange={(e) => setInstruction(e.target.value)}
+                disabled={running}
+                placeholder="e.g. Translate to Sinhala · Turn into bullet points…"
+                className="flex-1 rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            ) : (
+              <div className="flex-1" />
+            )}
+            {running ? (
+              <button onClick={stop}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/40 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors">
+                <Square className="h-3.5 w-3.5" /> Stop
+              </button>
+            ) : (
+              <button
+                onClick={run}
+                disabled={task === "custom" && !instruction.trim()}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
+              >
+                <Play className="h-3.5 w-3.5" /> Run
+              </button>
+            )}
+          </div>
+
+          {planned.route === "HYBRID" && (
+            <label className="flex items-center gap-2 text-[11px] text-muted-foreground cursor-pointer">
+              <input type="checkbox" checked={leakCheckOn} onChange={(e) => setLeakCheckOn(e.target.checked)}
+                disabled={running} className="h-3.5 w-3.5 accent-primary" />
+              NER leak check — scan the masked text for residual names before anything is uploaded (~110 MB model, cached)
+            </label>
+          )}
+        </>
+      )}
+
+      {running && phase && (
+        <div className="space-y-1.5">
+          <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+            {phase === "loading-model" ? <Download className="h-3 w-3" /> : <Loader2 className="h-3 w-3 animate-spin" />}
+            {PHASE_LABELS[phase]}
+          </p>
+          {(phase === "loading-model" || phase === "leak-check") && progress && (
+            <>
+              <Bar value={progress.progress} color="#10b981" />
+              <p className="text-[10px] text-muted-foreground truncate">{progress.text}</p>
+            </>
+          )}
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-600 dark:text-rose-400">
+          {error}
+        </div>
+      )}
+
+      {output && (
+        <textarea
+          readOnly
+          value={output}
+          className="w-full h-40 resize-y rounded-lg border bg-background p-3 text-xs font-mono focus:outline-none"
+        />
+      )}
+
+      {result && (
+        <>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] px-2 py-0.5 rounded-full border font-medium">
+              executed: {result.executedRoute.toLowerCase()}
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full border text-muted-foreground">
+              model: {result.modelId}
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full border text-muted-foreground tabular-nums">
+              {(result.durationMs / 1000).toFixed(1)}s{result.tokensPerSecond ? ` · ${result.tokensPerSecond} tok/s` : ""}
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full border text-muted-foreground flex items-center gap-1"
+              title={result.quality.components.map((c) => `${c.name}: ${Math.round(c.score * 100)}%`).join(" · ")}>
+              <BadgeCheck className="h-3 w-3" /> measured quality {Math.round(result.quality.score * 100)}%
+            </span>
+            {result.executedRoute === "HYBRID" && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full border text-muted-foreground">
+                {result.maskedCount} PII value{result.maskedCount === 1 ? "" : "s"} pseudonymized
+              </span>
+            )}
+            {result.leakCheck && (
+              <span className={`text-[10px] px-2 py-0.5 rounded-full border ${result.leakCheck.residualFound
+                ? "border-amber-500/40 text-amber-600 dark:text-amber-400"
+                : "border-emerald-500/40 text-emerald-600 dark:text-emerald-400"}`}>
+                leak check: {result.leakCheck.residualFound ? `${result.leakCheck.residualFound} residual name(s) re-masked` : "clean"}
+              </span>
+            )}
+            {result.lostTokens.length > 0 && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full border border-amber-500/40 text-amber-600 dark:text-amber-400">
+                {result.lostTokens.length} placeholder(s) dropped by the cloud model
+              </span>
+            )}
+            {result.executedRoute === "LOCAL" && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3" /> zero document bytes uploaded
+              </span>
+            )}
+          </div>
+
+          {result.notes.length > 0 && (
+            <ul className="text-[10px] text-muted-foreground space-y-0.5">
+              {result.notes.map((n, i) => <li key={i}>· {n}</li>)}
+            </ul>
+          )}
+
+          {receipt && (
+            <div className="rounded-lg border bg-background p-3 flex items-center gap-3">
+              <ReceiptText className="h-4 w-4 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-medium">Privacy Receipt issued</p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  doc sha256 {receipt.document.sha256.slice(0, 16)}… · {receipt.network.requests.length} request(s) in window ·{" "}
+                  {receipt.network.thirdPartyUploads} third-party upload(s)
+                  {receipt.network.metadataUploads > 0 && ` · ${receipt.network.metadataUploads} metadata-only (auth/history)`}
+                  {" "}· document left device: {receipt.network.documentLeftDevice ? "yes" : "NO"}
+                </p>
+              </div>
+              <button onClick={() => downloadReceipt(receipt)}
+                className="text-[10px] px-2.5 py-1 rounded-lg border hover:border-primary/40 hover:text-primary transition-colors shrink-0">
+                Download JSON
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 export function PrivacyRouter() {
   const [text, setText] = useState(SAMPLES[0].text);
   const [tier, setTier] = useState<LocalTier>("small");
+  const [nerEntities, setNerEntities] = useState<NamedEntity[] | null>(null);
+  const [nerRunning, setNerRunning] = useState(false);
+  const [nerProgress, setNerProgress] = useState<string | null>(null);
+  const [nerError, setNerError] = useState<string | null>(null);
+  // Bumped after each local run so the calibrated Factor 3 refreshes.
+  const [calVersion, setCalVersion] = useState(0);
 
-  const decision: RoutingDecision | null = useMemo(() => {
+  // A deep-scan belongs to the text it scanned — new text invalidates it.
+  useEffect(() => { setNerEntities(null); setNerError(null); }, [text]);
+
+  const computed: { decision: RoutingDecision; cal: CalibratedPrediction } | null = useMemo(() => {
     if (!text.trim()) return null;
-    return decideRoute(text, { tier });
-  }, [text, tier]);
+    const base = classifySensitivity(text);
+    const sens = nerEntities ? applyNerBoost(base, nerEntities) : base;
+    const cal = predictLocalQualityCalibrated(estimateComplexity(text).score, tier);
+    return { decision: buildDecision(sens, text, { tier, localQualityOverride: cal.quality }), cal };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, tier, nerEntities, calVersion]);
 
+  async function deepScan() {
+    setNerRunning(true); setNerError(null); setNerProgress(null);
+    try {
+      const entities = await detectNamedEntities(text, (p) => {
+        setNerProgress(`${Math.round(p.progress * 100)}% — ${p.text}`);
+      });
+      setNerEntities(entities);
+    } catch (err) {
+      setNerError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setNerRunning(false); setNerProgress(null);
+    }
+  }
+
+  const decision = computed?.decision ?? null;
+  const cal = computed?.cal ?? null;
   const RM = decision ? ROUTE_META[decision.route] : null;
   const activeCats = decision
     ? (Object.entries(decision.sensitivity.categoryScores) as [SensitivityCategory, number][])
@@ -111,6 +451,28 @@ export function PrivacyRouter() {
             </select>
           </label>
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={deepScan}
+            disabled={nerRunning || !text.trim()}
+            className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-medium hover:border-primary/40 hover:text-primary transition-colors disabled:opacity-50"
+          >
+            {nerRunning ? <Loader2 className="h-3 w-3 animate-spin" /> : <ScanSearch className="h-3 w-3" />}
+            {nerRunning ? "Scanning on-device…" : nerEntities ? "Re-scan" : "Deep scan — find names (on-device NER)"}
+          </button>
+          {nerRunning && nerProgress && (
+            <span className="text-[10px] text-muted-foreground truncate max-w-[50%]">{nerProgress}</span>
+          )}
+          {nerEntities && !nerRunning && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full border border-teal-500/40 text-teal-600 dark:text-teal-400">
+              ensemble active — {nerEntities.length} entit{nerEntities.length === 1 ? "y" : "ies"} found, folded into sensitivity
+            </span>
+          )}
+          {nerError && <span className="text-[10px] text-rose-500">{nerError}</span>}
+          <span className="text-[10px] text-muted-foreground">
+            BERT NER (~110 MB, cached) runs in this tab — the text is never uploaded to scan it.
+          </span>
+        </div>
       </div>
 
       {decision && RM && (
@@ -140,8 +502,13 @@ export function PrivacyRouter() {
             <FactorCard icon={Layers} title="Complexity" value={decision.factors.complexity} color="#8b5cf6"
               hint={`${decision.complexity.signals.words} words, ${decision.complexity.signals.tables} tables, ${decision.complexity.signals.formulas} formulas`} />
             <FactorCard icon={Gauge} title="Predicted local quality" value={decision.factors.localQuality} color="#3b82f6"
-              hint={`How well the on-device ${tier} model is expected to handle this document`} />
+              hint={cal && cal.empiricalWeight > 0
+                ? `Calibrated from ${cal.samples} measured run${cal.samples === 1 ? "" : "s"} on this device (${Math.round(cal.empiricalWeight * 100)}% empirical, prior ${Math.round(cal.prior * 100)}%)`
+                : `A-priori estimate for the on-device ${tier} model — runs on this device will calibrate it`} />
           </div>
+
+          {/* Decision → execution */}
+          <ExecutePanel text={text} tier={tier} decision={decision} onRunComplete={() => setCalVersion((v) => v + 1)} />
 
           {/* Sensitivity breakdown */}
           {activeCats.length > 0 && (

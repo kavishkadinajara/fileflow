@@ -146,8 +146,13 @@ const CATEGORIES: SensitivityCategory[] = [
 ];
 
 /** Saturating map: raw category weight → 0..1 (diminishing returns). */
-function saturate(x: number): number {
+export function saturate(x: number): number {
   return 1 - Math.exp(-1.3 * x);
+}
+
+/** Inverse of saturate — recover the raw weight so ensembles can add to it. */
+export function desaturate(y: number): number {
+  return -Math.log(1 - Math.min(y, 0.999)) / 1.3;
 }
 
 /**
@@ -193,9 +198,19 @@ export function classifySensitivity(text: string): SensitivityResult {
   const categoryScores = {} as Record<SensitivityCategory, number>;
   for (const c of CATEGORIES) categoryScores[c] = round(saturate(raw[c]));
 
-  // Overall = dominant category + damped contribution of the rest. One highly
-  // sensitive category should push the document to "high" on its own, while
-  // several moderate signals still accumulate.
+  return composeSensitivity(categoryScores, hits);
+}
+
+/**
+ * Overall = dominant category + damped contribution of the rest. One highly
+ * sensitive category should push the document to "high" on its own, while
+ * several moderate signals still accumulate. Exported so ensembles (the NER
+ * deep-scan) can rebuild a result after boosting category scores.
+ */
+export function composeSensitivity(
+  categoryScores: Record<SensitivityCategory, number>,
+  hits: DetectorHit[],
+): SensitivityResult {
   const sorted = CATEGORIES.map((c) => categoryScores[c]).sort((a, b) => b - a);
   const top = sorted[0] ?? 0;
   const rest = sorted.slice(1).reduce((acc, v) => acc + v, 0);
@@ -212,6 +227,53 @@ export function classifySensitivity(text: string): SensitivityResult {
     : "No sensitive content detected";
 
   return { score, level, categoryScores, hits, topReason };
+}
+
+/** Redact helper, exported for ensemble detectors that surface samples in the UI. */
+export function redactSample(s: string): string {
+  return redact(s);
+}
+
+/**
+ * A located PII match — the positional form of the regex detectors, used by the
+ * HYBRID route to pseudonymize sensitive values before anything leaves the
+ * device. Lexicon hits are deliberately excluded: they mark topical sensitivity
+ * (a document *about* medicine), not extractable values that can be masked.
+ */
+export interface SensitiveSpan {
+  start: number;
+  end: number;
+  text: string;
+  category: SensitivityCategory;
+  detector: string;
+}
+
+/** Locate every validated regex-detector match, overlap-free, in text order. */
+export function findSensitiveSpans(text: string): SensitiveSpan[] {
+  const sample = text.slice(0, 200_000);
+  const spans: SensitiveSpan[] = [];
+  for (const d of REGEX_DETECTORS) {
+    for (const m of sample.matchAll(d.re)) {
+      const value = m[0];
+      if (m.index === undefined) continue;
+      if (d.validate && !d.validate(value)) continue;
+      spans.push({
+        start: m.index, end: m.index + value.length,
+        text: value, category: d.category, detector: d.name,
+      });
+    }
+  }
+  // Overlaps (e.g. a card number also matching the phone regex): keep the span
+  // that starts first; on ties keep the longer one.
+  spans.sort((a, b) => a.start - b.start || b.end - a.end);
+  const out: SensitiveSpan[] = [];
+  let lastEnd = -1;
+  for (const s of spans) {
+    if (s.start < lastEnd) continue;
+    out.push(s);
+    lastEnd = s.end;
+  }
+  return out;
 }
 
 function escapeRe(s: string): string {

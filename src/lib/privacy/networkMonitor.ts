@@ -14,7 +14,7 @@
  * relative to the page origin — so the audit is explainable, not heuristic.
  */
 
-export type RequestClass = "first-party" | "same-site-api" | "supabase" | "ai-provider" | "third-party";
+export type RequestClass = "first-party" | "same-site-api" | "supabase" | "ai-provider" | "model-cdn" | "third-party";
 
 export interface NetworkEvent {
   id: number;
@@ -56,6 +56,11 @@ export function classify(url: string): { host: string; klass: RequestClass } {
     if (/\.supabase\.(co|in)$/.test(u.hostname)) return { host, klass: "supabase" };
     if (/(groq|openai|googleapis|generativelanguage|deepseek|anthropic)\./.test(u.hostname))
       return { host, klass: "ai-provider" };
+    // Model-weight downloads for on-device inference (WebLLM / Transformers.js).
+    // These are GET-only pulls of public model files — the document itself is
+    // never in these requests, so they must not read as third-party uploads.
+    if (/(^|\.)huggingface\.co$|(^|\.)hf\.co$|(^|\.)mlc\.ai$|^raw\.githubusercontent\.com$/.test(u.hostname))
+      return { host, klass: "model-cdn" };
     return { host, klass: "third-party" };
   } catch {
     return { host: host || "invalid", klass: "third-party" };
@@ -150,7 +155,7 @@ export function clearEvents() {
 /** Aggregate counts for the dashboard summary tiles. */
 export function summarize(evs: NetworkEvent[]) {
   const byClass: Record<RequestClass, number> = {
-    "first-party": 0, "same-site-api": 0, supabase: 0, "ai-provider": 0, "third-party": 0,
+    "first-party": 0, "same-site-api": 0, supabase: 0, "ai-provider": 0, "model-cdn": 0, "third-party": 0,
   };
   let uploads = 0;
   let thirdPartyUploads = 0;

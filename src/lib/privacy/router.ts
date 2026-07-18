@@ -110,10 +110,27 @@ export function decideRoute(
   text: string,
   opts: { tier?: LocalTier; thresholds?: Partial<RouteThresholds> } = {},
 ): RoutingDecision {
+  return buildDecision(classifySensitivity(text), text, opts);
+}
+
+/**
+ * Decision matrix over a precomputed sensitivity result. Exists so an ensemble
+ * (e.g. the on-device NER deep-scan) can boost sensitivity and re-decide without
+ * the matrix logic living in two places.
+ */
+export function buildDecision(
+  sensitivity: SensitivityResult,
+  text: string,
+  opts: {
+    tier?: LocalTier;
+    thresholds?: Partial<RouteThresholds>;
+    /** Replace the a-priori Factor 3 with a calibrated value (see calibration.ts). */
+    localQualityOverride?: number;
+  } = {},
+): RoutingDecision {
   const th = { ...DEFAULT_THRESHOLDS, ...(opts.thresholds ?? {}) };
-  const sensitivity = classifySensitivity(text);
   const complexity = estimateComplexity(text);
-  const localQuality = predictLocalQuality(complexity.score, opts.tier ?? "small");
+  const localQuality = opts.localQualityOverride ?? predictLocalQuality(complexity.score, opts.tier ?? "small");
 
   let route: Route;
   let reason: string;

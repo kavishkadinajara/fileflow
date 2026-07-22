@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="890" height="346" viewBox="0 0 890 346" font-family="system-ui, 'Segoe UI', sans-serif">
+<rect width="890" height="346" fill="#fcfcfb"/>
+<text x="14" y="22" font-size="14" fill="#0b0b0b" text-anchor="start" font-weight="600">Cumulative fidelity by hop (mean SFI vs original, N docs per chain)</text>
+<text x="52" y="52" font-size="12" fill="#52514e" text-anchor="start" font-weight="600">Round trips (2 hops)</text>
+<line x1="52" y1="280" x2="340" y2="280" stroke="#c3c2b7" stroke-width="1"/>
+<text x="44" y="284" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.4</text>
+<line x1="52" y1="244.33333333333334" x2="340" y2="244.33333333333334" stroke="#e1e0d9" stroke-width="1"/>
+<text x="44" y="248.33333333333334" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.5</text>
+<line x1="52" y1="208.66666666666669" x2="340" y2="208.66666666666669" stroke="#e1e0d9" stroke-width="1"/>
+<text x="44" y="212.66666666666669" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.6</text>
+<line x1="52" y1="173.00000000000003" x2="340" y2="173.00000000000003" stroke="#e1e0d9" stroke-width="1"/>
+<text x="44" y="177.00000000000003" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.7</text>
+<line x1="52" y1="137.33333333333337" x2="340" y2="137.33333333333337" stroke="#e1e0d9" stroke-width="1"/>
+<text x="44" y="141.33333333333337" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.8</text>
+<line x1="52" y1="101.66666666666671" x2="340" y2="101.66666666666671" stroke="#e1e0d9" stroke-width="1"/>
+<text x="44" y="105.66666666666671" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.9</text>
+<line x1="52" y1="66.00000000000004" x2="340" y2="66.00000000000004" stroke="#e1e0d9" stroke-width="1"/>
+<text x="44" y="70.00000000000004" font-size="10" fill="#898781" text-anchor="end" font-weight="400">1.0</text>
+<text x="52" y="298" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">orig</text>
+<text x="196" y="298" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">hop 1</text>
+<text x="340" y="298" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">hop 2</text>
+<path d="M52,66 L196,73.33855384615386 L340,66.05322564102562" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="52" cy="66" r="3.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="196" cy="73.33855384615386" r="3.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="340" cy="66.05322564102562" r="3.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<path d="M52,66 L196,120.06353333333331 L340,67.71474358974358" fill="none" stroke="#008300" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="52" cy="66" r="3.5" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="196" cy="120.06353333333331" r="3.5" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="340" cy="67.71474358974358" r="3.5" fill="#008300" stroke="#fcfcfb" stroke-width="2"/>
+<path d="M52,66 L196,74.52488205128202 L340,145.4164974358974" fill="none" stroke="#e87ba4" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="52" cy="66" r="3.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="196" cy="74.52488205128202" r="3.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="340" cy="145.4164974358974" r="3.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/>
+<path d="M52,66 L196,81.69113846153851 L340,225.12436410256413" fill="none" stroke="#eda100" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="52" cy="66" r="3.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="196" cy="81.69113846153851" r="3.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="340" cy="225.12436410256413" r="3.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="348" y="61.05322564102562" width="8" height="8" rx="2" fill="#2a78d6"/>
+<text x="360" y="70.05322564102562" font-size="10" fill="#52514e" text-anchor="start" font-weight="400">html 100%</text>
+<line x1="342" y1="67.71474358974358" x2="347" y2="80.05322564102562" stroke="#c3c2b7" stroke-width="1"/>
+<rect x="348" y="75.05322564102562" width="8" height="8" rx="2" fill="#008300"/>
+<text x="360" y="84.05322564102562" font-size="10" fill="#52514e" text-anchor="start" font-weight="400">docx 100%</text>
+<rect x="348" y="140.4164974358974" width="8" height="8" rx="2" fill="#e87ba4"/>
+<text x="360" y="149.4164974358974" font-size="10" fill="#52514e" text-anchor="start" font-weight="400">pdf 78%</text>
+<rect x="348" y="220.12436410256413" width="8" height="8" rx="2" fill="#eda100"/>
+<text x="360" y="229.12436410256413" font-size="10" fill="#52514e" text-anchor="start" font-weight="400">txt 55%</text>
+<text x="512" y="52" font-size="12" fill="#52514e" text-anchor="start" font-weight="600">Multi-hop chains</text>
+<line x1="512" y1="280" x2="760" y2="280" stroke="#c3c2b7" stroke-width="1"/>
+<text x="504" y="284" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.4</text>
+<line x1="512" y1="244.33333333333334" x2="760" y2="244.33333333333334" stroke="#e1e0d9" stroke-width="1"/>
+<text x="504" y="248.33333333333334" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.5</text>
+<line x1="512" y1="208.66666666666669" x2="760" y2="208.66666666666669" stroke="#e1e0d9" stroke-width="1"/>
+<text x="504" y="212.66666666666669" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.6</text>
+<line x1="512" y1="173.00000000000003" x2="760" y2="173.00000000000003" stroke="#e1e0d9" stroke-width="1"/>
+<text x="504" y="177.00000000000003" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.7</text>
+<line x1="512" y1="137.33333333333337" x2="760" y2="137.33333333333337" stroke="#e1e0d9" stroke-width="1"/>
+<text x="504" y="141.33333333333337" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.8</text>
+<line x1="512" y1="101.66666666666671" x2="760" y2="101.66666666666671" stroke="#e1e0d9" stroke-width="1"/>
+<text x="504" y="105.66666666666671" font-size="10" fill="#898781" text-anchor="end" font-weight="400">0.9</text>
+<line x1="512" y1="66.00000000000004" x2="760" y2="66.00000000000004" stroke="#e1e0d9" stroke-width="1"/>
+<text x="504" y="70.00000000000004" font-size="10" fill="#898781" text-anchor="end" font-weight="400">1.0</text>
+<text x="512" y="298" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">orig</text>
+<text x="574" y="298" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">hop 1</text>
+<text x="636" y="298" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">hop 2</text>
+<text x="698" y="298" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">hop 3</text>
+<text x="760" y="298" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">hop 4</text>
+<path d="M512,66 L574,73.33855384615386 L636,135.39910256410258 L698,95.10345128205134" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="512" cy="66" r="3.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="574" cy="73.33855384615386" r="3.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="636" cy="135.39910256410258" r="3.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="698" cy="95.10345128205134" r="3.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<path d="M512,66 L574,120.06353333333331 L636,76.39546153846149 L698,106.98813333333338" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="512" cy="66" r="3.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="574" cy="120.06353333333331" r="3.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="636" cy="76.39546153846149" r="3.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="698" cy="106.98813333333338" r="3.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<path d="M512,66 L574,73.33855384615386 L636,135.39910256410258 L698,99.6572615384614 L760,130.00191282051287" fill="none" stroke="#4a3aa7" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="512" cy="66" r="3.5" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="574" cy="73.33855384615386" r="3.5" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="636" cy="135.39910256410258" r="3.5" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="698" cy="99.6572615384614" r="3.5" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="760" cy="130.00191282051287" r="3.5" fill="#4a3aa7" stroke="#fcfcfb" stroke-width="2"/>
+<rect x="706" y="90.10345128205134" width="8" height="8" rx="2" fill="#1baf7a"/>
+<text x="718" y="99.10345128205134" font-size="10" fill="#52514e" text-anchor="start" font-weight="400">via html→docx 92%</text>
+<rect x="706" y="104.10345128205134" width="8" height="8" rx="2" fill="#eb6834"/>
+<text x="718" y="113.10345128205134" font-size="10" fill="#52514e" text-anchor="start" font-weight="400">via docx→pdf 89%</text>
+<rect x="768" y="125.00191282051287" width="8" height="8" rx="2" fill="#4a3aa7"/>
+<text x="780" y="134.00191282051287" font-size="10" fill="#52514e" text-anchor="start" font-weight="400">via html→docx→pdf 82%</text>
+</svg>

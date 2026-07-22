@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="326" viewBox="0 0 760 326" font-family="system-ui, 'Segoe UI', sans-serif">
+<rect width="760" height="326" fill="#fcfcfb"/>
+<text x="14" y="24" font-size="14" fill="#0b0b0b" text-anchor="start" font-weight="600">Final fidelity by conversion chain (mean SFI, error bar = ±1 SD)</text>
+<line x1="190" y1="38" x2="190" y2="300" stroke="#c3c2b7" stroke-width="1"/>
+<text x="190" y="314" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">0%</text>
+<line x1="310" y1="38" x2="310" y2="300" stroke="#e1e0d9" stroke-width="1"/>
+<text x="310" y="314" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">25%</text>
+<line x1="430" y1="38" x2="430" y2="300" stroke="#e1e0d9" stroke-width="1"/>
+<text x="430" y="314" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">50%</text>
+<line x1="550" y1="38" x2="550" y2="300" stroke="#e1e0d9" stroke-width="1"/>
+<text x="550" y="314" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">75%</text>
+<line x1="670" y1="38" x2="670" y2="300" stroke="#e1e0d9" stroke-width="1"/>
+<text x="670" y="314" font-size="10" fill="#898781" text-anchor="middle" font-weight="400">100%</text>
+<text x="180" y="59" font-size="11.5" fill="#0b0b0b" text-anchor="end" font-weight="400">md→html→md</text>
+<path d="M190,44 h475.92836923076925 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-475.92836923076925 z" fill="#2a78d6"/>
+<line x1="669.6676455043107" y1="55" x2="670" y2="55" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="669.6676455043107" y1="51" x2="669.6676455043107" y2="59" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="670" y1="51" x2="670" y2="59" stroke="#0b0b0b" stroke-width="1.2"/>
+<text x="678" y="59" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="600">100.0%</text>
+<text x="180" y="95" font-size="11.5" fill="#0b0b0b" text-anchor="end" font-weight="400">md→docx→md</text>
+<path d="M190,80 h473.6923076923077 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-473.6923076923077 z" fill="#008300"/>
+<line x1="662.1144286909447" y1="91" x2="670" y2="91" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="662.1144286909447" y1="87" x2="662.1144286909447" y2="95" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="670" y1="87" x2="670" y2="95" stroke="#0b0b0b" stroke-width="1.2"/>
+<text x="678" y="95" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="600">99.5%</text>
+<text x="180" y="131" font-size="11.5" fill="#0b0b0b" text-anchor="end" font-weight="400">md→html→docx→md</text>
+<path d="M190,116 h436.8327384615384 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-436.8327384615384 z" fill="#1baf7a"/>
+<line x1="616.4261687294281" y1="127" x2="645.2393081936485" y2="127" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="616.4261687294281" y1="123" x2="616.4261687294281" y2="131" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="645.2393081936485" y1="123" x2="645.2393081936485" y2="131" stroke="#0b0b0b" stroke-width="1.2"/>
+<text x="653.2393081936485" y="131" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="600">91.8%</text>
+<text x="180" y="167" font-size="11.5" fill="#0b0b0b" text-anchor="end" font-weight="400">md→docx→pdf→md</text>
+<path d="M190,152 h420.8383999999999 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-420.8383999999999 z" fill="#eb6834"/>
+<line x1="592.3337841534675" y1="163" x2="637.3430158465324" y2="163" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="592.3337841534675" y1="159" x2="592.3337841534675" y2="167" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="637.3430158465324" y1="159" x2="637.3430158465324" y2="167" stroke="#0b0b0b" stroke-width="1.2"/>
+<text x="645.3430158465324" y="167" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="600">88.5%</text>
+<text x="180" y="203" font-size="11.5" fill="#0b0b0b" text-anchor="end" font-weight="400">md→html→docx→pdf→md</text>
+<path d="M190,188 h389.86658461538457 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-389.86658461538457 z" fill="#4a3aa7"/>
+<line x1="560.5606428361862" y1="199" x2="607.172526394583" y2="199" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="560.5606428361862" y1="195" x2="560.5606428361862" y2="203" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="607.172526394583" y1="195" x2="607.172526394583" y2="203" stroke="#0b0b0b" stroke-width="1.2"/>
+<text x="615.172526394583" y="203" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="600">82.1%</text>
+<text x="180" y="239" font-size="11.5" fill="#0b0b0b" text-anchor="end" font-weight="400">md→pdf→md</text>
+<path d="M190,224 h369.1217230769231 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-369.1217230769231 z" fill="#e87ba4"/>
+<line x1="529.9900918918363" y1="235" x2="596.2533542620099" y2="235" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="529.9900918918363" y1="231" x2="529.9900918918363" y2="239" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="596.2533542620099" y1="231" x2="596.2533542620099" y2="239" stroke="#0b0b0b" stroke-width="1.2"/>
+<text x="604.2533542620099" y="239" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="600">77.7%</text>
+<text x="180" y="275" font-size="11.5" fill="#0b0b0b" text-anchor="end" font-weight="400">md→txt→md</text>
+<path d="M190,260 h261.85132307692305 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-261.85132307692305 z" fill="#eda100"/>
+<line x1="424.8875245085204" y1="271" x2="486.8151216453257" y2="271" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="424.8875245085204" y1="267" x2="424.8875245085204" y2="275" stroke="#0b0b0b" stroke-width="1.2"/>
+<line x1="486.8151216453257" y1="267" x2="486.8151216453257" y2="275" stroke="#0b0b0b" stroke-width="1.2"/>
+<text x="494.8151216453257" y="275" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="600">55.4%</text>
+</svg>

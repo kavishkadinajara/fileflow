@@ -123,6 +123,56 @@ export async function localGenerate(opts: LocalGenerateOptions): Promise<LocalGe
   return { text, modelId, tokensPerSecond, completionTokens };
 }
 
+export interface LocalChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+export interface LocalChatOptions {
+  tier: LocalTier;
+  /** Full conversation incl. system message — the caller owns history trimming. */
+  messages: LocalChatMessage[];
+  temperature?: number;
+  maxTokens?: number;
+  onToken?: (partial: string) => void;
+  onProgress?: (p: LocalLoadProgress) => void;
+}
+
+/** Multi-turn on-device chat completion (same engine singleton as localGenerate). */
+export async function localChat(opts: LocalChatOptions): Promise<LocalGenerateResult> {
+  if (!isWebGpuAvailable()) {
+    throw new Error("WebGPU is not available in this browser — on-device inference needs Chrome/Edge 113+ or Firefox 141+.");
+  }
+  const modelId = LOCAL_MODEL_IDS[opts.tier];
+  const engine = await getEngine(modelId, opts.onProgress);
+
+  const chunks = await engine.chat.completions.create({
+    stream: true,
+    stream_options: { include_usage: true },
+    messages: opts.messages,
+    temperature: opts.temperature ?? 0.4,
+    max_tokens: opts.maxTokens ?? 1200,
+  });
+
+  let text = "";
+  let completionTokens: number | undefined;
+  const genStart = performance.now();
+  for await (const chunk of chunks) {
+    const delta = chunk.choices[0]?.delta?.content ?? "";
+    if (delta) {
+      text += delta;
+      opts.onToken?.(text);
+    }
+    if (chunk.usage) completionTokens = chunk.usage.completion_tokens;
+  }
+  const genSeconds = (performance.now() - genStart) / 1000;
+  const tokensPerSecond = completionTokens && genSeconds > 0
+    ? Math.round(completionTokens / genSeconds)
+    : undefined;
+
+  return { text, modelId, tokensPerSecond, completionTokens };
+}
+
 /** Stop the current on-device generation (the stream ends with what was produced). */
 export async function interruptLocal(): Promise<void> {
   if (!enginePromise) return;

@@ -1,0 +1,157 @@
+{
+  "samples": 72,
+  "categoryThreshold": 0.15,
+  "perCategory": [
+    {
+      "category": "identity",
+      "precision": 1,
+      "recall": 0.818,
+      "f1": 0.9
+    },
+    {
+      "category": "contact",
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    {
+      "category": "financial",
+      "precision": 1,
+      "recall": 0.6,
+      "f1": 0.75
+    },
+    {
+      "category": "medical",
+      "precision": 1,
+      "recall": 0.833,
+      "f1": 0.909
+    },
+    {
+      "category": "legal",
+      "precision": 1,
+      "recall": 0.727,
+      "f1": 0.842
+    },
+    {
+      "category": "credentials",
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    }
+  ],
+  "micro": {
+    "precision": 1,
+    "recall": 0.822,
+    "f1": 0.902
+  },
+  "macro": {
+    "precision": 1,
+    "recall": 0.83,
+    "f1": 0.9
+  },
+  "binarySensitive": {
+    "precision": 1,
+    "recall": 0.804,
+    "f1": 0.891,
+    "tp": 45,
+    "fp": 0,
+    "fn": 11,
+    "tn": 16
+  },
+  "privacyGuarantee": {
+    "highDocs": 38,
+    "routedLocal": 38,
+    "rate": 1
+  },
+  "routesByLevel": {
+    "low": {
+      "LOCAL": 16
+    },
+    "moderate": {
+      "LOCAL": 18
+    },
+    "high": {
+      "LOCAL": 38
+    }
+  },
+  "disagreements": [
+    {
+      "id": "med-3",
+      "kind": "MISS",
+      "category": "identity",
+      "score": "0.120"
+    },
+    {
+      "id": "med-7",
+      "kind": "MISS",
+      "category": "medical",
+      "score": "0.000"
+    },
+    {
+      "id": "legal-6",
+      "kind": "MISS",
+      "category": "legal",
+      "score": "0.140"
+    },
+    {
+      "id": "legal-7",
+      "kind": "MISS",
+      "category": "financial",
+      "score": "0.140"
+    },
+    {
+      "id": "id-7",
+      "kind": "MISS",
+      "category": "financial",
+      "score": "0.140"
+    },
+    {
+      "id": "mix-1",
+      "kind": "MISS",
+      "category": "financial",
+      "score": "0.140"
+    },
+    {
+      "id": "mix-2",
+      "kind": "MISS",
+      "category": "medical",
+      "score": "0.000"
+    },
+    {
+      "id": "mix-3",
+      "kind": "MISS",
+      "category": "financial",
+      "score": "0.140"
+    },
+    {
+      "id": "mix-5",
+      "kind": "MISS",
+      "category": "financial",
+      "score": "0.140"
+    },
+    {
+      "id": "mix-5",
+      "kind": "MISS",
+      "category": "legal",
+      "score": "0.140"
+    },
+    {
+      "id": "mix-7",
+      "kind": "MISS",
+      "category": "identity",
+      "score": "0.120"
+    },
+    {
+      "id": "mix-8",
+      "kind": "MISS",
+      "category": "financial",
+      "score": "0.000"
+    },
+    {
+      "id": "mix-8",
+      "kind": "MISS",
+      "category": "legal",
+      "score": "0.000"
+    }
+  ]
+}

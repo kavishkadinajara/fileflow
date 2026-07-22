@@ -13,6 +13,7 @@ import {
   Header,
   HeadingLevel,
   ImageRun,
+  LevelFormat,
   NumberFormat,
   Packer,
   PageBreak,
@@ -196,6 +197,8 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
 
   // ── Content rendering ─────────────────────────────────────────────────────
   let isFirstH1 = true;
+  let numberedInstance = 0;                                  // one per ordered-list block
+  let prevListKind: "bullet" | "numbered" | null = null;     // tracks list continuity
   for (const seg of segments) {
     if (seg.type === "mermaid") {
       try {
@@ -226,6 +229,9 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
     let i = 0;
     while (i < lines.length) {
       const line = lines[i];
+
+      // Any non-list line breaks list continuity (next ordered list restarts at 1).
+      if (!/^[-*+]\s+/.test(line) && !/^\d+\.\s+/.test(line)) prevListKind = null;
 
       // Code blocks
       if (/^```/.test(line)) {
@@ -357,33 +363,31 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
         i++; continue;
       }
 
-      // Bullet list
+      // Bullet list — real Word bullet numbering (numPr), so the list survives
+      // DOCX → HTML/MD extraction and behaves as a list in Word.
       if (/^[-*+]\s+/.test(line)) {
         const text = line.replace(/^[-*+]\s+/, "");
         children.push(new Paragraph({
-          children: [
-            new TextRun({ text: "  •  ", color: hex(colors.primary), bold: true }),
-            ...parseInline(text, t.body),
-          ],
-          indent: { left: 360 },
+          children: parseInline(text, t.body),
+          bullet: { level: 0 },
           spacing: { before: 40, after: 40 },
         }));
+        prevListKind = "bullet";
         i++; continue;
       }
 
-      // Numbered list
+      // Numbered list — real decimal numbering; fresh instance per list block.
       if (/^\d+\.\s+/.test(line)) {
         const nMatch = line.match(/^(\d+)\.\s+(.*)/);
         if (nMatch) {
+          if (prevListKind !== "numbered") numberedInstance++;
           children.push(new Paragraph({
-            children: [
-              new TextRun({ text: `  ${nMatch[1]}.  `, color: hex(colors.primary), bold: true }),
-              ...parseInline(nMatch[2], t.body),
-            ],
-            indent: { left: 360 },
+            children: parseInline(nMatch[2], t.body),
+            numbering: { reference: "styled-numbered", level: 0, instance: numberedInstance },
             spacing: { before: 40, after: 40 },
           }));
         }
+        prevListKind = "numbered";
         i++; continue;
       }
 
@@ -480,6 +484,20 @@ export async function mdToStyledDocx(markdown: string, style: StyleConfig): Prom
   const doc = new Document({
     features: { updateFields: true },
     styles,
+    numbering: {
+      config: [
+        {
+          reference: "styled-numbered",
+          levels: [0, 1, 2].map((level) => ({
+            level,
+            format: LevelFormat.DECIMAL,
+            text: `%${level + 1}.`,
+            alignment: AlignmentType.START,
+            style: { paragraph: { indent: { left: 720 * (level + 1) / 2, hanging: 260 } } },
+          })),
+        },
+      ],
+    },
     sections,
   });
 

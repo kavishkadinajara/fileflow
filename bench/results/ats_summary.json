@@ -1,0 +1,41 @@
+{
+  "rows": [
+    {
+      "pair": "dev",
+      "base_overall": 53,
+      "deterministic": "yes",
+      "d_bullets": 0,
+      "d_blanks": 0,
+      "d_sections": 0,
+      "d_aliases": 0,
+      "alias_skills_identical": "yes",
+      "d_addskill": 2,
+      "monotonic": "yes"
+    },
+    {
+      "pair": "analyst",
+      "base_overall": 44,
+      "deterministic": "yes",
+      "d_bullets": 0,
+      "d_blanks": 0,
+      "d_sections": 0,
+      "d_aliases": -13,
+      "alias_skills_identical": "yes",
+      "d_addskill": 7,
+      "monotonic": "yes"
+    },
+    {
+      "pair": "ops",
+      "base_overall": 60,
+      "deterministic": "yes",
+      "d_bullets": 0,
+      "d_blanks": 0,
+      "d_sections": 0,
+      "d_aliases": 0,
+      "alias_skills_identical": "yes",
+      "d_addskill": 1,
+      "monotonic": "yes"
+    }
+  ],
+  "issues": []
+}

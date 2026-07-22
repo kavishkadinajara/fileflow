@@ -88,7 +88,10 @@ const REGEX_DETECTORS: RegexDetector[] = [
   { name: "Credit-card number", category: "financial", weight: 0.5,
     re: /\b(?:\d[ -]?){13,19}\b/g, validate: luhnValid },
   { name: "IBAN", category: "financial", weight: 0.4,
-    re: /\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b/g },
+    // Accept the canonical spaced grouping ("GB82 WEST 1234 …") as well as the
+    // compact form; validate overall length after stripping spaces.
+    re: /\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{2,4}){3,8}\b/g,
+    validate: (m) => { const s = m.replace(/\s/g, ""); return s.length >= 15 && s.length <= 34; } },
   { name: "US SSN", category: "identity", weight: 0.5,
     re: /\b\d{3}-\d{2}-\d{4}\b/g },
   { name: "Sri Lanka NIC", category: "identity", weight: 0.5,
@@ -96,7 +99,9 @@ const REGEX_DETECTORS: RegexDetector[] = [
   { name: "Passport number", category: "identity", weight: 0.4,
     re: /\bpassport\s*(?:no\.?|number|#)?\s*[:\-]?\s*[A-Z0-9]{6,9}\b/gi },
   { name: "API key / secret", category: "credentials", weight: 0.55,
-    re: /\b(?:sk|pk|api[_-]?key|secret|token|bearer)[_-]?[A-Za-z0-9]{16,}\b/gi },
+    // Vendor token shapes (AWS AKIA…, GitHub gh?_…, sk-/pk- prefixed with
+    // internal hyphens) plus the generic long-suffix form.
+    re: /\b(?:AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{20,}|(?:sk|pk)[-_][A-Za-z0-9][A-Za-z0-9_-]{10,}|(?:api[_-]?key|secret|token|bearer)[_-]?[A-Za-z0-9]{16,})\b/gi },
   { name: "Private key block", category: "credentials", weight: 0.6,
     re: /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/g },
   { name: "IP address", category: "contact", weight: 0.06,
@@ -118,22 +123,32 @@ const LEXICONS: LexiconDetector[] = [
     "prescription", "medication", "dosage", "disease", "disorder", "chronic",
     "cancer", "tumor", "hiv", "diabetes", "hypertension", "depression", "anxiety",
     "mental health", "blood pressure", "medical record", "clinical", "pathology",
-    "surgery", "biopsy", "immunization", "allergy",
+    "surgery", "biopsy", "immunization", "allergy", "pneumonia", "radiotherapy",
+    "chemotherapy", "oncology", "carcinoma", "insulin", "asthma", "inhaler",
+    "metformin", "prednisolone", "sertraline", "coeliac", "proteinuria", "x-ray",
+    "vaccination", "discharge summary",
   ]},
   { name: "Legal terms", category: "legal", weight: 0.12, terms: [
     "confidential", "non-disclosure", "nda", "hereby agree", "governing law",
     "liability", "indemnify", "litigation", "plaintiff", "defendant", "settlement",
     "breach of contract", "terms and conditions", "power of attorney", "affidavit",
     "jurisdiction", "arbitration", "intellectual property", "proprietary",
+    "confidentiality", "privileged", "counsel", "clause", "indemnity", "tribunal",
+    "claimant", "respondent", "attorney", "trademark", "negligence", "consent order",
+    "dilapidations", "term sheet",
   ]},
   { name: "Financial terms", category: "financial", weight: 0.12, terms: [
     "salary", "bank account", "account number", "routing number", "sort code",
     "net worth", "annual income", "credit score", "loan", "mortgage", "invoice total",
     "tax id", "vat number", "compensation", "payroll", "wire transfer", "swift code",
+    "dividend", "portfolio", "installment", "instalment", "tranche", "co-payment",
+    "account balance", "interest rate", "remittance", "settlement account",
+    "earn-out", "premium",
   ]},
   { name: "Identity context", category: "identity", weight: 0.1, terms: [
-    "date of birth", "d.o.b", "place of birth", "nationality", "marital status",
+    "date of birth", "d.o.b", "dob", "place of birth", "nationality", "marital status",
     "maiden name", "mother's name", "next of kin", "driver's license", "national id",
+    "nic", "policyholder",
   ]},
   { name: "Credential terms", category: "credentials", weight: 0.2, terms: [
     "password", "passphrase", "pin number", "security question", "access token",
@@ -183,7 +198,9 @@ export function classifySensitivity(text: string): SensitivityResult {
     let total = 0;
     const found: string[] = [];
     for (const term of lex.terms) {
-      const re = new RegExp(`(?<![a-z0-9])${escapeRe(term)}(?![a-z0-9])`, "g");
+      // Optional plural "s" — the strict boundary otherwise rejects "loans",
+      // "symptoms", "tranches" while matching their singulars.
+      const re = new RegExp(`(?<![a-z0-9])${escapeRe(term)}s?(?![a-z0-9])`, "g");
       const n = (lower.match(re) ?? []).length;
       if (n) { total += n; if (found.length < 3) found.push(term); }
     }

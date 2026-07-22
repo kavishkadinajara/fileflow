@@ -1,0 +1,4 @@
+pair,base_overall,deterministic,d_bullets,d_blanks,d_sections,d_aliases,alias_skills_identical,d_addskill,monotonic
+dev,53,yes,0,0,0,0,yes,2,yes
+analyst,44,yes,0,0,0,-13,yes,7,yes
+ops,60,yes,0,0,0,0,yes,1,yes

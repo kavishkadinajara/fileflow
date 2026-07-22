@@ -22,7 +22,7 @@
  * isn't leaving the device.
  */
 
-import { classifySensitivity, type SensitivityResult } from "@/lib/privacy/sensitivity";
+import { classifySensitivity, type SensitivityResult } from "./sensitivity";
 
 export type Route = "LOCAL" | "HYBRID" | "CLOUD";
 

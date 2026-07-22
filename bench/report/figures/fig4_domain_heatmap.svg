@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="732" height="286" viewBox="0 0 732 286" font-family="system-ui, 'Segoe UI', sans-serif">
+<rect width="732" height="286" fill="#fcfcfb"/>
+<text x="14" y="24" font-size="14" fill="#0b0b0b" text-anchor="start" font-weight="600">Mean final fidelity — domain × chain</text>
+<text x="140" y="44" font-size="9.5" fill="#52514e" text-anchor="middle" font-weight="400">html</text>
+<text x="140" y="58" font-size="8.5" fill="#898781" text-anchor="middle" font-weight="400">(2 hops)</text>
+<text x="228" y="44" font-size="9.5" fill="#52514e" text-anchor="middle" font-weight="400">docx</text>
+<text x="228" y="58" font-size="8.5" fill="#898781" text-anchor="middle" font-weight="400">(2 hops)</text>
+<text x="316" y="44" font-size="9.5" fill="#52514e" text-anchor="middle" font-weight="400">pdf</text>
+<text x="316" y="58" font-size="8.5" fill="#898781" text-anchor="middle" font-weight="400">(2 hops)</text>
+<text x="404" y="44" font-size="9.5" fill="#52514e" text-anchor="middle" font-weight="400">txt</text>
+<text x="404" y="58" font-size="8.5" fill="#898781" text-anchor="middle" font-weight="400">(2 hops)</text>
+<text x="492" y="44" font-size="9.5" fill="#52514e" text-anchor="middle" font-weight="400">html→docx</text>
+<text x="492" y="58" font-size="8.5" fill="#898781" text-anchor="middle" font-weight="400">(3 hops)</text>
+<text x="580" y="44" font-size="9.5" fill="#52514e" text-anchor="middle" font-weight="400">docx→pdf</text>
+<text x="580" y="58" font-size="8.5" fill="#898781" text-anchor="middle" font-weight="400">(3 hops)</text>
+<text x="668" y="44" font-size="9.5" fill="#52514e" text-anchor="middle" font-weight="400">html→docx→pd…</text>
+<text x="668" y="58" font-size="8.5" fill="#898781" text-anchor="middle" font-weight="400">(4 hops)</text>
+<text x="86" y="94" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="400">business</text>
+<rect x="97" y="71" width="86" height="38" rx="3" fill="#0d366b"/>
+<text x="140" y="94" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">100.0%</text>
+<rect x="185" y="71" width="86" height="38" rx="3" fill="#0d366b"/>
+<text x="228" y="94" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">100.0%</text>
+<rect x="273" y="71" width="86" height="38" rx="3" fill="#3987e5"/>
+<text x="316" y="94" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">75.8%</text>
+<rect x="361" y="71" width="86" height="38" rx="3" fill="#cde2fb"/>
+<text x="404" y="94" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">54.5%</text>
+<rect x="449" y="71" width="86" height="38" rx="3" fill="#184f95"/>
+<text x="492" y="94" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">92.8%</text>
+<rect x="537" y="71" width="86" height="38" rx="3" fill="#1c5cab"/>
+<text x="580" y="94" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">87.3%</text>
+<rect x="625" y="71" width="86" height="38" rx="3" fill="#3987e5"/>
+<text x="668" y="94" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">78.3%</text>
+<text x="86" y="134" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="400">academic</text>
+<rect x="97" y="111" width="86" height="38" rx="3" fill="#0d366b"/>
+<text x="140" y="134" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">100.0%</text>
+<rect x="185" y="111" width="86" height="38" rx="3" fill="#0d366b"/>
+<text x="228" y="134" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">98.9%</text>
+<rect x="273" y="111" width="86" height="38" rx="3" fill="#3987e5"/>
+<text x="316" y="134" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">78.4%</text>
+<rect x="361" y="111" width="86" height="38" rx="3" fill="#b7d3f6"/>
+<text x="404" y="134" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">56.2%</text>
+<rect x="449" y="111" width="86" height="38" rx="3" fill="#1c5cab"/>
+<text x="492" y="134" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">90.3%</text>
+<rect x="537" y="111" width="86" height="38" rx="3" fill="#256abf"/>
+<text x="580" y="134" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">84.8%</text>
+<rect x="625" y="111" width="86" height="38" rx="3" fill="#2a78d6"/>
+<text x="668" y="134" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">81.9%</text>
+<text x="86" y="174" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="400">technical</text>
+<rect x="97" y="151" width="86" height="38" rx="3" fill="#0d366b"/>
+<text x="140" y="174" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">99.9%</text>
+<rect x="185" y="151" width="86" height="38" rx="3" fill="#0d366b"/>
+<text x="228" y="174" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">98.7%</text>
+<rect x="273" y="151" width="86" height="38" rx="3" fill="#3987e5"/>
+<text x="316" y="174" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">78.5%</text>
+<rect x="361" y="151" width="86" height="38" rx="3" fill="#cde2fb"/>
+<text x="404" y="174" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">54.2%</text>
+<rect x="449" y="151" width="86" height="38" rx="3" fill="#184f95"/>
+<text x="492" y="174" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">91.6%</text>
+<rect x="537" y="151" width="86" height="38" rx="3" fill="#184f95"/>
+<text x="580" y="174" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">92.1%</text>
+<rect x="625" y="151" width="86" height="38" rx="3" fill="#256abf"/>
+<text x="668" y="174" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">83.8%</text>
+<text x="86" y="214" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="400">legal</text>
+<rect x="97" y="191" width="86" height="38" rx="3" fill="#0d366b"/>
+<text x="140" y="214" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">100.0%</text>
+<rect x="185" y="191" width="86" height="38" rx="3" fill="#0d366b"/>
+<text x="228" y="214" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">100.0%</text>
+<rect x="273" y="191" width="86" height="38" rx="3" fill="#3987e5"/>
+<text x="316" y="214" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">77.6%</text>
+<rect x="361" y="191" width="86" height="38" rx="3" fill="#cde2fb"/>
+<text x="404" y="214" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">53.8%</text>
+<rect x="449" y="191" width="86" height="38" rx="3" fill="#184f95"/>
+<text x="492" y="214" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">92.8%</text>
+<rect x="537" y="191" width="86" height="38" rx="3" fill="#1c5cab"/>
+<text x="580" y="214" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">89.1%</text>
+<rect x="625" y="191" width="86" height="38" rx="3" fill="#2a78d6"/>
+<text x="668" y="214" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">82.1%</text>
+<text x="86" y="254" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="400">medical</text>
+<rect x="97" y="231" width="86" height="38" rx="3" fill="#0d366b"/>
+<text x="140" y="254" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">100.0%</text>
+<rect x="185" y="231" width="86" height="38" rx="3" fill="#0d366b"/>
+<text x="228" y="254" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">100.0%</text>
+<rect x="273" y="231" width="86" height="38" rx="3" fill="#3987e5"/>
+<text x="316" y="254" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">78.4%</text>
+<rect x="361" y="231" width="86" height="38" rx="3" fill="#b7d3f6"/>
+<text x="404" y="254" font-size="10.5" fill="#0b0b0b" text-anchor="middle" font-weight="600">58.2%</text>
+<rect x="449" y="231" width="86" height="38" rx="3" fill="#184f95"/>
+<text x="492" y="254" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">91.7%</text>
+<rect x="537" y="231" width="86" height="38" rx="3" fill="#1c5cab"/>
+<text x="580" y="254" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">89.3%</text>
+<rect x="625" y="231" width="86" height="38" rx="3" fill="#256abf"/>
+<text x="668" y="254" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="600">84.2%</text>
+</svg>

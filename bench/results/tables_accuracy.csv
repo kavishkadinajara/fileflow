@@ -1,0 +1,17 @@
+fixture,extractor,gt_tables,detected,false_positives,cell_accuracy,cells
+t1_ruled_text,fileflowone,1,1,0,1,20/20
+t1_ruled_text,pdfplumber,1,1,0,1,20/20
+t2_ruled_numeric,fileflowone,1,1,0,1,24/24
+t2_ruled_numeric,pdfplumber,1,1,0,1,24/24
+t3_borderless_text,fileflowone,1,1,0,1,18/18
+t3_borderless_text,pdfplumber,1,1,0,1,18/18
+t4_borderless_numbers,fileflowone,1,1,0,0.85,17/20
+t4_borderless_numbers,pdfplumber,1,1,0,0.8,16/20
+t5_tight_numeric,fileflowone,1,1,0,0.84,21/25
+t5_tight_numeric,pdfplumber,1,1,0,0.8,20/25
+t6_mixed_page,fileflowone,2,2,0,1,24/24
+t6_mixed_page,pdfplumber,2,1,0,0.5,12/24
+t7_airy_borderless,fileflowone,1,0,0,0,0/12
+t7_airy_borderless,pdfplumber,1,1,0,1,12/12
+TOTAL,fileflowone,8,7,0,0.8671,124/143
+TOTAL,pdfplumber,8,7,0,0.8531,122/143

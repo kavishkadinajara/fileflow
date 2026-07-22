@@ -1,12 +1,21 @@
 "use client";
 
+import { CHAT_SYSTEM_PROMPT } from "@/lib/ai/chatPrompt";
+import {
+  isWebGpuAvailable,
+  localChat,
+  type LocalChatMessage,
+  type LocalLoadProgress,
+} from "@/lib/local-ai/webllm";
 import { useConversionStore } from "@/store/conversionStore";
 import { useChat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import {
   Bot,
   Check,
+  Cloud,
   CornerDownLeft,
+  Cpu,
   Eraser,
   FileText,
   Loader2,
@@ -16,6 +25,22 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+
+type EngineMode = "cloud" | "local";
+const ENGINE_STORAGE_KEY = "ffo-chat-engine";
+
+/** Keep on-device history inside the small model's context budget. */
+function trimHistory(history: LocalChatMessage[], maxMessages = 8, maxChars = 5000): LocalChatMessage[] {
+  const recent = history.slice(-maxMessages);
+  let total = 0;
+  const kept: LocalChatMessage[] = [];
+  for (let i = recent.length - 1; i >= 0; i--) {
+    total += recent[i].content.length;
+    if (total > maxChars && kept.length) break;
+    kept.unshift(recent[i]);
+  }
+  return kept;
+}
 
 /** Extract plain text from a UIMessage's parts array */
 function getMessageText(message: UIMessage): string {
@@ -41,13 +66,65 @@ export function AiChat() {
   const [input, setInput] = useState("");
   const [isModifying, setIsModifying] = useState(false);
   const [modifyStatus, setModifyStatus] = useState<"idle" | "modifying" | "converting" | "done" | "error">("idle");
+  const [engineMode, setEngineMode] = useState<EngineMode>("cloud");
+  const [webgpu, setWebgpu] = useState(false);
+  const [localBusy, setLocalBusy] = useState(false);
+  const [modelProgress, setModelProgress] = useState<LocalLoadProgress | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, setMessages } = useChat();
   const activeFile = useConversionStore((s) => s.activeFile);
   const addJobFromContent = useConversionStore((s) => s.addJobFromContent);
 
-  const isLoading = status === "streaming" || status === "submitted";
+  const isLoading = status === "streaming" || status === "submitted" || localBusy;
+
+  // WebGPU + persisted engine choice are browser-only.
+  useEffect(() => {
+    const gpu = isWebGpuAvailable();
+    setWebgpu(gpu);
+    if (gpu && localStorage.getItem(ENGINE_STORAGE_KEY) === "local") setEngineMode("local");
+  }, []);
+
+  const switchEngine = (mode: EngineMode) => {
+    setEngineMode(mode);
+    try { localStorage.setItem(ENGINE_STORAGE_KEY, mode); } catch { /* private mode */ }
+  };
+
+  /** On-device chat turn: stream WebLLM output into the shared message list. */
+  const runLocalChat = async (text: string) => {
+    const userMsg: UIMessage = { id: crypto.randomUUID(), role: "user", parts: [{ type: "text", text }] };
+    const assistantId = crypto.randomUUID();
+    setMessages((prev) => [...prev, userMsg]);
+    setLocalBusy(true);
+    try {
+      const history: LocalChatMessage[] = [
+        ...messages
+          .filter((m) => m.role === "user" || m.role === "assistant")
+          .map((m): LocalChatMessage => ({ role: m.role === "user" ? "user" : "assistant", content: getMessageText(m) })),
+        { role: "user", content: text },
+      ];
+      await localChat({
+        tier: "small",
+        messages: [{ role: "system", content: CHAT_SYSTEM_PROMPT }, ...trimHistory(history)],
+        onProgress: (p) => setModelProgress(p.progress < 1 ? p : null),
+        onToken: (partial) => {
+          setMessages((prev) => {
+            const rest = prev.filter((m) => m.id !== assistantId);
+            return [...rest, { id: assistantId, role: "assistant", parts: [{ type: "text", text: partial }] }];
+          });
+        },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "On-device generation failed.";
+      setMessages((prev) => [...prev, {
+        id: crypto.randomUUID(), role: "assistant",
+        parts: [{ type: "text", text: `On-device error: ${msg}` }],
+      }]);
+    } finally {
+      setLocalBusy(false);
+      setModelProgress(null);
+    }
+  };
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -56,37 +133,58 @@ export function AiChat() {
     }
   }, [messages, modifyStatus]);
 
-  /** Handle AI-powered file modification. Returns true on success. */
-  const handleModifyFile = async (instruction: string): Promise<boolean> => {
-    if (!activeFile) return false;
+  /** Handle AI-powered file modification. Returns an error message on failure. */
+  const handleModifyFile = async (instruction: string): Promise<{ ok: boolean; error?: string }> => {
+    if (!activeFile) return { ok: false };
 
     setIsModifying(true);
     setModifyStatus("modifying");
 
     try {
-      // Step 1: Call AI to modify the file content
-      const modifyRes = await fetch("/api/ai-modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileContent: activeFile.content,
-          fileName: activeFile.fileName,
-          fileFormat: activeFile.fileFormat,
-          instruction,
-        }),
-      });
+      let modifiedContent: string;
 
-      const modifyData = await modifyRes.json();
-      if (!modifyRes.ok || !modifyData.success) {
-        throw new Error(modifyData.error || "Modification failed");
+      if (engineMode === "local") {
+        // On-device: the privacy executor runs WebLLM in-tab; route is forced
+        // LOCAL so the file cannot leave the machine in this mode.
+        const [{ runRouted }, { decideRoute }] = await Promise.all([
+          import("@/lib/local-ai/executor"),
+          import("@/lib/privacy/router"),
+        ]);
+        const decision = decideRoute(activeFile.content, { tier: "small" });
+        const result = await runRouted({
+          text: activeFile.content,
+          task: "custom",
+          instruction,
+          tier: "small",
+          decision: { ...decision, route: "LOCAL", reason: "On-device chat mode — forced LOCAL; the file never leaves this machine." },
+          onPhase: () => setModifyStatus("modifying"),
+          onToken: undefined,
+        });
+        modifiedContent = result.output;
+      } else {
+        const modifyRes = await fetch("/api/ai-modify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileContent: activeFile.content,
+            fileName: activeFile.fileName,
+            fileFormat: activeFile.fileFormat,
+            instruction,
+          }),
+        });
+        const modifyData = await modifyRes.json();
+        if (!modifyRes.ok || !modifyData.success) {
+          throw new Error(modifyData.error || "Modification failed");
+        }
+        modifiedContent = modifyData.modifiedContent;
       }
 
-      // Step 2: Auto-convert the modified file
+      // Auto-convert the modified file
       setModifyStatus("converting");
       const toFormat = activeFile.toFormat || activeFile.fileFormat;
 
       await addJobFromContent(
-        modifyData.modifiedContent,
+        modifiedContent,
         activeFile.fileName,
         activeFile.fileFormat,
         toFormat
@@ -94,12 +192,12 @@ export function AiChat() {
 
       setModifyStatus("done");
       setTimeout(() => setModifyStatus("idle"), 3000);
-      return true;
+      return { ok: true };
     } catch (err) {
       console.error("[ai-modify] error:", err);
       setModifyStatus("error");
       setTimeout(() => setModifyStatus("idle"), 3000);
-      return false;
+      return { ok: false, error: err instanceof Error ? err.message : undefined };
     } finally {
       setIsModifying(false);
     }
@@ -121,16 +219,19 @@ export function AiChat() {
       setMessages((prev) => [...prev, userMsg]);
 
       // Start modification
-      handleModifyFile(text).then((success) => {
+      handleModifyFile(text).then(({ ok, error }) => {
+        const doneNote = engineMode === "local"
+          ? `Done — modified **${activeFile.fileName}** entirely on this device (nothing was uploaded) and started the conversion. Check the conversion list below.`
+          : `✅ Done! I've modified **${activeFile.fileName}** based on your request and started the conversion. Check the conversion list below for your file.`;
         const statusMsg: UIMessage = {
           id: crypto.randomUUID(),
           role: "assistant",
           parts: [
             {
               type: "text",
-              text: success
-                ? `✅ Done! I've modified **${activeFile.fileName}** based on your request and started the conversion. Check the conversion list below for your file.`
-                : `Sorry, I couldn't modify the file. Please try rephrasing your request.`,
+              text: ok
+                ? doneNote
+                : error ?? `Sorry, I couldn't modify the file. Please try rephrasing your request.`,
             },
           ],
         };
@@ -141,7 +242,11 @@ export function AiChat() {
       const contextPrefix = activeFile
         ? `[User has file "${activeFile.fileName}" (${activeFile.fileFormat}) loaded${activeFile.toFormat ? ` → converting to ${activeFile.toFormat}` : ""}]\n\n`
         : "";
-      sendMessage({ text: contextPrefix + text });
+      if (engineMode === "local") {
+        void runLocalChat(contextPrefix + text);
+      } else {
+        sendMessage({ text: contextPrefix + text });
+      }
     }
   };
 
@@ -196,6 +301,31 @@ export function AiChat() {
                 : "Smart conversion assistant"}
             </p>
           </div>
+          <div className="flex rounded-lg border border-border/50 bg-muted/30 p-0.5 text-[10px] font-medium">
+            <button
+              type="button"
+              onClick={() => switchEngine("cloud")}
+              className={`flex items-center gap-1 rounded-md px-2 py-1 transition-colors ${
+                engineMode === "cloud" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Groq cloud model — fastest answers"
+            >
+              <Cloud className="h-3 w-3" /> Cloud
+            </button>
+            <button
+              type="button"
+              onClick={() => switchEngine("local")}
+              disabled={!webgpu}
+              className={`flex items-center gap-1 rounded-md px-2 py-1 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                engineMode === "local" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+              title={webgpu
+                ? "Runs entirely on this device via WebGPU — nothing is uploaded"
+                : "Needs WebGPU (Chrome/Edge 113+)"}
+            >
+              <Cpu className="h-3 w-3" /> On-device
+            </button>
+          </div>
           <button
             onClick={() => { setMessages([]); setModifyStatus("idle"); }}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -219,6 +349,25 @@ export function AiChat() {
               </p>
             </div>
             <Wand2 className="h-3.5 w-3.5 text-primary shrink-0 animate-pulse" />
+          </div>
+        )}
+
+        {/* On-device model download progress */}
+        {modelProgress && (
+          <div className="mx-3 mt-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+            <div className="flex items-center gap-2 text-xs font-medium text-primary">
+              <Cpu className="h-3 w-3 shrink-0" />
+              <span className="flex-1 truncate">Preparing on-device model… {Math.round(modelProgress.progress * 100)}%</span>
+            </div>
+            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-primary/10">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300"
+                style={{ width: `${Math.round(modelProgress.progress * 100)}%` }}
+              />
+            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              One-time download (~0.9 GB), cached by the browser for future use.
+            </p>
           </div>
         )}
 
@@ -339,7 +488,9 @@ export function AiChat() {
             </button>
           </div>
           <p className="mt-1.5 text-center text-[10px] text-muted-foreground/50">
-            Powered by Groq · Enter to send · Shift+Enter for new line
+            {engineMode === "local"
+              ? "On-device · Qwen2.5-1.5B via WebGPU — nothing leaves this machine"
+              : "Powered by Groq · Enter to send · Shift+Enter for new line"}
           </p>
         </div>
       </div>

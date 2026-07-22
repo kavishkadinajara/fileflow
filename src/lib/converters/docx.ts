@@ -24,7 +24,12 @@ export async function docxToPdf(buffer: Buffer): Promise<Buffer> {
   const html = await docxToHtml(buffer);
   const styledHtml = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
-<style>body { font-family: sans-serif; max-width: 860px; margin: 40px auto; padding: 0 20px; line-height: 1.7; }</style>
+<style>
+body { font-family: sans-serif; max-width: 860px; margin: 40px auto; padding: 0 20px; line-height: 1.7; }
+table { border-collapse: collapse; margin: 12px 0; }
+th, td { border: 1px solid #6b7280; padding: 4px 10px; text-align: left; }
+th { background: #f3f4f6; font-weight: 600; }
+</style>
 </head><body>${html}</body></html>`;
   return htmlToPdf(styledHtml);
 }

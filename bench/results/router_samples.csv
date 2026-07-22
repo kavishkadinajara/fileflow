@@ -1,0 +1,73 @@
+id,level,truth_categories,pred_categories,score,sens_level,route,reason
+clean-1,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+clean-2,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+clean-3,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+clean-4,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+clean-5,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+clean-6,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+clean-7,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+clean-8,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+contact-1,moderate,contact,contact,0.340,moderate,LOCAL,Moderate sensitivity (34%) and the local model is predicted adequate (84%). Kept on-device
+contact-2,moderate,contact,contact,0.170,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+contact-3,moderate,contact,contact,0.480,moderate,LOCAL,Moderate sensitivity (48%) and the local model is predicted adequate (84%). Kept on-device
+contact-4,moderate,contact,contact,0.340,moderate,LOCAL,Moderate sensitivity (34%) and the local model is predicted adequate (84%). Kept on-device
+contact-5,moderate,contact,contact,0.340,moderate,LOCAL,Moderate sensitivity (34%) and the local model is predicted adequate (84%). Kept on-device
+contact-6,moderate,contact,contact,0.340,moderate,LOCAL,Moderate sensitivity (34%) and the local model is predicted adequate (84%). Kept on-device
+contact-7,moderate,contact,contact,0.340,moderate,LOCAL,Moderate sensitivity (34%) and the local model is predicted adequate (84%). Kept on-device
+contact-8,moderate,contact,contact,0.340,moderate,LOCAL,Moderate sensitivity (34%) and the local model is predicted adequate (84%). Kept on-device
+fin-1,high,financial,financial,0.730,high,LOCAL,High sensitivity (73%): Financial content detected (credit-card number). Processed on-devi
+fin-2,high,financial,financial,0.650,high,LOCAL,High sensitivity (65%): Financial content detected (iban). Processed on-device only.
+fin-3,moderate,financial,financial,0.270,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+fin-4,high,financial;contact,contact;financial,0.580,moderate,LOCAL,Moderate sensitivity (58%) and the local model is predicted adequate (84%). Kept on-device
+fin-5,moderate,financial,financial,0.370,moderate,LOCAL,Moderate sensitivity (37%) and the local model is predicted adequate (84%). Kept on-device
+fin-6,high,financial,financial,0.480,moderate,LOCAL,Moderate sensitivity (48%) and the local model is predicted adequate (84%). Kept on-device
+fin-7,moderate,financial,financial,0.290,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+fin-8,high,financial,financial,0.710,high,LOCAL,"High sensitivity (71%): Financial content detected (credit-card number, iban). Processed o"
+med-1,high,medical,medical,0.520,moderate,LOCAL,Moderate sensitivity (52%) and the local model is predicted adequate (84%). Kept on-device
+med-2,high,medical,medical,0.420,moderate,LOCAL,Moderate sensitivity (42%) and the local model is predicted adequate (84%). Kept on-device
+med-3,high,medical;identity,medical,0.330,moderate,LOCAL,Moderate sensitivity (33%) and the local model is predicted adequate (84%). Kept on-device
+med-4,high,medical,medical,0.600,high,LOCAL,High sensitivity (60%): Medical content detected (medical terms). Processed on-device only
+med-5,high,medical,medical,0.310,moderate,LOCAL,Moderate sensitivity (31%) and the local model is predicted adequate (84%). Kept on-device
+med-6,high,medical,medical,0.420,moderate,LOCAL,Moderate sensitivity (42%) and the local model is predicted adequate (84%). Kept on-device
+med-7,high,medical;contact,contact,0.170,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+med-8,high,medical,medical,0.520,moderate,LOCAL,Moderate sensitivity (52%) and the local model is predicted adequate (84%). Kept on-device
+legal-1,moderate,legal,legal,0.540,moderate,LOCAL,Moderate sensitivity (54%) and the local model is predicted adequate (84%). Kept on-device
+legal-2,high,legal,legal,0.460,moderate,LOCAL,Moderate sensitivity (46%) and the local model is predicted adequate (84%). Kept on-device
+legal-3,moderate,legal,legal,0.370,moderate,LOCAL,Moderate sensitivity (37%) and the local model is predicted adequate (84%). Kept on-device
+legal-4,high,legal,legal,0.370,moderate,LOCAL,Moderate sensitivity (37%) and the local model is predicted adequate (84%). Kept on-device
+legal-5,moderate,legal,legal,0.370,moderate,LOCAL,Moderate sensitivity (37%) and the local model is predicted adequate (84%). Kept on-device
+legal-6,moderate,legal,,0.140,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+legal-7,high,legal;financial,legal,0.290,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+legal-8,moderate,legal,legal,0.270,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+cred-1,high,credentials,credentials,0.510,moderate,LOCAL,Moderate sensitivity (51%) and the local model is predicted adequate (84%). Kept on-device
+cred-2,high,credentials,credentials,0.510,moderate,LOCAL,Moderate sensitivity (51%) and the local model is predicted adequate (84%). Kept on-device
+cred-3,high,credentials,credentials,0.540,moderate,LOCAL,Moderate sensitivity (54%) and the local model is predicted adequate (84%). Kept on-device
+cred-4,high,credentials,credentials,0.410,moderate,LOCAL,Moderate sensitivity (41%) and the local model is predicted adequate (84%). Kept on-device
+cred-5,high,credentials;contact,contact;credentials,0.440,moderate,LOCAL,Moderate sensitivity (44%) and the local model is predicted adequate (84%). Kept on-device
+cred-6,high,credentials,credentials,0.510,moderate,LOCAL,Moderate sensitivity (51%) and the local model is predicted adequate (84%). Kept on-device
+cred-7,high,credentials,credentials,0.410,moderate,LOCAL,Moderate sensitivity (41%) and the local model is predicted adequate (84%). Kept on-device
+cred-8,high,credentials,credentials,0.230,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+id-1,high,identity,identity,0.730,high,LOCAL,"High sensitivity (73%): Personal identity content detected (sri lanka nic, passport number"
+id-2,high,identity;contact,identity;contact,0.590,moderate,LOCAL,Moderate sensitivity (59%) and the local model is predicted adequate (84%). Kept on-device
+id-3,high,identity,identity,0.500,moderate,LOCAL,Moderate sensitivity (50%) and the local model is predicted adequate (84%). Kept on-device
+id-4,high,identity,identity,0.650,high,LOCAL,"High sensitivity (65%): Personal identity content detected (sri lanka nic, identity contex"
+id-5,high,identity;medical,identity;medical,0.440,moderate,LOCAL,Moderate sensitivity (44%) and the local model is predicted adequate (84%). Kept on-device
+id-6,high,identity,identity,0.620,high,LOCAL,"High sensitivity (62%): Personal identity content detected (sri lanka nic, identity contex"
+id-7,high,identity;financial,identity,0.560,moderate,LOCAL,Moderate sensitivity (56%) and the local model is predicted adequate (84%). Kept on-device
+id-8,high,identity,identity,0.410,moderate,LOCAL,Moderate sensitivity (41%) and the local model is predicted adequate (84%). Kept on-device
+mix-1,high,medical;financial,medical,0.330,moderate,LOCAL,Moderate sensitivity (33%) and the local model is predicted adequate (84%). Kept on-device
+mix-2,high,legal;medical,legal,0.370,moderate,LOCAL,Moderate sensitivity (37%) and the local model is predicted adequate (84%). Kept on-device
+mix-3,high,credentials;financial,credentials,0.550,moderate,LOCAL,Moderate sensitivity (55%) and the local model is predicted adequate (84%). Kept on-device
+mix-4,high,identity;contact;financial,identity;contact;financial,0.610,high,LOCAL,"High sensitivity (61%): Personal identity content detected (sri lanka nic, identity contex"
+mix-5,moderate,legal;financial,,0.160,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+mix-6,high,medical;contact,contact;medical,0.340,moderate,LOCAL,Moderate sensitivity (34%) and the local model is predicted adequate (84%). Kept on-device
+mix-7,high,identity;credentials,credentials,0.250,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+mix-8,moderate,financial;legal,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+neg-1,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+neg-2,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+neg-3,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+neg-4,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+neg-5,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+neg-6,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+neg-7,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.
+neg-8,low,,,0.000,low,LOCAL,Low sensitivity and low complexity — the fast on-device path is sufficient.

@@ -1,0 +1,1190 @@
+{
+  "name": "ConvertBench-lite corpus",
+  "version": "1.0",
+  "generated": "deterministic (seeded per doc id; regenerate with bench/corpus/generate.mjs)",
+  "domains": [
+    "business",
+    "academic",
+    "technical",
+    "legal",
+    "medical"
+  ],
+  "tiers": {
+    "simple": 4,
+    "moderate": 5,
+    "complex": 4
+  },
+  "docCount": 65,
+  "docs": [
+    {
+      "id": "business-s1",
+      "domain": "business",
+      "tier": "simple",
+      "title": "Q1 2025 Performance Review — Cendric Holdings",
+      "bytes": 1494,
+      "features": {
+        "headings": 3,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 3,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 192
+      }
+    },
+    {
+      "id": "business-s2",
+      "domain": "business",
+      "tier": "simple",
+      "title": "Q2 2024 Performance Review — Cendric Holdings",
+      "bytes": 1332,
+      "features": {
+        "headings": 3,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 4,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 183
+      }
+    },
+    {
+      "id": "business-s3",
+      "domain": "business",
+      "tier": "simple",
+      "title": "Annual Planning Brief: Bluefern Analytics",
+      "bytes": 2172,
+      "features": {
+        "headings": 4,
+        "tables": 1,
+        "tableRows": 3,
+        "listItems": 3,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 294
+      }
+    },
+    {
+      "id": "business-s4",
+      "domain": "business",
+      "tier": "simple",
+      "title": "Q4 2023 Performance Review — Weystone Retail",
+      "bytes": 1400,
+      "features": {
+        "headings": 3,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 3,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 188
+      }
+    },
+    {
+      "id": "business-m1",
+      "domain": "business",
+      "tier": "moderate",
+      "title": "Halden Foods Operations Report, February 2025",
+      "bytes": 4298,
+      "features": {
+        "headings": 6,
+        "tables": 2,
+        "tableRows": 9,
+        "listItems": 8,
+        "links": 3,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 590
+      }
+    },
+    {
+      "id": "business-m2",
+      "domain": "business",
+      "tier": "moderate",
+      "title": "Q3 2024 Performance Review — Cendric Holdings",
+      "bytes": 4397,
+      "features": {
+        "headings": 6,
+        "tables": 1,
+        "tableRows": 6,
+        "listItems": 9,
+        "links": 3,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 640
+      }
+    },
+    {
+      "id": "business-m3",
+      "domain": "business",
+      "tier": "moderate",
+      "title": "Corvid Manufacturing Operations Report, January 2024",
+      "bytes": 5593,
+      "features": {
+        "headings": 8,
+        "tables": 2,
+        "tableRows": 11,
+        "listItems": 8,
+        "links": 4,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 781
+      }
+    },
+    {
+      "id": "business-m4",
+      "domain": "business",
+      "tier": "moderate",
+      "title": "Q2 2025 Performance Review — Corvid Manufacturing",
+      "bytes": 4914,
+      "features": {
+        "headings": 9,
+        "tables": 1,
+        "tableRows": 6,
+        "listItems": 6,
+        "links": 4,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 676
+      }
+    },
+    {
+      "id": "business-m5",
+      "domain": "business",
+      "tier": "moderate",
+      "title": "Q1 2023 Performance Review — Bluefern Analytics",
+      "bytes": 5589,
+      "features": {
+        "headings": 8,
+        "tables": 1,
+        "tableRows": 5,
+        "listItems": 8,
+        "links": 5,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 781
+      }
+    },
+    {
+      "id": "business-c1",
+      "domain": "business",
+      "tier": "complex",
+      "title": "Annual Planning Brief: Halden Foods",
+      "bytes": 10854,
+      "features": {
+        "headings": 9,
+        "tables": 3,
+        "tableRows": 21,
+        "listItems": 12,
+        "links": 9,
+        "formulas": 4,
+        "codeBlocks": 0,
+        "blockquotes": 2,
+        "words": 1533
+      }
+    },
+    {
+      "id": "business-c2",
+      "domain": "business",
+      "tier": "complex",
+      "title": "Annual Planning Brief: Cendric Holdings",
+      "bytes": 9607,
+      "features": {
+        "headings": 8,
+        "tables": 3,
+        "tableRows": 19,
+        "listItems": 17,
+        "links": 7,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 1339
+      }
+    },
+    {
+      "id": "business-c3",
+      "domain": "business",
+      "tier": "complex",
+      "title": "Annual Planning Brief: Bluefern Analytics",
+      "bytes": 10296,
+      "features": {
+        "headings": 9,
+        "tables": 4,
+        "tableRows": 27,
+        "listItems": 16,
+        "links": 7,
+        "formulas": 4,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 1436
+      }
+    },
+    {
+      "id": "business-c4",
+      "domain": "business",
+      "tier": "complex",
+      "title": "Annual Planning Brief: Cendric Holdings",
+      "bytes": 10502,
+      "features": {
+        "headings": 10,
+        "tables": 4,
+        "tableRows": 27,
+        "listItems": 16,
+        "links": 9,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 1453
+      }
+    },
+    {
+      "id": "academic-s1",
+      "domain": "academic",
+      "tier": "simple",
+      "title": "On semantic drift in derived corpora: Evidence from the held-out evaluation split",
+      "bytes": 2334,
+      "features": {
+        "headings": 4,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 3,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 326
+      }
+    },
+    {
+      "id": "academic-s2",
+      "domain": "academic",
+      "tier": "simple",
+      "title": "An Empirical Study of on-device inference for privacy",
+      "bytes": 1704,
+      "features": {
+        "headings": 3,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 4,
+        "links": 1,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 242
+      }
+    },
+    {
+      "id": "academic-s3",
+      "domain": "academic",
+      "tier": "simple",
+      "title": "Measuring on-device inference for privacy: Methods and Results",
+      "bytes": 1629,
+      "features": {
+        "headings": 3,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 4,
+        "links": 1,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 221
+      }
+    },
+    {
+      "id": "academic-s4",
+      "domain": "academic",
+      "tier": "simple",
+      "title": "An Empirical Study of semantic drift in derived corpora",
+      "bytes": 1194,
+      "features": {
+        "headings": 3,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 4,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 161
+      }
+    },
+    {
+      "id": "academic-m1",
+      "domain": "academic",
+      "tier": "moderate",
+      "title": "Measuring on-device inference for privacy: Methods and Results",
+      "bytes": 5048,
+      "features": {
+        "headings": 7,
+        "tables": 2,
+        "tableRows": 12,
+        "listItems": 8,
+        "links": 3,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 700
+      }
+    },
+    {
+      "id": "academic-m2",
+      "domain": "academic",
+      "tier": "moderate",
+      "title": "On cross-format document fidelity: Evidence from a 65-document synthetic corpus",
+      "bytes": 4536,
+      "features": {
+        "headings": 7,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 7,
+        "links": 4,
+        "formulas": 2,
+        "codeBlocks": 1,
+        "blockquotes": 1,
+        "words": 603
+      }
+    },
+    {
+      "id": "academic-m3",
+      "domain": "academic",
+      "tier": "moderate",
+      "title": "An Empirical Study of cross-format document fidelity",
+      "bytes": 4358,
+      "features": {
+        "headings": 6,
+        "tables": 1,
+        "tableRows": 6,
+        "listItems": 7,
+        "links": 4,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 594
+      }
+    },
+    {
+      "id": "academic-m4",
+      "domain": "academic",
+      "tier": "moderate",
+      "title": "Measuring on-device inference for privacy: Methods and Results",
+      "bytes": 5102,
+      "features": {
+        "headings": 8,
+        "tables": 2,
+        "tableRows": 10,
+        "listItems": 7,
+        "links": 5,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 683
+      }
+    },
+    {
+      "id": "academic-m5",
+      "domain": "academic",
+      "tier": "moderate",
+      "title": "An Empirical Study of low-resource text summarisation",
+      "bytes": 5374,
+      "features": {
+        "headings": 8,
+        "tables": 2,
+        "tableRows": 11,
+        "listItems": 7,
+        "links": 4,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 735
+      }
+    },
+    {
+      "id": "academic-c1",
+      "domain": "academic",
+      "tier": "complex",
+      "title": "Measuring low-resource text summarisation: Methods and Results",
+      "bytes": 11068,
+      "features": {
+        "headings": 11,
+        "tables": 3,
+        "tableRows": 20,
+        "listItems": 14,
+        "links": 7,
+        "formulas": 3,
+        "codeBlocks": 2,
+        "blockquotes": 2,
+        "words": 1468
+      }
+    },
+    {
+      "id": "academic-c2",
+      "domain": "academic",
+      "tier": "complex",
+      "title": "An Empirical Study of on-device inference for privacy",
+      "bytes": 12188,
+      "features": {
+        "headings": 13,
+        "tables": 3,
+        "tableRows": 17,
+        "listItems": 16,
+        "links": 9,
+        "formulas": 2,
+        "codeBlocks": 2,
+        "blockquotes": 1,
+        "words": 1623
+      }
+    },
+    {
+      "id": "academic-c3",
+      "domain": "academic",
+      "tier": "complex",
+      "title": "An Empirical Study of low-resource text summarisation",
+      "bytes": 11059,
+      "features": {
+        "headings": 10,
+        "tables": 4,
+        "tableRows": 26,
+        "listItems": 10,
+        "links": 7,
+        "formulas": 3,
+        "codeBlocks": 1,
+        "blockquotes": 2,
+        "words": 1541
+      }
+    },
+    {
+      "id": "academic-c4",
+      "domain": "academic",
+      "tier": "complex",
+      "title": "Measuring cross-format document fidelity: Methods and Results",
+      "bytes": 8589,
+      "features": {
+        "headings": 7,
+        "tables": 3,
+        "tableRows": 19,
+        "listItems": 14,
+        "links": 6,
+        "formulas": 2,
+        "codeBlocks": 1,
+        "blockquotes": 1,
+        "words": 1162
+      }
+    },
+    {
+      "id": "technical-s1",
+      "domain": "technical",
+      "tier": "simple",
+      "title": "Design Note — the rate limiter",
+      "bytes": 1964,
+      "features": {
+        "headings": 4,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 5,
+        "links": 1,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 282
+      }
+    },
+    {
+      "id": "technical-s2",
+      "domain": "technical",
+      "tier": "simple",
+      "title": "Design Note — the health probe",
+      "bytes": 1335,
+      "features": {
+        "headings": 3,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 3,
+        "links": 1,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 185
+      }
+    },
+    {
+      "id": "technical-s3",
+      "domain": "technical",
+      "tier": "simple",
+      "title": "Design Note — the job scheduler",
+      "bytes": 1918,
+      "features": {
+        "headings": 4,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 4,
+        "links": 1,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 290
+      }
+    },
+    {
+      "id": "technical-s4",
+      "domain": "technical",
+      "tier": "simple",
+      "title": "Runbook: the queue consumer",
+      "bytes": 1336,
+      "features": {
+        "headings": 3,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 3,
+        "links": 1,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 198
+      }
+    },
+    {
+      "id": "technical-m1",
+      "domain": "technical",
+      "tier": "moderate",
+      "title": "Runbook: the ingestion service",
+      "bytes": 3724,
+      "features": {
+        "headings": 5,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 9,
+        "links": 3,
+        "formulas": 2,
+        "codeBlocks": 1,
+        "blockquotes": 1,
+        "words": 551
+      }
+    },
+    {
+      "id": "technical-m2",
+      "domain": "technical",
+      "tier": "moderate",
+      "title": "Design Note — the job scheduler",
+      "bytes": 5360,
+      "features": {
+        "headings": 8,
+        "tables": 1,
+        "tableRows": 5,
+        "listItems": 7,
+        "links": 3,
+        "formulas": 2,
+        "codeBlocks": 1,
+        "blockquotes": 1,
+        "words": 802
+      }
+    },
+    {
+      "id": "technical-m3",
+      "domain": "technical",
+      "tier": "moderate",
+      "title": "Design Note — the retry policy",
+      "bytes": 4007,
+      "features": {
+        "headings": 5,
+        "tables": 2,
+        "tableRows": 10,
+        "listItems": 8,
+        "links": 3,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 598
+      }
+    },
+    {
+      "id": "technical-m4",
+      "domain": "technical",
+      "tier": "moderate",
+      "title": "Design Note — the health probe",
+      "bytes": 6014,
+      "features": {
+        "headings": 8,
+        "tables": 1,
+        "tableRows": 6,
+        "listItems": 9,
+        "links": 5,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 894
+      }
+    },
+    {
+      "id": "technical-m5",
+      "domain": "technical",
+      "tier": "moderate",
+      "title": "Runbook: the audit logger",
+      "bytes": 5699,
+      "features": {
+        "headings": 8,
+        "tables": 1,
+        "tableRows": 6,
+        "listItems": 9,
+        "links": 5,
+        "formulas": 2,
+        "codeBlocks": 1,
+        "blockquotes": 1,
+        "words": 809
+      }
+    },
+    {
+      "id": "technical-c1",
+      "domain": "technical",
+      "tier": "complex",
+      "title": "Runbook: the conversion worker",
+      "bytes": 9732,
+      "features": {
+        "headings": 9,
+        "tables": 3,
+        "tableRows": 19,
+        "listItems": 15,
+        "links": 7,
+        "formulas": 3,
+        "codeBlocks": 2,
+        "blockquotes": 1,
+        "words": 1351
+      }
+    },
+    {
+      "id": "technical-c2",
+      "domain": "technical",
+      "tier": "complex",
+      "title": "Design Note — the cache layer",
+      "bytes": 10042,
+      "features": {
+        "headings": 10,
+        "tables": 3,
+        "tableRows": 19,
+        "listItems": 14,
+        "links": 6,
+        "formulas": 2,
+        "codeBlocks": 1,
+        "blockquotes": 2,
+        "words": 1485
+      }
+    },
+    {
+      "id": "technical-c3",
+      "domain": "technical",
+      "tier": "complex",
+      "title": "Runbook: the render pool",
+      "bytes": 9241,
+      "features": {
+        "headings": 8,
+        "tables": 4,
+        "tableRows": 26,
+        "listItems": 13,
+        "links": 9,
+        "formulas": 4,
+        "codeBlocks": 1,
+        "blockquotes": 2,
+        "words": 1309
+      }
+    },
+    {
+      "id": "technical-c4",
+      "domain": "technical",
+      "tier": "complex",
+      "title": "Runbook: the conversion worker",
+      "bytes": 10984,
+      "features": {
+        "headings": 11,
+        "tables": 4,
+        "tableRows": 26,
+        "listItems": 16,
+        "links": 9,
+        "formulas": 2,
+        "codeBlocks": 2,
+        "blockquotes": 2,
+        "words": 1528
+      }
+    },
+    {
+      "id": "legal-s1",
+      "domain": "legal",
+      "tier": "simple",
+      "title": "Master Services Agreement between Cendric Holdings (Private) Limited and Almara Logistics Ltd",
+      "bytes": 1804,
+      "features": {
+        "headings": 3,
+        "tables": 1,
+        "tableRows": 3,
+        "listItems": 5,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 239
+      }
+    },
+    {
+      "id": "legal-s2",
+      "domain": "legal",
+      "tier": "simple",
+      "title": "Software Licence Agreement between Weystone Retail (Pvt) Ltd and Almara Logistics Ltd",
+      "bytes": 2307,
+      "features": {
+        "headings": 4,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 5,
+        "links": 1,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 325
+      }
+    },
+    {
+      "id": "legal-s3",
+      "domain": "legal",
+      "tier": "simple",
+      "title": "Master Services Agreement between Cendric Holdings (Private) Limited and Kestrel Facilities Group",
+      "bytes": 2048,
+      "features": {
+        "headings": 4,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 3,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 304
+      }
+    },
+    {
+      "id": "legal-s4",
+      "domain": "legal",
+      "tier": "simple",
+      "title": "Contract Review Memorandum: Master Services Agreement",
+      "bytes": 1866,
+      "features": {
+        "headings": 3,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 3,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 262
+      }
+    },
+    {
+      "id": "legal-m1",
+      "domain": "legal",
+      "tier": "moderate",
+      "title": "Contract Review Memorandum: Master Services Agreement",
+      "bytes": 3591,
+      "features": {
+        "headings": 6,
+        "tables": 1,
+        "tableRows": 6,
+        "listItems": 7,
+        "links": 4,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 490
+      }
+    },
+    {
+      "id": "legal-m2",
+      "domain": "legal",
+      "tier": "moderate",
+      "title": "Contract Review Memorandum: Software Licence Agreement",
+      "bytes": 5689,
+      "features": {
+        "headings": 8,
+        "tables": 2,
+        "tableRows": 12,
+        "listItems": 8,
+        "links": 4,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 804
+      }
+    },
+    {
+      "id": "legal-m3",
+      "domain": "legal",
+      "tier": "moderate",
+      "title": "Software Licence Agreement between Cendric Holdings (Private) Limited and Almara Logistics Ltd",
+      "bytes": 3919,
+      "features": {
+        "headings": 5,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 8,
+        "links": 5,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 552
+      }
+    },
+    {
+      "id": "legal-m4",
+      "domain": "legal",
+      "tier": "moderate",
+      "title": "Master Services Agreement — Key Terms Summary",
+      "bytes": 4288,
+      "features": {
+        "headings": 7,
+        "tables": 1,
+        "tableRows": 6,
+        "listItems": 6,
+        "links": 4,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 597
+      }
+    },
+    {
+      "id": "legal-m5",
+      "domain": "legal",
+      "tier": "moderate",
+      "title": "Software Licence Agreement — Key Terms Summary",
+      "bytes": 5094,
+      "features": {
+        "headings": 6,
+        "tables": 2,
+        "tableRows": 8,
+        "listItems": 7,
+        "links": 5,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 734
+      }
+    },
+    {
+      "id": "legal-c1",
+      "domain": "legal",
+      "tier": "complex",
+      "title": "Contract Review Memorandum: Supply and Distribution Agreement",
+      "bytes": 10840,
+      "features": {
+        "headings": 9,
+        "tables": 4,
+        "tableRows": 30,
+        "listItems": 12,
+        "links": 7,
+        "formulas": 4,
+        "codeBlocks": 0,
+        "blockquotes": 2,
+        "words": 1550
+      }
+    },
+    {
+      "id": "legal-c2",
+      "domain": "legal",
+      "tier": "complex",
+      "title": "Master Services Agreement — Key Terms Summary",
+      "bytes": 10987,
+      "features": {
+        "headings": 9,
+        "tables": 3,
+        "tableRows": 22,
+        "listItems": 18,
+        "links": 8,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 1602
+      }
+    },
+    {
+      "id": "legal-c3",
+      "domain": "legal",
+      "tier": "complex",
+      "title": "Data Processing Agreement — Key Terms Summary",
+      "bytes": 8977,
+      "features": {
+        "headings": 8,
+        "tables": 4,
+        "tableRows": 25,
+        "listItems": 11,
+        "links": 6,
+        "formulas": 4,
+        "codeBlocks": 0,
+        "blockquotes": 2,
+        "words": 1271
+      }
+    },
+    {
+      "id": "legal-c4",
+      "domain": "legal",
+      "tier": "complex",
+      "title": "Data Processing Agreement — Key Terms Summary",
+      "bytes": 11611,
+      "features": {
+        "headings": 10,
+        "tables": 4,
+        "tableRows": 26,
+        "listItems": 18,
+        "links": 9,
+        "formulas": 3,
+        "codeBlocks": 0,
+        "blockquotes": 2,
+        "words": 1669
+      }
+    },
+    {
+      "id": "medical-s1",
+      "domain": "medical",
+      "tier": "simple",
+      "title": "Service Evaluation: a nurse-led follow-up protocol",
+      "bytes": 1149,
+      "features": {
+        "headings": 3,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 5,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 158
+      }
+    },
+    {
+      "id": "medical-s2",
+      "domain": "medical",
+      "tier": "simple",
+      "title": "Clinical Audit — chronic kidney disease Management, 2024",
+      "bytes": 1423,
+      "features": {
+        "headings": 3,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 3,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 193
+      }
+    },
+    {
+      "id": "medical-s3",
+      "domain": "medical",
+      "tier": "simple",
+      "title": "Quality Improvement Report: the emergency department",
+      "bytes": 1238,
+      "features": {
+        "headings": 4,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 4,
+        "links": 2,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 173
+      }
+    },
+    {
+      "id": "medical-s4",
+      "domain": "medical",
+      "tier": "simple",
+      "title": "Clinical Audit — hypertension Management, 2024",
+      "bytes": 1416,
+      "features": {
+        "headings": 3,
+        "tables": 0,
+        "tableRows": 0,
+        "listItems": 5,
+        "links": 1,
+        "formulas": 0,
+        "codeBlocks": 0,
+        "blockquotes": 0,
+        "words": 199
+      }
+    },
+    {
+      "id": "medical-m1",
+      "domain": "medical",
+      "tier": "moderate",
+      "title": "Service Evaluation: a dietician referral pathway",
+      "bytes": 4258,
+      "features": {
+        "headings": 7,
+        "tables": 2,
+        "tableRows": 9,
+        "listItems": 7,
+        "links": 3,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 577
+      }
+    },
+    {
+      "id": "medical-m2",
+      "domain": "medical",
+      "tier": "moderate",
+      "title": "Clinical Audit — ischaemic heart disease Management, 2025",
+      "bytes": 4491,
+      "features": {
+        "headings": 7,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 7,
+        "links": 4,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 632
+      }
+    },
+    {
+      "id": "medical-m3",
+      "domain": "medical",
+      "tier": "moderate",
+      "title": "Quality Improvement Report: the emergency department",
+      "bytes": 4256,
+      "features": {
+        "headings": 8,
+        "tables": 1,
+        "tableRows": 4,
+        "listItems": 7,
+        "links": 3,
+        "formulas": 1,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 588
+      }
+    },
+    {
+      "id": "medical-m4",
+      "domain": "medical",
+      "tier": "moderate",
+      "title": "Clinical Audit — chronic kidney disease Management, 2024",
+      "bytes": 3627,
+      "features": {
+        "headings": 5,
+        "tables": 2,
+        "tableRows": 11,
+        "listItems": 7,
+        "links": 5,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 487
+      }
+    },
+    {
+      "id": "medical-m5",
+      "domain": "medical",
+      "tier": "moderate",
+      "title": "Service Evaluation: a dietician referral pathway",
+      "bytes": 3751,
+      "features": {
+        "headings": 5,
+        "tables": 2,
+        "tableRows": 9,
+        "listItems": 8,
+        "links": 3,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 514
+      }
+    },
+    {
+      "id": "medical-c1",
+      "domain": "medical",
+      "tier": "complex",
+      "title": "Service Evaluation: a dietician referral pathway",
+      "bytes": 9492,
+      "features": {
+        "headings": 10,
+        "tables": 4,
+        "tableRows": 26,
+        "listItems": 14,
+        "links": 8,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 1,
+        "words": 1315
+      }
+    },
+    {
+      "id": "medical-c2",
+      "domain": "medical",
+      "tier": "complex",
+      "title": "Clinical Audit — hypertension Management, 2024",
+      "bytes": 10010,
+      "features": {
+        "headings": 10,
+        "tables": 3,
+        "tableRows": 23,
+        "listItems": 16,
+        "links": 9,
+        "formulas": 3,
+        "codeBlocks": 0,
+        "blockquotes": 2,
+        "words": 1375
+      }
+    },
+    {
+      "id": "medical-c3",
+      "domain": "medical",
+      "tier": "complex",
+      "title": "Clinical Audit — ischaemic heart disease Management, 2023",
+      "bytes": 10201,
+      "features": {
+        "headings": 11,
+        "tables": 4,
+        "tableRows": 22,
+        "listItems": 16,
+        "links": 8,
+        "formulas": 2,
+        "codeBlocks": 0,
+        "blockquotes": 2,
+        "words": 1424
+      }
+    },
+    {
+      "id": "medical-c4",
+      "domain": "medical",
+      "tier": "complex",
+      "title": "Quality Improvement Report: the surgical ward",
+      "bytes": 10026,
+      "features": {
+        "headings": 8,
+        "tables": 4,
+        "tableRows": 23,
+        "listItems": 17,
+        "links": 8,
+        "formulas": 3,
+        "codeBlocks": 0,
+        "blockquotes": 2,
+        "words": 1401
+      }
+    }
+  ]
+}

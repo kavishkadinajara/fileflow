@@ -11,6 +11,7 @@ import {
     Header,
     HeadingLevel,
     ImageRun,
+    LevelFormat,
     NumberFormat,
     Packer,
     PageBreak,
@@ -284,6 +285,8 @@ export async function mdToDocx(markdown: string): Promise<Buffer> {
 
   // ── Process markdown content into docx elements ────────────────────────────
   let isFirstH1 = true; // skip page break for the very first H1 (title)
+  let numberedInstance = 0;                                  // one per ordered-list block
+  let prevListKind: "bullet" | "numbered" | null = null;     // tracks list continuity
   for (const seg of segments) {
     if (seg.type === "mermaid") {
       try {
@@ -336,6 +339,10 @@ export async function mdToDocx(markdown: string): Promise<Buffer> {
       let i = 0;
       while (i < lines.length) {
         const line = lines[i];
+
+        // Any non-list line breaks list continuity (so the next numbered list
+        // restarts at 1). List branches below re-set the kind themselves.
+        if (!/^[-*+]\s+/.test(line) && !/^\d+\.\s+/.test(line)) prevListKind = null;
 
         // Fenced code blocks
         if (/^```/.test(line)) {
@@ -504,34 +511,40 @@ export async function mdToDocx(markdown: string): Promise<Buffer> {
           continue;
         }
 
-        // Bullet list
+        // Bullet list — real Word bullet numbering (numPr), not a literal "•"
+        // TextRun: survives DOCX → HTML/MD as an actual <ul><li>, and Word
+        // treats it as a continuable list.
         if (/^[-*+]\s+/.test(line)) {
           const text = line.replace(/^[-*+]\s+/, "");
           const runs = parseInlineMarkdown(text);
           children.push(
             new Paragraph({
-              children: [new TextRun({ text: "  •  ", color: "6B7280" }), ...runs],
-              indent: { left: 360 },
+              children: runs,
+              bullet: { level: 0 },
               spacing: { before: 40, after: 40 },
             })
           );
+          prevListKind = "bullet";
           i++;
           continue;
         }
 
-        // Numbered list
+        // Numbered list — real decimal numbering; a fresh `instance` restarts
+        // the counter for each separate list block.
         if (/^\d+\.\s+/.test(line)) {
           const nMatch = line.match(/^(\d+)\.\s+(.*)/);
           if (nMatch) {
+            if (prevListKind !== "numbered") numberedInstance++;
             const runs = parseInlineMarkdown(nMatch[2]);
             children.push(
               new Paragraph({
-                children: [new TextRun({ text: `  ${nMatch[1]}.  `, color: "6B7280", bold: true }), ...runs],
-                indent: { left: 360 },
+                children: runs,
+                numbering: { reference: "md-numbered", level: 0, instance: numberedInstance },
                 spacing: { before: 40, after: 40 },
               })
             );
           }
+          prevListKind = "numbered";
           i++;
           continue;
         }
@@ -645,6 +658,20 @@ export async function mdToDocx(markdown: string): Promise<Buffer> {
   const doc = new Document({
     features: { updateFields: true },
     styles,
+    numbering: {
+      config: [
+        {
+          reference: "md-numbered",
+          levels: [0, 1, 2].map((level) => ({
+            level,
+            format: LevelFormat.DECIMAL,
+            text: `%${level + 1}.`,
+            alignment: AlignmentType.START,
+            style: { paragraph: { indent: { left: 720 * (level + 1) / 2, hanging: 260 } } },
+          })),
+        },
+      ],
+    },
     sections: [coverSection, tocSection, contentSection],
   });
 
@@ -675,34 +702,278 @@ function parseInlineMarkdown(text: string): TextRun[] {
 }
 
 // ─── HTML → MD ──────────────────────────────────────────────────────────────
+//
+// Proper HTML → Markdown serializer: tokenizer → element tree → GFM emitter.
+// Handles the structures the regex approach destroyed: <table> → GFM tables,
+// nested/ordered lists with correct numbering, <blockquote>, fenced code with
+// language, and it drops <head>/<style>/<script> instead of leaking CSS text.
+
+interface HtmlNode {
+  tag: string;                       // "#text" for text nodes
+  attrs: Record<string, string>;
+  children: HtmlNode[];
+  text: string;                      // populated for #text nodes
+}
+
+const VOID_TAGS = new Set(["br", "img", "hr", "meta", "link", "input", "area", "base", "col", "embed", "source", "track", "wbr"]);
+const RAWTEXT_TAGS = new Set(["script", "style"]);
+const DROP_TAGS = new Set(["script", "style", "head", "title", "noscript", "template", "iframe", "svg", "button", "nav"]);
+// Tags whose open implicitly closes a still-open sibling of the same group.
+const IMPLICIT_CLOSE: Record<string, string[]> = {
+  li: ["li"], p: ["p"], tr: ["tr", "td", "th"], td: ["td", "th"], th: ["td", "th"],
+  option: ["option"], dd: ["dd", "dt"], dt: ["dd", "dt"],
+};
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&hellip;/g, "…")
+    .replace(/&mdash;/g, "—").replace(/&ndash;/g, "–").replace(/&amp;/g, "&");
+}
+
+function parseAttrs(raw: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  const re = /([a-zA-Z][\w:-]*)\s*(?:=\s*("([^"]*)"|'([^']*)'|([^\s"'>]+)))?/g;
+  let m;
+  while ((m = re.exec(raw)) !== null) {
+    attrs[m[1].toLowerCase()] = decodeEntities(m[3] ?? m[4] ?? m[5] ?? "");
+  }
+  return attrs;
+}
+
+/** Tolerant tag-soup parser: builds a tree from possibly imperfect HTML. */
+function parseHtml(html: string): HtmlNode {
+  const root: HtmlNode = { tag: "#root", attrs: {}, children: [], text: "" };
+  const stack: HtmlNode[] = [root];
+  const top = () => stack[stack.length - 1];
+  let i = 0;
+
+  const pushText = (t: string) => {
+    if (!t) return;
+    top().children.push({ tag: "#text", attrs: {}, children: [], text: decodeEntities(t) });
+  };
+
+  while (i < html.length) {
+    const lt = html.indexOf("<", i);
+    if (lt < 0) { pushText(html.slice(i)); break; }
+    if (lt > i) pushText(html.slice(i, lt));
+
+    if (html.startsWith("<!--", lt)) {
+      const end = html.indexOf("-->", lt + 4);
+      i = end < 0 ? html.length : end + 3;
+      continue;
+    }
+    if (html[lt + 1] === "!" || html[lt + 1] === "?") {           // doctype / PI
+      const end = html.indexOf(">", lt);
+      i = end < 0 ? html.length : end + 1;
+      continue;
+    }
+
+    const gt = html.indexOf(">", lt);
+    if (gt < 0) { pushText(html.slice(lt)); break; }
+    const rawTag = html.slice(lt + 1, gt);
+    i = gt + 1;
+
+    if (rawTag.startsWith("/")) {                                  // closing tag
+      const name = rawTag.slice(1).trim().toLowerCase();
+      for (let d = stack.length - 1; d > 0; d--) {
+        if (stack[d].tag === name) { stack.length = d; break; }
+      }
+      continue;
+    }
+
+    const m = /^([a-zA-Z][\w:-]*)([\s\S]*?)(\/)?$/.exec(rawTag);
+    if (!m) continue;
+    const name = m[1].toLowerCase();
+    const selfClosed = Boolean(m[3]) || VOID_TAGS.has(name);
+    const node: HtmlNode = { tag: name, attrs: parseAttrs(m[2] ?? ""), children: [], text: "" };
+
+    // Implicit closes (e.g. <li> before an unclosed <li>).
+    const closes = IMPLICIT_CLOSE[name];
+    if (closes) {
+      for (let d = stack.length - 1; d > 0; d--) {
+        if (closes.includes(stack[d].tag)) { stack.length = d; break; }
+        if (["ul", "ol", "table", "tbody", "thead", "tfoot", "blockquote", "div"].includes(stack[d].tag)) break;
+      }
+    }
+
+    top().children.push(node);
+
+    if (RAWTEXT_TAGS.has(name) && !selfClosed) {                   // consume raw text
+      const closeRe = new RegExp(`</${name}\\s*>`, "i");
+      const rest = html.slice(i);
+      const cm = closeRe.exec(rest);
+      const end = cm ? i + cm.index + cm[0].length : html.length;
+      node.children.push({ tag: "#text", attrs: {}, children: [], text: html.slice(i, cm ? i + cm.index : html.length) });
+      i = end;
+      continue;
+    }
+    if (!selfClosed) stack.push(node);
+  }
+  return root;
+}
+
+interface MdCtx {
+  listDepth: number;
+  ordered: boolean[];
+  counters: number[];
+  inTable: boolean;
+  inPre: boolean;
+}
+
+const INLINE_TAGS = new Set(["#text", "a", "strong", "b", "em", "i", "u", "s", "del", "code", "span", "img", "br", "sub", "sup", "mark", "small", "abbr", "time", "label"]);
+
+/** Render inline content: collapse whitespace, apply md inline marks. */
+function inlineMd(nodes: HtmlNode[], ctx: MdCtx): string {
+  let out = "";
+  for (const n of nodes) {
+    if (n.tag === "#text") { out += n.text.replace(/\s+/g, " "); continue; }
+    const inner = () => inlineMd(n.children, ctx);
+    switch (n.tag) {
+      case "strong": case "b": { const c = inner().trim(); if (c) out += `**${c}**`; break; }
+      case "em": case "i": { const c = inner().trim(); if (c) out += `*${c}*`; break; }
+      case "del": case "s": { const c = inner().trim(); if (c) out += `~~${c}~~`; break; }
+      case "code": { const c = n.children.map((x) => x.text).join("").replace(/\s+/g, " ").trim(); if (c) out += c.includes("`") ? `\`\` ${c} \`\`` : `\`${c}\``; break; }
+      case "a": { const href = n.attrs.href ?? ""; const c = inner().trim() || href; out += href ? `[${c}](${href})` : c; break; }
+      case "img": { out += `![${n.attrs.alt ?? ""}](${n.attrs.src ?? ""})`; break; }
+      case "br": out += ctx.inTable ? " " : "  \n"; break;
+      default: out += INLINE_TAGS.has(n.tag) ? inner() : blockMd(n, ctx);
+    }
+  }
+  return out;
+}
+
+function escapeCell(s: string): string {
+  return s.replace(/\|/g, "\\|").replace(/\s+/g, " ").trim();
+}
+
+function tableMd(node: HtmlNode, ctx: MdCtx): string {
+  const rows: string[][] = [];
+  let headerRow: string[] | null = null;
+  const walkRows = (n: HtmlNode, inHead: boolean) => {
+    for (const c of n.children) {
+      if (c.tag === "tr") {
+        const cells = c.children
+          .filter((x) => x.tag === "td" || x.tag === "th")
+          .map((x) => escapeCell(inlineMd(x.children, { ...ctx, inTable: true })));
+        if (!cells.length) continue;
+        const isHeader = inHead || c.children.every((x) => x.tag !== "td");
+        if (isHeader && !headerRow && !rows.length) headerRow = cells;
+        else rows.push(cells);
+      } else if (["thead", "tbody", "tfoot"].includes(c.tag)) {
+        walkRows(c, c.tag === "thead");
+      }
+    }
+  };
+  walkRows(node, false);
+  if (!headerRow && rows.length) headerRow = rows.shift() ?? null;
+  if (!headerRow) return "";
+  const width = Math.max(headerRow.length, ...rows.map((r) => r.length));
+  const pad = (r: string[]) => { const c = [...r]; while (c.length < width) c.push(""); return c; };
+  const lines = [
+    `| ${pad(headerRow).join(" | ")} |`,
+    `| ${Array(width).fill("---").join(" | ")} |`,
+    ...rows.map((r) => `| ${pad(r).join(" | ")} |`),
+  ];
+  return lines.join("\n") + "\n\n";
+}
+
+function listMd(node: HtmlNode, ctx: MdCtx): string {
+  const ordered = node.tag === "ol";
+  const start = Number(node.attrs.start ?? "1") || 1;
+  const depth = ctx.listDepth;
+  let counter = start;
+  let out = "";
+  for (const li of node.children) {
+    if (li.tag !== "li") continue;
+    const nested = li.children.filter((c) => c.tag === "ul" || c.tag === "ol");
+    const own = li.children.filter((c) => c.tag !== "ul" && c.tag !== "ol");
+    const marker = ordered ? `${counter}. ` : "- ";
+    const indent = "  ".repeat(depth);
+    const content = inlineMd(own, ctx).replace(/\s+/g, " ").trim();
+    out += `${indent}${marker}${content}\n`;
+    for (const sub of nested) {
+      out += listMd(sub, { ...ctx, listDepth: depth + 1 });
+    }
+    counter++;
+  }
+  return depth === 0 ? out + "\n" : out;
+}
+
+function blockMd(node: HtmlNode, ctx: MdCtx): string {
+  if (DROP_TAGS.has(node.tag)) return "";
+  switch (node.tag) {
+    case "h1": case "h2": case "h3": case "h4": case "h5": case "h6": {
+      const level = Number(node.tag[1]);
+      const c = inlineMd(node.children, ctx).trim();
+      return c ? `${"#".repeat(level)} ${c}\n\n` : "";
+    }
+    case "p": {
+      const c = inlineMd(node.children, ctx).trim();
+      return c ? `${c}\n\n` : "";
+    }
+    case "ul": case "ol": return listMd(node, ctx);
+    case "table": return tableMd(node, ctx);
+    case "blockquote": {
+      const inner = renderChildren(node.children, ctx).trim();
+      return inner ? inner.split("\n").map((l) => (l ? `> ${l}` : ">")).join("\n") + "\n\n" : "";
+    }
+    case "pre": {
+      const codeChild = node.children.find((c) => c.tag === "code");
+      const src = (codeChild ?? node).children.map((c) => (c.tag === "#text" ? c.text : c.children.map((x) => x.text).join(""))).join("");
+      const langMatch = /language-([\w+-]+)/.exec(codeChild?.attrs.class ?? node.attrs.class ?? "");
+      const body = src.replace(/^\n+|\n+$/g, "");
+      return `\`\`\`${langMatch?.[1] ?? ""}\n${body}\n\`\`\`\n\n`;
+    }
+    case "hr": return "---\n\n";
+    case "br": return "\n";
+    case "img": return `![${node.attrs.alt ?? ""}](${node.attrs.src ?? ""})\n\n`;
+    default: {
+      // Generic containers (div/section/article/…): render children as blocks,
+      // but if the container holds only inline content, emit it as a paragraph.
+      const hasBlock = node.children.some((c) => c.tag !== "#text" && !INLINE_TAGS.has(c.tag));
+      if (hasBlock) return renderChildren(node.children, ctx);
+      const c = inlineMd(node.children, ctx).trim();
+      return c ? `${c}\n\n` : "";
+    }
+  }
+}
+
+function renderChildren(children: HtmlNode[], ctx: MdCtx): string {
+  let out = "";
+  let inlineRun: HtmlNode[] = [];
+  const flush = () => {
+    if (!inlineRun.length) return;
+    const c = inlineMd(inlineRun, ctx).trim();
+    if (c) out += `${c}\n\n`;
+    inlineRun = [];
+  };
+  for (const c of children) {
+    if (c.tag === "#text" || INLINE_TAGS.has(c.tag)) {
+      inlineRun.push(c);
+    } else {
+      flush();
+      out += blockMd(c, ctx);
+    }
+  }
+  flush();
+  return out;
+}
 
 export function htmlToMd(html: string): string {
-  return html
-    .replace(/<h1[^>]*>(.*?)<\/h1>/gi, "# $1\n")
-    .replace(/<h2[^>]*>(.*?)<\/h2>/gi, "## $1\n")
-    .replace(/<h3[^>]*>(.*?)<\/h3>/gi, "### $1\n")
-    .replace(/<h4[^>]*>(.*?)<\/h4>/gi, "#### $1\n")
-    .replace(/<h5[^>]*>(.*?)<\/h5>/gi, "##### $1\n")
-    .replace(/<h6[^>]*>(.*?)<\/h6>/gi, "###### $1\n")
-    .replace(/<strong[^>]*>(.*?)<\/strong>/gi, "**$1**")
-    .replace(/<b[^>]*>(.*?)<\/b>/gi, "**$1**")
-    .replace(/<em[^>]*>(.*?)<\/em>/gi, "*$1*")
-    .replace(/<i[^>]*>(.*?)<\/i>/gi, "*$1*")
-    .replace(/<code[^>]*>(.*?)<\/code>/gi, "`$1`")
-    .replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, "```\n$1\n```\n")
-    .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, "[$2]($1)")
-    .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*\/?>/gi, "![$2]($1)")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, "$1\n\n")
-    .replace(/<li[^>]*>(.*?)<\/li>/gi, "- $1\n")
-    .replace(/<\/?(ul|ol|div|span|section|article|header|footer|main)[^>]*>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, " ")
+  const root = parseHtml(html);
+  // Serialize from <body> when present so head metadata never leaks into text.
+  const findBody = (n: HtmlNode): HtmlNode | null => {
+    if (n.tag === "body") return n;
+    for (const c of n.children) { const hit = findBody(c); if (hit) return hit; }
+    return null;
+  };
+  const start = findBody(root) ?? root;
+  const ctx: MdCtx = { listDepth: 0, ordered: [], counters: [], inTable: false, inPre: false };
+  return renderChildren(start.children, ctx)
+    .replace(/[ \t]+$/gm, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }

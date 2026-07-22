@@ -60,7 +60,12 @@ def _extract_docx(data: bytes) -> tuple[str, dict[str, int]]:
             text_parts.append(text)
         if "heading" in style_name:
             headings += 1
-        if style_name in {"list bullet", "list number", "list paragraph"}:
+        # A list item is EITHER styled as one OR carries real Word numbering
+        # (numPr) — docx producers vary; numPr is the ground truth.
+        has_numpr = (
+            para._p.pPr is not None and para._p.pPr.numPr is not None  # noqa: SLF001
+        )
+        if has_numpr or style_name in {"list bullet", "list number", "list paragraph"}:
             lists += 1
 
     tables = len(doc.tables)
@@ -115,9 +120,15 @@ def _extract_html(data: bytes) -> tuple[str, dict[str, int]]:
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(data, "html.parser")
+    # Drop non-content elements BEFORE text extraction — get_text() would
+    # otherwise leak CSS/JS source into the "semantic" text of styled documents.
+    for el in soup(["script", "style", "head", "title", "noscript", "template"]):
+        el.decompose()
     headings = sum(len(soup.find_all(f"h{i}")) for i in range(1, 7))
     tables   = len(soup.find_all("table"))
-    lists    = len(soup.find_all(["ul", "ol"]))
+    # Count list ITEMS (not <ul>/<ol> containers) so the unit matches the
+    # md/docx/pdf extractors, which all count per-item.
+    lists    = len(soup.find_all("li"))
     links    = len(soup.find_all("a", href=True))
     plain    = soup.get_text(separator="\n", strip=True)
 
@@ -132,7 +143,9 @@ def _extract_md(data: bytes) -> tuple[str, dict[str, int]]:
     table_headers = re.findall(r"^\|.+\|$", text, re.MULTILINE)
     separators    = re.findall(r"^\|[\s\-:|]+\|$", text, re.MULTILINE)
     tables        = min(len(table_headers), len(separators))
-    lists  = len(re.findall(r"^[\-\*\+]\s|\d+\.\s", text, re.MULTILINE))
+    # Both alternatives anchored to line start — an unanchored r"\d+\.\s" also
+    # matches prose like "in 2024. The", inflating list counts.
+    lists  = len(re.findall(r"^\s*(?:[-*+]|\d+[.)])\s", text, re.MULTILINE))
     links  = len(re.findall(r"\[.+?\]\(.+?\)", text))
     formulas = len(re.findall(r"\$[^$\n]+\$|\\\(.+?\\\)", text))
 

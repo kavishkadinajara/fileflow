@@ -12,9 +12,49 @@
 
 A powerful file conversion tool built with Next.js — convert documents, diagrams, data files, images, and SQL dialects with a clean drag-and-drop interface. Apply professional **style templates**, build your own in the **Style Studio**, or let it auto-detect and preserve your source document's look.
 
-**🌐 Live:** [fileflow-one.kavishkadinajara.com](https://fileflow-one.kavishkadinajara.com/)
+**🌐 Live:** [fileflow-one.kavishkadinajara.com](https://fileflow-one.kavishkadinajara.com)
 
 </div>
+
+---
+
+## 🔬 Research: privacy-first document intelligence
+
+FileFlowOne is also a final-year research project: a **deterministic core +
+AI layer** where privacy is proven, not promised.
+
+- **Privacy-aware router** (`/privacy-router`) — a fully client-side,
+  deterministic classifier decides per document whether AI runs **LOCAL**
+  (on-device), **HYBRID** (PII pseudonymized before upload), or **CLOUD**.
+  High sensitivity is an absolute LOCAL veto. Measured on a 72-sample labeled
+  set: category precision 1.000, 38/38 high-sensitivity documents kept local.
+- **On-device AI execution** — WebLLM (Qwen2.5 / Phi-3.5, INT4, WebGPU) runs
+  summarize/proofread/custom edits and the **AI chat assistant** entirely in
+  the browser. Works with Wi-Fi off.
+- **Privacy receipts** — every AI run issues a verifiable JSON receipt:
+  document SHA-256, the run's network window, a `documentLeftDevice` flag,
+  and a tamper-evident attestation hash.
+- **Privacy audit dashboard** (`/privacy-audit`) — a runtime network monitor
+  wraps `fetch`/XHR/`sendBeacon` and classifies every outbound request live.
+- **Semantic Fidelity Index (SFI)** — every conversion is scored on
+  structural / semantic / functional preservation.
+- **Round-trip fidelity tracker** (`/roundtrip`) — measures cumulative
+  meaning-loss across multi-hop conversion chains, exposing silent
+  compounding loss that per-conversion scores can't see.
+- **Semantic document compare** (`/compare`) — embedding-aligned redline that
+  distinguishes modified, moved, added, and removed blocks.
+- **Self-calibrating routing** — LOCAL runs record (complexity, measured
+  quality) on-device; the router's quality prior is re-fit locally, with no
+  telemetry.
+
+**Evaluation (ConvertBench-lite):** 65 generated documents × 7 chains = 455
+automated runs through the production pipeline — md→html→md **100%**,
+md→docx→md **99.5%**, md→pdf→md 77.7%, md→txt→md 55.4%; table extraction
+**86.7%** cell accuracy vs pdfplumber's 85.3% on ground-truth fixtures. Full
+results, figures, and methodology: [`bench/report/RESULTS.md`](bench/report/RESULTS.md).
+Reproduce with three commands — see [`bench/README.md`](bench/README.md).
+
+**Tests:** `npm test` — 62 unit tests over the deterministic core.
 
 ---
 

@@ -20,6 +20,9 @@ fixtures/*.pdf
 # Benchmark output
 benchmark_results.csv
 results/
+# ConvertBench evidence IS the dissertation's evaluation data — keep it tracked
+# (raw.jsonl ~2 MB, regenerable but examiner-browsable).
+!bench/results/
 
 # Docs that shouldn't be in the repo
 IMPLEMENTATION_SUMMARY.md
@@ -27,5 +30,7 @@ PR_DESCRIPTION_v0.2.0.md
 RELEASE_NOTES_v0.2.0.md
 
 docs
+# …but the ConvertBench corpus is the published open dataset, not private docs.
+!bench/corpus/docs/
 
 CLAUDE.md

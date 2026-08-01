@@ -2,19 +2,29 @@
 
 import { UserButton } from "@/components/auth/UserButton";
 import { Button } from "@/components/ui/button";
-import { BarChart3, BookOpen, Moon, Sun } from "lucide-react";
+import { BarChart3, BookOpen, Clock, GitCompareArrows, Moon, ScanLine, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 const NAV_LINKS = [
-  { href: "/guide",     label: "Guide",     icon: BookOpen  },
-  { href: "/benchmark", label: "Benchmark", icon: BarChart3 },
+  { href: "/ats",       label: "Resume ATS", icon: ScanLine         },
+  { href: "/compare",   label: "Compare",    icon: GitCompareArrows },
+  { href: "/guide",     label: "Guide",      icon: BookOpen         },
+  { href: "/benchmark", label: "Benchmark",  icon: BarChart3        },
+];
+
+// Shown only when signed in (needs an account to have any history).
+const AUTH_NAV_LINKS = [
+  { href: "/history", label: "History", icon: Clock },
 ];
 
 export function Header() {
   const { setTheme, theme } = useTheme();
   const pathname = usePathname();
+  const user = useAuthStore((s) => s.user);
+  const navLinks = user ? [...NAV_LINKS, ...AUTH_NAV_LINKS] : NAV_LINKS;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -52,7 +62,7 @@ export function Header() {
 
         {/* ── Centre nav ── */}
         <nav className="hidden md:flex items-center gap-1">
-          {NAV_LINKS.map(({ href, label, icon: Icon }) => (
+          {navLinks.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}

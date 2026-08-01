@@ -68,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       <p className="font-semibold text-foreground/80 uppercase tracking-wider text-[10px]">Legal</p>
                       <Link href="/terms" className="block text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
                       <Link href="/privacy" className="block text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
+                      <Link href="/privacy-audit" className="block text-muted-foreground hover:text-foreground transition-colors">Privacy Audit</Link>
                     </div>
                     <div className="space-y-2.5">
                       <p className="font-semibold text-foreground/80 uppercase tracking-wider text-[10px]">Community</p>

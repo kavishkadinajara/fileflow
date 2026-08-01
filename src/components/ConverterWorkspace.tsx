@@ -6,6 +6,7 @@ import { FileUploader } from "@/components/FileUploader";
 import { StyleOnboardingTip } from "@/components/StyleOnboardingTip";
 import { JobList } from "@/components/JobList";
 import { LivePreview } from "@/components/LivePreview";
+import { PdfEditor } from "@/components/PdfEditor";
 import { TextEditor } from "@/components/TextEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,13 +14,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { detectTextFormat, FORMAT_META } from "@/lib/formats";
 import { useConversionStore } from "@/store/conversionStore";
 import type { DropzoneFile, FileFormat } from "@/types";
-import { Eye, EyeOff, Files, SplitSquareHorizontal, Type, UploadCloud } from "lucide-react";
+import { Eye, EyeOff, Files, FileEdit, SplitSquareHorizontal, Type, UploadCloud } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const DRAFT_KEY = "fileflow-draft";
 
 export function ConverterWorkspace() {
   const [pendingFiles, setPendingFiles] = useState<DropzoneFile[]>([]);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<string>("upload");
   const [textContent, setTextContent] = useState("");
   const [textFormat, setTextFormat] = useState<FileFormat | undefined>(undefined);
@@ -148,7 +150,18 @@ export function ConverterWorkspace() {
   }, [textContent, textFormat]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
-  const handleFilesAccepted = (files: DropzoneFile[]) => setPendingFiles((prev) => [...prev, ...files]);
+  const handleFilesAccepted = (files: DropzoneFile[]) => {
+    // A dropped PDF jumps straight to the Edit PDF tab (extract → edit → rebuild).
+    const pdf = files.find((f) => f.detectedFormat === "pdf");
+    if (pdf) {
+      setPdfFile(pdf.file);
+      setActiveTab("pdf");
+      const rest = files.filter((f) => f.id !== pdf.id);
+      if (rest.length) setPendingFiles((prev) => [...prev, ...rest]);
+      return;
+    }
+    setPendingFiles((prev) => [...prev, ...files]);
+  };
   const removeFile = (id: string) => setPendingFiles((prev) => prev.filter((f) => f.id !== id));
 
   function handleRestoreDraft() {
@@ -227,6 +240,12 @@ export function ConverterWorkspace() {
                 <Type className="h-3.5 w-3.5" />
                 Type Text
               </TabsTrigger>
+              {pdfFile && (
+                <TabsTrigger value="pdf" className="gap-1.5">
+                  <FileEdit className="h-3.5 w-3.5" />
+                  Edit PDF
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="upload">
@@ -242,6 +261,15 @@ export function ConverterWorkspace() {
                 onTemplateSelect={handleTemplateSelect}
               />
             </TabsContent>
+
+            {pdfFile && (
+              <TabsContent value="pdf">
+                <PdfEditor
+                  file={pdfFile}
+                  onRemove={() => { setPdfFile(null); setActiveTab("upload"); }}
+                />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
 

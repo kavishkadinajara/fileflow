@@ -2,12 +2,22 @@ import { ConverterWorkspace } from "@/components/ConverterWorkspace";
 import { FeatureShowcase } from "@/components/FeatureShowcase";
 import { FormatMatrix } from "@/components/FormatMatrix";
 import {
-  ArrowRight, Brain, Check, Code2, FileJson, FileText,
+  ArrowRight, Brain, Check, Code2, FileJson, FilePenLine, FileText,
   Layers, Lock, Sparkles, Star, X, Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { Fragment } from "react";
 
 const FEATURES = [
+  {
+    icon: FilePenLine,
+    title: "In-Browser PDF Editor",
+    description:
+      "Fill a PDF like a paper form, or edit its text in place — redrawn in the original font so the rest of the page stays pixel-identical. No other free tool does this.",
+    color: "text-rose-500",
+    bg: "bg-rose-500/10 dark:bg-rose-500/15",
+    border: "group-hover:border-rose-500/30",
+  },
   {
     icon: Layers,
     title: "Professional Reports",
@@ -77,24 +87,63 @@ const WHY_US = [
 
 type CompRow = { feature: string; us: string | boolean; cc: string | boolean; zamzar: string | boolean; ilovepdf: string | boolean };
 
-const COMPARISON: CompRow[] = [
-  { feature: "Completely free", us: true, cc: "25/day", zamzar: "2 files/day", ilovepdf: false },
-  { feature: "No registration required", us: true, cc: false, zamzar: false, ilovepdf: true },
-  { feature: "Audio/Video conversion", us: "Browser-only", cc: "Server", zamzar: false, ilovepdf: false },
-  { feature: "Video compression", us: true, cc: true, zamzar: false, ilovepdf: false },
-  { feature: "Files stay on device (A/V)", us: true, cc: false, zamzar: false, ilovepdf: false },
-  { feature: "AI content detection", us: true, cc: false, zamzar: false, ilovepdf: false },
-  { feature: "AI text humanizer", us: true, cc: false, zamzar: false, ilovepdf: false },
-  { feature: "Mermaid diagram rendering", us: true, cc: false, zamzar: false, ilovepdf: false },
-  { feature: "SQL dialect conversion", us: true, cc: false, zamzar: false, ilovepdf: false },
-  { feature: "Full text editor + templates", us: true, cc: false, zamzar: false, ilovepdf: false },
-  { feature: "Open source", us: true, cc: false, zamzar: false, ilovepdf: false },
+type CompGroup = { group: string; rows: CompRow[] };
+
+const COMPARISON_GROUPS: CompGroup[] = [
+  {
+    group: "Pricing & access",
+    rows: [
+      { feature: "Completely free", us: true, cc: "25/day", zamzar: "2 files/day", ilovepdf: false },
+      { feature: "No registration required", us: true, cc: false, zamzar: false, ilovepdf: true },
+      { feature: "No upload / file-count limits", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "Open source · MIT", us: true, cc: false, zamzar: false, ilovepdf: false },
+    ],
+  },
+  {
+    group: "PDF Editor",
+    rows: [
+      { feature: "Fill in a PDF visually (in-browser)", us: true, cc: false, zamzar: false, ilovepdf: true },
+      { feature: "Edit PDF text in place — font-matched", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "Surgical patch (rest stays pixel-identical)", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "PDF → editable Markdown / DOCX", us: true, cc: "Basic", zamzar: "Basic", ilovepdf: "Basic" },
+      { feature: "Layout-preserving rebuild (Smart Reflow)", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "Auto header / footer / page numbers", us: true, cc: false, zamzar: false, ilovepdf: true },
+    ],
+  },
+  {
+    group: "Media",
+    rows: [
+      { feature: "Audio / video conversion", us: "Browser-only", cc: "Server", zamzar: false, ilovepdf: false },
+      { feature: "Video compression", us: true, cc: true, zamzar: false, ilovepdf: false },
+      { feature: "Files never leave your device (A/V)", us: true, cc: false, zamzar: false, ilovepdf: false },
+    ],
+  },
+  {
+    group: "AI & developer tools",
+    rows: [
+      { feature: "AI content detection", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "AI text humanizer", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "Mermaid diagram rendering", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "SQL dialect conversion", us: true, cc: false, zamzar: false, ilovepdf: false },
+      { feature: "Full text editor + templates", us: true, cc: false, zamzar: false, ilovepdf: false },
+    ],
+  },
 ];
 
-function CellValue({ val }: { val: string | boolean }) {
-  if (val === true) return <Check className="h-4 w-4 text-green-500 mx-auto" aria-label="Yes" />;
+function CellValue({ val, highlight = false }: { val: string | boolean; highlight?: boolean }) {
+  if (val === true) {
+    return (
+      <Check
+        className={`h-4 w-4 mx-auto ${highlight ? "text-emerald-500" : "text-green-500"}`}
+        strokeWidth={highlight ? 3 : 2}
+        aria-label="Yes"
+      />
+    );
+  }
   if (val === false) return <X className="h-4 w-4 text-muted-foreground/40 mx-auto" aria-label="No" />;
-  return <span className="text-xs text-muted-foreground">{val}</span>;
+  return (
+    <span className={`text-xs ${highlight ? "font-medium text-foreground" : "text-muted-foreground"}`}>{val}</span>
+  );
 }
 
 export default function HomePage() {
@@ -111,13 +160,14 @@ export default function HomePage() {
         </div>
 
         <h1 className="animate-fade-up font-display relative text-5xl font-extrabold tracking-tight leading-[1.1] sm:text-6xl lg:text-7xl">
-          Convert any file,{" "}
+          Convert &amp; edit any file,{" "}
           <span className="text-gradient">instantly</span>
         </h1>
 
         <p className="animate-fade-up text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed" style={{ animationDelay: "80ms" }}>
-          Drag and drop Markdown, DOCX, HTML, Mermaid diagrams, JSON, CSV, images, SQL files,
-          audio, or video. Choose a format, hit Convert, download the result — no sign-up, no uploads.
+          Drag and drop Markdown, DOCX, HTML, Mermaid diagrams, JSON, CSV, images, SQL, audio, or
+          video — or drop a PDF to fill it in and edit it in place. Choose a format, hit Convert,
+          download. No sign-up, no uploads.
         </p>
 
         <div className="animate-fade-up flex flex-wrap items-center justify-center gap-x-10 gap-y-4 pt-2" style={{ animationDelay: "160ms" }}>
@@ -147,7 +197,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Feature highlights ───────────────────────────────────────── */}
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {FEATURES.map((f, i) => (
           <div
             key={f.title}
@@ -174,8 +224,8 @@ export default function HomePage() {
             Built different — by design
           </h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
-            Most converters upload your files to their servers, limit your usage, and charge for features.
-            FileFlowOne does none of that.
+            Most converters upload your files, cap your usage, and charge for the good features —
+            then still can&apos;t truly edit a PDF. FileFlowOne does all of it, free.
           </p>
         </div>
 
@@ -224,15 +274,19 @@ export default function HomePage() {
       <section className="space-y-6">
         <div className="text-center space-y-2">
           <h2 className="font-display text-3xl font-bold tracking-tight">Compare</h2>
-          <p className="text-muted-foreground text-sm">See how FileFlowOne stacks up against other popular converters.</p>
+          <p className="text-muted-foreground text-sm max-w-xl mx-auto">
+            See how FileFlowOne stacks up against other popular converters — including a full
+            in-browser <span className="text-foreground font-medium">PDF editor</span> the others
+            can&apos;t match.
+          </p>
         </div>
 
         <div className="overflow-x-auto rounded-2xl border">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40">
-                <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wide w-[38%]">Feature</th>
-                <th className="px-4 py-3 text-center font-semibold text-xs">
+                <th className="text-left px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wide w-[40%]">Feature</th>
+                <th className="px-4 py-3 text-center font-semibold text-xs ring-1 ring-inset ring-primary/20 bg-primary/[0.04]">
                   <span className="text-gradient font-bold">FileFlowOne</span>
                   <span className="ml-1 text-[10px] text-primary font-normal">(you)</span>
                 </th>
@@ -242,28 +296,41 @@ export default function HomePage() {
               </tr>
             </thead>
             <tbody>
-              {COMPARISON.map((row, i) => (
-                <tr key={row.feature} className={`border-b last:border-0 ${i % 2 === 0 ? "" : "bg-muted/20"}`}>
-                  <td className="px-4 py-3 text-xs font-medium">{row.feature}</td>
-                  <td className="px-4 py-3 text-center">
-                    <CellValue val={row.us} />
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <CellValue val={row.cc} />
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <CellValue val={row.zamzar} />
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <CellValue val={row.ilovepdf} />
-                  </td>
-                </tr>
+              {COMPARISON_GROUPS.map((grp) => (
+                <Fragment key={grp.group}>
+                  <tr className="border-b bg-muted/50">
+                    <td
+                      colSpan={5}
+                      className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                    >
+                      {grp.group}
+                    </td>
+                  </tr>
+                  {grp.rows.map((row, i) => (
+                    <tr key={row.feature} className={`border-b last:border-0 ${i % 2 === 0 ? "" : "bg-muted/20"}`}>
+                      <td className="px-4 py-3 text-xs font-medium">{row.feature}</td>
+                      <td className="px-4 py-3 text-center bg-primary/[0.03]">
+                        <CellValue val={row.us} highlight />
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <CellValue val={row.cc} />
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <CellValue val={row.zamzar} />
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <CellValue val={row.ilovepdf} />
+                      </td>
+                    </tr>
+                  ))}
+                </Fragment>
               ))}
             </tbody>
           </table>
         </div>
         <p className="text-[11px] text-muted-foreground text-center">
-          Comparison based on publicly available information as of March 2026. Competitor features may change.
+          Comparison based on publicly available information as of March 2026. &quot;Basic&quot; = limited
+          or lower-fidelity support. Competitor features may change.
         </p>
       </section>
 

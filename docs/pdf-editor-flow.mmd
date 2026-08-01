@@ -1,0 +1,64 @@
+flowchart LR
+  %% ─── FileFlowOne · PDF Editor — Upload → Edit → Output ───
+  start(["📄 User uploads a PDF"])
+
+  subgraph BROWSER["🖥️ Browser (Frontend)"]
+    direction TB
+    tab["Edit PDF tab opens"]
+    editor["Editable text + toggles<br/>+ Find / Replace box"]
+    pick{"User picks<br/>ONE action"}
+    bPatch["🪄 Patch original<br/>(surgical)"]
+    bRebuild["📑 Rebuild PDF"]
+    bDecorate["🏷️ Decorate original"]
+    tab --> editor --> pick
+    pick --> bPatch
+    pick --> bRebuild
+    pick --> bDecorate
+  end
+
+  subgraph API["⚙️ Next.js API (Server)"]
+    direction TB
+    aConvert["POST /api/convert<br/>(pdf → md)"]
+    aPatch["POST /api/pdf-patch"]
+    aRebuild["POST /api/convert<br/>(md → pdf)"]
+    aOverlay["POST /api/pdf-overlay<br/>(decorate)"]
+    aAI["✨ POST /api/pdf-autoformat<br/>(optional · AI suggests<br/>TOC / header / footer)"]
+  end
+
+  subgraph PY["🐍 Python Backend · PyMuPDF + algorithms"]
+    direction TB
+    structure["Structure Engine<br/>harvest spans → font-size clustering<br/>→ XY-cut columns → line/block → Markdown"]
+    diff["Diff Engine<br/>diff edited vs original<br/>→ minimal changed words<br/>→ locate (page + occurrence)"]
+    overlay["Font-matching Overlay<br/>read span style → base-14 font<br/>→ redact + redraw same font/colour"]
+    puppeteer["Styled HTML → Puppeteer print"]
+  end
+
+  %% On open: extract text for the editor
+  start --> tab
+  editor -. "on open" .-> aConvert --> structure --> editor
+
+  %% PATH 1 — SURGICAL PATCH (highlight)
+  bPatch ==> aPatch ==> diff ==> overlay
+  diff -. "re-extract to compare" .-> structure
+  overlay ==> outPatch["✅ Only changed words replaced<br/>rest stays pixel-identical"]
+
+  %% PATH 2 — REBUILD
+  bRebuild --> aRebuild --> puppeteer --> outRebuild["🆕 Clean new polished PDF"]
+  aAI -. "pre-fills toggles" .-> editor
+
+  %% PATH 3 — DECORATE ORIGINAL
+  bDecorate --> aOverlay --> overlay
+  aOverlay --> outDecorate["🏷️ Header / footer / page numbers<br/>stamped · layout untouched"]
+
+  %% Outputs → job list
+  outPatch --> jobs(["⬇️ New file in job list → Download"])
+  outRebuild --> jobs
+  outDecorate --> jobs
+
+  note["📌 The original file is NEVER modified —<br/>every action produces a NEW file"]
+  jobs --- note
+
+  classDef patch stroke:#7c3aed,stroke-width:3px;
+  classDef ai fill:#faf5ff,stroke:#a855f7;
+  class bPatch,aPatch,diff,overlay,outPatch patch
+  class aAI ai

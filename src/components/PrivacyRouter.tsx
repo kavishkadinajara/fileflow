@@ -15,6 +15,7 @@
 import {
   buildDecision,
   estimateComplexity,
+  predictLocalQuality,
   type RoutingDecision,
   type LocalTier,
 } from "@/lib/privacy/router";
@@ -381,6 +382,11 @@ export function PrivacyRouter() {
   const [nerError, setNerError] = useState<string | null>(null);
   // Bumped after each local run so the calibrated Factor 3 refreshes.
   const [calVersion, setCalVersion] = useState(0);
+  // localStorage-backed calibration must not be read during the server/first-client
+  // render (server has no localStorage) — that mismatch would trigger a hydration
+  // error. Stay on the a-priori prior until after mount, then re-render with it.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // A deep-scan belongs to the text it scanned — new text invalidates it.
   useEffect(() => { setNerEntities(null); setNerError(null); }, [text]);
@@ -389,10 +395,13 @@ export function PrivacyRouter() {
     if (!text.trim()) return null;
     const base = classifySensitivity(text);
     const sens = nerEntities ? applyNerBoost(base, nerEntities) : base;
-    const cal = predictLocalQualityCalibrated(estimateComplexity(text).score, tier);
+    const complexity = estimateComplexity(text).score;
+    const cal = mounted
+      ? predictLocalQualityCalibrated(complexity, tier)
+      : { quality: predictLocalQuality(complexity, tier), prior: predictLocalQuality(complexity, tier), empirical: null, samples: 0, empiricalWeight: 0 };
     return { decision: buildDecision(sens, text, { tier, localQualityOverride: cal.quality }), cal };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, tier, nerEntities, calVersion]);
+  }, [text, tier, nerEntities, calVersion, mounted]);
 
   async function deepScan() {
     setNerRunning(true); setNerError(null); setNerProgress(null);

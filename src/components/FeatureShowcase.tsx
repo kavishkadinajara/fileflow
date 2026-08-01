@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import {
+    AlignLeft,
     Archive,
     BarChart3,
     BookOpen,
@@ -13,10 +14,13 @@ import {
     Download,
     Eye,
     FileText,
+    FileType2,
     GitBranch,
     Keyboard,
     MousePointer2,
+    MousePointerClick,
     Pencil,
+    Replace,
     Search,
     Sparkles,
     SplitSquareHorizontal,
@@ -37,6 +41,77 @@ interface Feature {
 }
 
 const FEATURES: Feature[] = [
+  // ── PDF Editor
+  {
+    icon: MousePointerClick,
+    iconBg: "bg-rose-500/10 dark:bg-rose-500/15",
+    iconColor: "text-rose-500",
+    badge: "PDF",
+    badgeColor: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+    title: "Visual Fill-In Editor",
+    benefit: "Drop a PDF and it appears exactly as it looks — logo, colour bands, dotted lines and all. Click any line and type straight into the blanks, like a paper form.",
+    steps: [
+      "Drop a PDF — it opens on the Fill in (visual) tab",
+      "Click any field on the page and type your answer",
+      "Hit Download filled PDF — only your edits are added",
+    ],
+  },
+  {
+    icon: Replace,
+    iconBg: "bg-pink-500/10 dark:bg-pink-500/15",
+    iconColor: "text-pink-500",
+    badge: "PDF",
+    badgeColor: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
+    title: "Font-Matched Text Editing",
+    benefit: "Edit words inside an existing PDF and they're redrawn in the original font, size and colour — the change blends in instead of standing out.",
+    steps: [
+      "Open the Advanced tab in the PDF editor",
+      "Use Edit original text (find & replace) — set scope and case",
+      "Apply to original — the matched span keeps its exact style",
+    ],
+  },
+  {
+    icon: Wand2,
+    iconBg: "bg-fuchsia-500/10 dark:bg-fuchsia-500/15",
+    iconColor: "text-fuchsia-500",
+    badge: "PDF",
+    badgeColor: "bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/20",
+    title: "Surgical Patch",
+    benefit: "Edit the extracted text freely, then patch only the words you changed back onto the original — everything you didn't touch stays pixel-identical.",
+    steps: [
+      "Open the Advanced tab and edit the extracted text",
+      "Click Patch original (surgical)",
+      "Only the changed phrases are redrawn; the rest is byte-for-byte intact",
+    ],
+  },
+  {
+    icon: AlignLeft,
+    iconBg: "bg-rose-500/10 dark:bg-rose-500/15",
+    iconColor: "text-rose-500",
+    badge: "PDF",
+    badgeColor: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+    title: "Smart Reflow Rebuild",
+    benefit: "Rebuild a PDF from edited, positioned blocks that each keep their original spot, font and colour — a fully editable PDF that still looks like the source.",
+    steps: [
+      "Open the Advanced tab → Smart Reflow → Load layout blocks",
+      "Edit any block of text in place",
+      "Rebuild (keep layout) — every block stays where it was",
+    ],
+  },
+  {
+    icon: FileType2,
+    iconBg: "bg-pink-500/10 dark:bg-pink-500/15",
+    iconColor: "text-pink-500",
+    badge: "PDF",
+    badgeColor: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
+    title: "PDF → Editable Markdown / DOCX",
+    benefit: "A deterministic structure engine reads headings, lists, tables and reading order from a PDF — far cleaner than a naive text dump.",
+    steps: [
+      "Drop a PDF, then open the Advanced tab",
+      "The extracted Markdown loads automatically — edit it",
+      "Rebuild or convert it to DOCX, HTML or a polished new PDF",
+    ],
+  },
   // ── Editing
   {
     icon: BookOpen,
@@ -282,8 +357,9 @@ const FEATURES: Feature[] = [
   },
 ];
 
-const CATEGORY_ORDER = ["AI", "Editor", "Preview", "Download", "Workflow"];
+const CATEGORY_ORDER = ["PDF", "AI", "Editor", "Preview", "Download", "Workflow"];
 const CATEGORY_COLORS: Record<string, string> = {
+  PDF: "text-rose-500",
   AI: "text-violet-500",
   Editor: "text-blue-500",
   Preview: "text-emerald-500",
@@ -311,11 +387,11 @@ export function FeatureShowcase() {
               <h2 className="text-sm font-bold">What&apos;s New in FileFlowOne</h2>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] font-semibold text-primary border border-primary/20">
                 <Sparkles className="h-2.5 w-2.5" />
-                18 Features
+                {FEATURES.length} Features
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Templates · AI Detection · Humanizer · Live Preview · Auto-save · Find &amp; Replace · Outline + more
+              PDF Editor · Visual fill-in · Font-matched editing · AI Detection · Humanizer · Live Preview · Templates + more
             </p>
           </div>
         </div>
@@ -364,7 +440,8 @@ export function FeatureShowcase() {
 
           {/* Footer tip */}
           <p className="text-[11px] text-muted-foreground/70 text-center pt-1 border-t">
-            All features work 100&nbsp;% locally — no uploads, no sign-up, no API keys required.
+            No sign-up, no limits. Audio &amp; video stay in your browser; documents are processed
+            and discarded in seconds — never stored.
           </p>
         </div>
       )}

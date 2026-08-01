@@ -2,7 +2,9 @@
 
 import { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
+import { installNetworkMonitor } from "@/lib/privacy/networkMonitor";
 import { ThemeProvider } from "next-themes";
+import { useEffect } from "react";
 
 function Toaster() {
   const { toasts } = useToast();
@@ -24,6 +26,10 @@ function Toaster() {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  // Install the privacy network monitor app-wide, before any tool makes a request,
+  // so the audit dashboard sees every outbound call from the whole session.
+  useEffect(() => { installNetworkMonitor(); }, []);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <ToastProvider>

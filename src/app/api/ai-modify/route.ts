@@ -1,8 +1,6 @@
-import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
-
-const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
+import { getModel } from "@/lib/ai/provider";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -64,7 +62,7 @@ ${content}
 Apply the modification and return ONLY the modified file content:`;
 
     const result = await generateText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: getModel("modify"),
       system: MODIFY_SYSTEM_PROMPT,
       prompt: userPrompt,
       maxOutputTokens: 8000,

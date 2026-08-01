@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, Shield } from "lucide-react";
+import { ArrowLeft, ChevronRight, Shield, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
@@ -35,6 +35,22 @@ export default function PrivacyPage() {
           This policy explains exactly what happens to your data.
         </p>
       </div>
+
+      {/* Verify-it-live banner → Privacy Audit dashboard */}
+      <Link
+        href="/privacy-audit"
+        className="group flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 transition-colors hover:bg-emerald-500/10"
+      >
+        <ShieldCheck className="h-6 w-6 text-emerald-500 shrink-0" />
+        <div className="flex-1">
+          <p className="text-sm font-semibold">Don&apos;t just take our word for it — verify it live</p>
+          <p className="text-xs text-muted-foreground">
+            Open the Privacy Audit dashboard to watch every network request in real time and confirm no
+            document is uploaded to a third party.
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+      </Link>
 
       {/* Privacy summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

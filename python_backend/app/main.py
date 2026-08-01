@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import pdf_extract, sfi
+from app.routers import ats, pdf_edit, pdf_extract, redline, sfi
 
 app = FastAPI(
     title="FileFlowOne Research Backend",
@@ -28,6 +28,9 @@ app.add_middleware(
 
 app.include_router(sfi.router)
 app.include_router(pdf_extract.router)
+app.include_router(pdf_edit.router)
+app.include_router(ats.router)
+app.include_router(redline.router)
 
 
 @app.get("/health")

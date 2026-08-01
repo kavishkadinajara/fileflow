@@ -20,6 +20,8 @@ import { pdfToDocx, pdfToHtml, pdfToMd, pdfToTxt } from "@/lib/converters/pdfExt
 import { imageToJpeg, imageToPng, pngToSvg, svgToPng } from "@/lib/converters/image";
 import { mermaidToHtml, mermaidToPdf, mermaidToPng, mermaidToSvg } from "@/lib/converters/mermaid";
 import { htmlToPdf, htmlToPng } from "@/lib/converters/pdf";
+import { rebuildPdfFromMarkdown, rebuildOptionsFromConvert } from "@/lib/converters/pdfEdit";
+import type { ConvertOptions } from "@/types";
 import { convertSql } from "@/lib/converters/sql";
 import { htmlToMd, htmlToTxt, mdToDocx, mdToHtml, mdToTxt } from "@/lib/converters/text";
 import { mdToStyledHtml } from "@/lib/converters/styledHtml";
@@ -175,6 +177,15 @@ async function runConversion(input: ConversionInput): Promise<ConversionResult> 
     return { resultBuffer: buf };
   }
   if (fromFormat === "md" && toFormat === "pdf") {
+    // PDF Editor rebuild — any pdf* auto-format toggle routes through the
+    // editor pipeline so the chosen header/footer/TOC/page-numbers are applied.
+    const o = options as ConvertOptions;
+    const hasEditorToggles =
+      o.pdfAddToc || o.pdfAddPageNumbers || o.pdfHeaderText || o.pdfFooterText || o.pdfCoverPage;
+    if (hasEditorToggles) {
+      const buf = await rebuildPdfFromMarkdown(fileText, rebuildOptionsFromConvert(o));
+      return { resultBuffer: buf };
+    }
     if (style) {
       const html = await mdToStyledHtml(fileText, style);
       const buf = await htmlToPdf(html, {

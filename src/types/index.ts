@@ -89,6 +89,15 @@ export interface ConvertOptions {
   mermaidTheme?: "default" | "dark" | "forest" | "neutral";
   /** Markdown options */
   mdHighlightCode?: boolean;
+  /** PDF Editor — auto-format toggles for rebuilding an edited PDF */
+  pdfAddToc?: boolean;
+  pdfAddPageNumbers?: boolean;
+  /** Header text — empty/undefined disables the header. */
+  pdfHeaderText?: string;
+  /** Footer text — empty/undefined disables the footer. */
+  pdfFooterText?: string;
+  /** Add a cover page using the first H1 as title. */
+  pdfCoverPage?: boolean;
   /** Video compression options */
   videoCrf?: number;                  // 18–51: lower = better quality, larger file
   videoResolution?: "original" | "1080p" | "720p" | "480p" | "360p";

@@ -1,13 +1,13 @@
 import {
     ArrowLeft, ArrowRight, BookOpen, Brain, ChevronRight,
-    Download, FileText, Film, Layers, Music, Search,
+    Download, FilePenLine, FileText, Film, Layers, Music, Search,
     Sparkles, Upload, Zap
 } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
   title: "User Guide — FileFlowOne",
-  description: "Complete guide to using FileFlowOne: file conversion, audio/video, compression, AI tools, text editor, and more.",
+  description: "Complete guide to using FileFlowOne: PDF editing & fill-in, file conversion, audio/video, compression, AI tools, text editor, and more.",
 };
 
 type Step = { n: number; title: string; detail: string };
@@ -98,6 +98,73 @@ Available themes: Default, Dark, Forest, Neutral — configurable in the options
     tips: [
       "Format pairs are shown in the 'To' dropdown — only valid conversions are listed.",
       "The Format Matrix on the home page shows all available pairs at a glance.",
+    ],
+  },
+  {
+    id: "pdf-editor",
+    icon: FilePenLine,
+    title: "PDF Editor",
+    color: "text-rose-500",
+    intro: "Fill in and edit existing PDFs right in your browser — no Acrobat, no account. When you drop a PDF, FileFlowOne opens a dedicated editor with two tabs: Fill in (visual) for form-style editing, and Advanced for text editing and rebuilding.",
+    steps: [
+      { n: 1, title: "Drop a PDF file", detail: "Drag a PDF onto the uploader. FileFlowOne automatically opens the Edit PDF tab — no need to pick an output format first." },
+      { n: 2, title: "Fill in visually", detail: "The page is shown exactly as it looks — logo, colour bands, dotted lines and all. Click any line and type straight into it, just like filling a paper form. Edited fields are tinted so you can see your changes." },
+      { n: 3, title: "Download the filled PDF", detail: "Click 'Download filled PDF'. Only the words you changed are redrawn onto the original — everything you didn't touch stays pixel-identical." },
+      { n: 4, title: "Need more control? Open the Advanced tab", detail: "Advanced gives you the extracted text plus four power tools: surgical patch, font-matched find & replace, Smart Reflow, and a clean rebuild." },
+    ],
+    subsections: [
+      {
+        title: "Fill in (visual) — WYSIWYG form filling",
+        content: `The default tab. Every page of the PDF is rendered as a real image, with an editable field overlaid on each line of text at its exact position.
+
+• See the actual form — blanks, dotted lines, logos and layout are all visible
+• Click any field and type in place
+• Zoom 50–200% for precise work; a counter shows how many fields you've edited
+• "Reset" clears all edits; "Download filled PDF" applies only your changes
+
+Best for: application forms, log books, profiles, any "fill in the blanks" PDF.`,
+      },
+      {
+        title: "Surgical Patch — edit text, keep everything else",
+        content: `In the Advanced tab, the PDF's text is extracted into an editable box. Change any words, then click "Patch original (surgical)".
+
+FileFlowOne diffs your edits against the original, isolates the smallest changed phrases, and redraws only those — in the original font, size and colour. Every untouched region stays byte-for-byte identical.
+
+Best for: fixing a typo, updating a date or figure, changing a name — without re-flowing the whole document.`,
+      },
+      {
+        title: "Font-Matched Find & Replace",
+        content: `The "Edit original text" panel does targeted find & replace directly on the original PDF.
+
+• Replaced text is redrawn in the matched span's own font, weight, size and colour
+• Choose scope: all matches, first match, or a specific occurrence
+• Toggle case sensitivity
+• If the new text is wider, the font auto-shrinks to fit — it never overruns neighbouring text
+
+Best for: swapping a recurring term or label across a document while keeping it visually seamless.`,
+      },
+      {
+        title: "Smart Reflow — editable rebuild that keeps the layout",
+        content: `Smart Reflow (Advanced tab → "Load layout blocks") extracts every line as a positioned block carrying its original coordinates, font, size and colour.
+
+Edit any block, then "Rebuild (keep layout)" — each block is placed back at its exact original position. The result looks like the source but is a freshly generated, fully editable PDF.
+
+Best for: heavier edits where you want to change wording but preserve the visual layout.`,
+      },
+      {
+        title: "Rebuild, Decorate & Auto-format",
+        content: `• Rebuild PDF — re-flows the edited text into a clean, polished new PDF (page size, orientation, optional cover page, table of contents)
+• Decorate original — stamps a header, footer and page numbers onto the existing PDF without touching its content
+• AI Auto-format — infers sensible header/footer/TOC settings and tidies the extracted Markdown for you
+
+PDF → Markdown / DOCX extraction uses a deterministic structure engine that recognises headings, lists, tables and reading order — far cleaner than a plain text dump.`,
+      },
+    ],
+    tips: [
+      "Your original file is never modified — every action produces a new PDF you can download.",
+      "Visual fill-in is the easiest start; switch to Advanced only when you need text-level edits.",
+      "Surgical Patch and Font-Matched editing keep the original's fonts and images intact — ideal for official forms.",
+      "PDF editing needs the processing backend — give it a moment to render larger documents.",
     ],
   },
   {
@@ -325,7 +392,11 @@ Batch Download: If you have multiple completed jobs, you can download all at onc
       },
       {
         title: "Do my files get stored on your servers?",
-        content: "Audio and video files are never sent to our servers at all — they're processed in your browser. Document and image conversions are processed server-side but files are not stored. They're held in memory only for the conversion duration (typically <5 seconds) and then discarded.",
+        content: "Audio and video files are never sent to our servers at all — they're processed in your browser. Document, image, and PDF conversions are processed server-side but files are not stored. They're held in memory only for the conversion duration (typically <5 seconds) and then discarded.",
+      },
+      {
+        title: "Can I really edit a PDF, not just convert it?",
+        content: "Yes — that's what sets FileFlowOne apart. Drop a PDF and you can fill it in visually like a form, or edit its text in place. Edits are redrawn in the original font, size and colour, and only the parts you change are touched — the rest of the page stays pixel-identical. Most free converters can't edit PDF text at all.",
       },
       {
         title: "Why does the first audio/video conversion take time?",

@@ -2,8 +2,12 @@
 PDF text extraction endpoint.
 
 POST /api/pdf-extract
-Accepts a PDF file, returns extracted text with heuristic structure detection.
-Used by the Next.js convert route instead of the pdf-parse npm package.
+Accepts a PDF file, returns extracted text with accurate structure detection.
+
+Primary path: the deterministic structure engine (app.services.pdf_structure),
+which reconstructs headings/paragraphs/lists/tables/reading-order from glyph
+geometry and font metrics. Falls back to the legacy pdfminer flow only if the
+engine raises, so a malformed PDF still returns *something*.
 """
 
 from __future__ import annotations
@@ -14,85 +18,120 @@ import re
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
+from app.services.pdf_structure import extract_structure
+
 router = APIRouter(prefix="/api", tags=["PDF"])
 
 
-def _extract_and_structure(data: bytes) -> dict:
-    """Extract text from PDF and return structured plain/md/html representations."""
-    from pdfminer.high_level import extract_text
-    from pdfminer.layout import LAParams
+def _md_to_html(md: str) -> str:
+    """Render the structured Markdown (headings, lists, tables, paragraphs) to HTML."""
+    lines = md.split("\n")
+    out: list[str] = []
+    i = 0
+    list_open: str | None = None
 
-    params = LAParams(line_margin=0.5, word_margin=0.1)
-    raw = extract_text(io.BytesIO(data), laparams=params) or ""
+    def close_list():
+        nonlocal list_open
+        if list_open:
+            out.append(f"</{list_open}>")
+            list_open = None
 
-    lines = raw.split("\n")
-    md_lines: list[str] = []
-    blank_run = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
 
-    for line in lines:
-        trimmed = line.strip()
-        if not trimmed:
-            blank_run += 1
-            if blank_run == 1:
-                md_lines.append("")
+        # Table block: a run of lines starting with '|'.
+        if stripped.startswith("|"):
+            close_list()
+            tbl = []
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                tbl.append(lines[i].strip())
+                i += 1
+            out.append(_table_block_to_html(tbl))
             continue
-        blank_run = 0
 
-        # Heading heuristic: short, no terminal sentence punctuation,
-        # title-cased or all-caps
-        is_heading = (
-            5 < len(trimmed) < 80
-            and not trimmed.endswith((".", ",", ";", "?", "!"))
-            and (trimmed.istitle() or trimmed.isupper())
-        )
-
-        # Bullet heuristic
-        is_bullet = bool(re.match(r"^[\u2022\u2023\u25e6\-\*\+]\s", trimmed))
-        is_numbered = bool(re.match(r"^\d+[\.\)]\s", trimmed))
-
-        if is_heading and len(trimmed) < 60:
-            md_lines.append(f"## {trimmed}")
-        elif is_bullet:
-            body = re.sub(r"^[\u2022\u2023\u25e6\-\*\+]\s+", "", trimmed)
-            md_lines.append(f"- {body}")
-        elif is_numbered:
-            md_lines.append(trimmed)
+        heading = re.match(r"^(#{1,6})\s+(.*)$", stripped)
+        if heading:
+            close_list()
+            lvl = len(heading.group(1))
+            out.append(f"<h{lvl}>{_esc(heading.group(2))}</h{lvl}>")
+        elif re.match(r"^[-*]\s+", stripped):
+            if list_open != "ul":
+                close_list(); out.append("<ul>"); list_open = "ul"
+            out.append(f"<li>{_esc(re.sub(r'^[-*]\\s+', '', stripped))}</li>")
+        elif re.match(r"^\d+\.\s+", stripped):
+            if list_open != "ol":
+                close_list(); out.append("<ol>"); list_open = "ol"
+            out.append(f"<li>{_esc(re.sub(r'^\\d+\\.\\s+', '', stripped))}</li>")
+        elif stripped == "":
+            close_list()
         else:
-            md_lines.append(trimmed)
+            close_list()
+            out.append(f"<p>{_esc(stripped)}</p>")
+        i += 1
+    close_list()
 
-    md_text = re.sub(r"\n{3,}", "\n\n", "\n".join(md_lines)).strip()
-    plain_text = raw.strip()
-
-    # Build HTML
-    html_parts: list[str] = []
-    for line in md_text.split("\n"):
-        if line.startswith("## "):
-            html_parts.append(f"<h2>{line[3:]}</h2>")
-        elif line.startswith("# "):
-            html_parts.append(f"<h1>{line[2:]}</h1>")
-        elif line.startswith("### "):
-            html_parts.append(f"<h3>{line[4:]}</h3>")
-        elif line.startswith("- "):
-            html_parts.append(f"<li>{line[2:]}</li>")
-        elif line.strip() == "":
-            html_parts.append("")
-        else:
-            html_parts.append(f"<p>{line}</p>")
-
-    html_body = "\n".join(html_parts)
-    html_text = f"""<!DOCTYPE html>
+    body = "\n".join(out)
+    return f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>
   body {{ font-family: sans-serif; max-width: 860px; margin: 40px auto; padding: 0 24px; line-height: 1.7; color: #1a1a1a; }}
   h1,h2,h3 {{ margin-top: 1.5em; }}
   p {{ margin: 0.6em 0; }}
   li {{ margin: 0.3em 0; }}
+  table {{ border-collapse: collapse; margin: 1em 0; }}
+  th,td {{ border: 1px solid #ccc; padding: 6px 10px; text-align: left; }}
+  th {{ background: #f3f4f6; }}
 </style>
 </head><body>
-{html_body}
+{body}
 </body></html>"""
 
-    return {"plain": plain_text, "md": md_text, "html": html_text}
+
+def _table_block_to_html(rows: list[str]) -> str:
+    def cells(r: str) -> list[str]:
+        return [c.strip() for c in r.strip().strip("|").split("|")]
+    if len(rows) >= 2 and set(rows[1].replace("|", "").replace(" ", "")) <= {"-", ":"}:
+        header, body = cells(rows[0]), [cells(r) for r in rows[2:]]
+    else:
+        header, body = None, [cells(r) for r in rows]
+    parts = ["<table>"]
+    if header:
+        parts.append("<thead><tr>" + "".join(f"<th>{_esc(c)}</th>" for c in header) + "</tr></thead>")
+    parts.append("<tbody>")
+    for r in body:
+        parts.append("<tr>" + "".join(f"<td>{_esc(c)}</td>" for c in r) + "</tr>")
+    parts.append("</tbody></table>")
+    return "".join(parts)
+
+
+def _esc(s: str) -> str:
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _legacy_extract(data: bytes) -> dict:
+    """Fallback: the old pdfminer line-heuristic flow, used only if the engine fails."""
+    from pdfminer.high_level import extract_text
+    from pdfminer.layout import LAParams
+
+    params = LAParams(line_margin=0.5, word_margin=0.1)
+    raw = extract_text(io.BytesIO(data), laparams=params) or ""
+    md_text = re.sub(r"\n{3,}", "\n\n", raw).strip()
+    return {"plain": raw.strip(), "md": md_text, "html": _md_to_html(md_text)}
+
+
+def _extract_and_structure(data: bytes) -> dict:
+    """Run the structure engine; degrade gracefully to the legacy flow on error."""
+    try:
+        result = extract_structure(data)
+        md = result["md"]
+        if not md.strip():
+            raise ValueError("structure engine returned empty markdown")
+        return {"plain": result["plain"], "md": md, "html": _md_to_html(md)}
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return _legacy_extract(data)
 
 
 @router.post("/pdf-extract")

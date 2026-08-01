@@ -10,6 +10,7 @@ import {
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { StyleGallery } from "@/components/StyleGallery";
+import { PresetBar } from "@/components/PresetBar";
 import { MEDIA_FORMATS } from "@/lib/converters/media";
 import { FORMAT_META, formatBytes, getSupportedOutputs } from "@/lib/formats";
 import { BUILTIN_TEMPLATES } from "@/lib/styles/templates";
@@ -510,6 +511,14 @@ export function ConversionConfig({ droppedFile, onRemove }: ConversionConfigProp
         }}
       />
 
+
+      {/* Conversion presets (signed-in only) */}
+      <PresetBar
+        fromFormat={fromFormat}
+        toFormat={toFormat}
+        options={options}
+        onApply={(opts) => setOptions(opts)}
+      />
 
       <Button
         className="w-full bg-gradient-brand hover:opacity-90 text-white border-0 transition-opacity duration-200"
